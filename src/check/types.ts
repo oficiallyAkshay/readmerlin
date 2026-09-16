@@ -33,6 +33,8 @@ export interface RuleContext {
   doc: Doc;
   config: Config;
   links: boolean;
+  /** Whether count-source commands from the config may run. */
+  exec: boolean;
   fetch: typeof fetch;
 }
 

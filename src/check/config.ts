@@ -19,8 +19,16 @@ export const DEFAULT_CONFIG: Config = {
 
 export function loadConfig(path: string | undefined, cwd: string): Config {
   const file = path ?? `${cwd}/readmerlin.json`;
-  if (!existsSync(file)) return { ...DEFAULT_CONFIG };
-  const raw = JSON.parse(readFileSync(file, "utf8")) as Partial<Config>;
+  if (!existsSync(file)) {
+    if (path) throw new Error(`Config not found: ${file}`);
+    return { ...DEFAULT_CONFIG };
+  }
+  let raw: Partial<Config>;
+  try {
+    raw = JSON.parse(readFileSync(file, "utf8")) as Partial<Config>;
+  } catch (e) {
+    throw new Error(`Config is not valid JSON: ${file} (${e instanceof Error ? e.message : String(e)})`);
+  }
   const rules: Record<string, Level> = {};
   for (const [k, v] of Object.entries(raw.rules ?? {})) {
     if (v === "off" || v === "warn" || v === "fail") rules[k] = v;

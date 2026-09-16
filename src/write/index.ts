@@ -44,7 +44,7 @@ export async function write(dir: string, opts: WriteOptions = {}): Promise<Write
   if (backend.name === "prompt") return { backend: backend.name, readme: "", rounds: 0, findings: [] };
   let readme = extractReadme(text);
 
-  const maxRounds = opts.rounds ?? 3;
+  const maxRounds = Number.isInteger(opts.rounds) && (opts.rounds as number) >= 1 ? (opts.rounds as number) : 3;
   let rounds = 1;
   let findings: Finding[] = [];
   const scratchDir = mkdtempSync(join(tmpdir(), "readmerlin-"));
@@ -52,7 +52,7 @@ export async function write(dir: string, opts: WriteOptions = {}): Promise<Write
   try {
   for (;;) {
     writeFileSync(scratch, readme);
-    const result = await check(scratch, { format: "json", links: false, repoRoot: root });
+    const result = await check(scratch, { format: "json", links: false, exec: false, repoRoot: root });
     findings = result.findings.filter((f) => f.level === "fail" && !DEFERRED.has(f.id));
     log(`round ${rounds}: ${findings.length} fails to fix`);
     if (findings.length === 0 || rounds >= maxRounds) break;

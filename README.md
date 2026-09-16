@@ -89,9 +89,9 @@ What leaves your machine: nothing, with two exceptions you control.
 
 | Concern | What happens | Guard |
 |---|---|---|
-| The check fetches links | External links and badge logos are requested once a day | `--no-links` |
+| The check fetches links | External links are requested, results cached for a day; badge logos are requested each run | `--no-links` |
 | The writer sends your repo to a model | Manifests, commands and the old README go to the backend you chose | `--backend prompt` prints instead of sending |
-| The action runs code on your runner | One `npx` of a pinned version, no cache, no secrets read | the `version` input |
+| The action runs code on your runner | One `npx` of the version you set, no cache. Count-source commands from the config stay off | the `version` and `exec` inputs |
 
 ## Common workflows
 
@@ -119,7 +119,7 @@ What leaves your machine: nothing, with two exceptions you control.
 
 - Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
 - Order of work: `context`, `rules`, draw with herofold and Archify, write, `check` until clean, `init-workflow`.
-- Commands: `context [dir] --format md|json`, `rules`, `check [file] --format text|github|json [--no-links]`, `write [dir] --backend auto|claude|anthropic|github|codex|gemini|prompt`, `init-workflow [dir]`.
+- Commands: `context [dir] --format md|json`, `rules`, `check [file] --format text|github|json [--no-links] [--no-exec]`, `write [dir] --backend auto|claude|anthropic|github|codex|gemini|prompt [--model id, anthropic and github only] [--rounds 1..10]`, `init-workflow [dir]`.
 - Exit codes: 0 clean or warnings only, 1 any fail, 2 the tool itself failed.
 - Rule ids read `group/name`: `hero/exists`, `shape/kill-list`, `badges/logo-renders`, `prose/no-dashes`, `visuals/spec-beside`, `privacy/denylist`, `links/external`. Every finding carries the id and a repair line.
 - Library: `import { check, gather, write, rules } from "readmerlin"`. Types ship in the package.

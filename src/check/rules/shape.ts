@@ -12,10 +12,14 @@ export const heroExists: Rule = {
   description: "Everything before the first section holds a title, one bold line and one plain line",
   run: ({ doc }) => {
     const html = htmlOf(doc.hero);
-    const md = doc.hero.filter((n) => n.type !== "html").map((n) => toString(n)).join("\n");
     const hasTitle = /<h1[\s>]/i.test(html) || doc.hero.some((n) => n.type === "heading" && n.depth === 1);
     const hasBold = /<b>|<strong>/i.test(html) || doc.hero.some((n) => n.type === "paragraph" && (n as { children: Array<{ type: string }> }).children.some((c) => c.type === "strong"));
-    const plain = md.split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"));
+    const plain = doc.hero
+      .filter((n) => n.type === "paragraph")
+      .map((n) => n as { children: Array<{ type: string }> })
+      .filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link" || (c.type === "text" && !/\S/.test((c as { value?: string }).value ?? ""))))
+      .map((p) => toString(p as never).trim())
+      .filter(Boolean);
     const plainHtml = html.replace(/<[^>]+>/g, "\n").split("\n").map((s) => s.trim()).filter(Boolean);
     const hasPlain = plain.length > 0 || plainHtml.length > 1;
     const out = [];

@@ -1,7 +1,52 @@
 import { visit } from "unist-util-visit";
 import { toString } from "mdast-util-to-string";
 import type { Root, RootContent, Paragraph } from "mdast";
+import { isAbsolute, relative, resolve } from "node:path";
 import type { Doc } from "./types.js";
+
+/** decodeURIComponent that returns the input on malformed escapes instead of throwing. */
+export function safeDecode(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+/** Resolve a README-relative path inside the repo. Root-relative paths start at the repo root. Returns undefined when the path escapes the repo. */
+export function localPath(root: string, src: string): string | undefined {
+  const clean = safeDecode(src.split(/[?#]/)[0]).replace(/^\/+/, "");
+  const p = resolve(root, clean);
+  const rel = relative(root, p);
+  if (rel.startsWith("..") || isAbsolute(rel)) return undefined;
+  return p;
+}
+
+/** Line numbers (1-based) that sit inside fenced code. */
+export function fencedLines(doc: Doc): Set<number> {
+  const out = new Set<number>();
+  let inFence = false;
+  doc.lines.forEach((l, i) => {
+    if (/^\s*(```|~~~)/.test(l)) {
+      inFence = !inFence;
+      out.add(i + 1);
+      return;
+    }
+    if (inFence) out.add(i + 1);
+  });
+  return out;
+}
+
+/** The document text with fenced code, inline code and html comments blanked out, offsets preserved. */
+export function maskedText(doc: Doc): string {
+  const fences = fencedLines(doc);
+  const lines = doc.lines.map((l, i) => (fences.has(i + 1) ? " ".repeat(l.length) : l));
+  let text = lines.join("\n");
+  const blank = (m: string) => m.replace(/[^\n]/g, " ");
+  text = text.replace(/<!--[\s\S]*?-->/g, blank);
+  text = text.replace(/`[^`\n]*`/g, blank);
+  return text;
+}
 
 export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|\/workflows\/[^"'\s)]*\.svg/i;
 export const isBadge = (src: string): boolean => BADGE_RE.test(src);
@@ -66,16 +111,10 @@ export function collectImages(doc: Doc): ImageRef[] {
   // HTML images. Link wrapping: an <a that opens before the img and has not closed.
   const re = /<img\b[^>]*>/gi;
   let m: RegExpExecArray | null;
-  let inFence = false;
-  const fences = new Set<number>();
-  doc.lines.forEach((l, i) => {
-    if (/^\s*(```|~~~)/.test(l)) inFence = !inFence;
-    if (inFence) fences.add(i + 1);
-  });
-  while ((m = re.exec(doc.text))) {
+  const text = maskedText(doc);
+  while ((m = re.exec(text))) {
     const line = lineAt(doc, m.index);
-    if (fences.has(line)) continue;
-    const before = doc.text.slice(Math.max(0, m.index - 400), m.index);
+    const before = text.slice(Math.max(0, m.index - 400), m.index);
     const lastOpen = before.lastIndexOf("<a");
     const lastClose = before.lastIndexOf("</a>");
     const src = attr(m[0], "src") ?? "";
@@ -89,6 +128,7 @@ export function collectImages(doc: Doc): ImageRef[] {
 export function collectLinks(doc: Doc): LinkRef[] {
   const out: LinkRef[] = [];
   const heroEnd = heroEndLine(doc);
+  const text = maskedText(doc);
   visit(doc.tree as Root, "link", (node, _i, parent) => {
     const line = node.position?.start.line ?? 0;
     const onlyImage = node.children.length === 1 && node.children[0].type === "image";
@@ -97,11 +137,11 @@ export function collectLinks(doc: Doc): LinkRef[] {
   });
   const re = /<a\b[^>]*href\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(doc.text))) {
+  while ((m = re.exec(text))) {
     const inner = m[3];
     if (/<img\b/i.test(inner) && !inner.replace(/<[^>]+>/g, "").trim()) continue;
     const line = lineAt(doc, m.index);
-    const before = doc.text.slice(Math.max(0, m.index - 12), m.index);
+    const before = text.slice(Math.max(0, m.index - 12), m.index);
     out.push({ href: m[1] ?? m[2], line, inHero: line < heroEnd, text: inner.replace(/<[^>]+>/g, "").trim(), bold: /<b>\s*$|<strong>\s*$/i.test(before), html: true });
   }
   return out.sort((a, b) => a.line - b.line);

@@ -29,7 +29,8 @@ function run(cmd: string, args: string[], stdin: string): Promise<string> {
 
 export const claudeCli: Backend = {
   name: "claude",
-  complete: (prompt) => run("claude", ["-p", "--output-format", "text"], prompt),
+  // No tools, no hooks, no project settings: the model only sees the prompt, never the target repo.
+  complete: (prompt) => run("claude", ["-p", "--output-format", "text", "--tools", "", "--bare", "--setting-sources", "user", "--no-session-persistence"], prompt),
 };
 
 export function anthropicSdk(model = "claude-opus-5"): Backend {
@@ -61,10 +62,13 @@ export function githubModels(model = "openai/gpt-4.1"): Backend {
   return {
     name: "github",
     complete: async (prompt) => {
+      const token = process.env.GITHUB_TOKEN;
+      if (!token) throw new Error("The github backend needs GITHUB_TOKEN. In a workflow, pass env GITHUB_TOKEN: ${{ github.token }} and grant permissions: models: read.");
       const res = await fetch("https://models.github.ai/inference/chat/completions", {
         method: "POST",
-        headers: { authorization: `Bearer ${process.env.GITHUB_TOKEN}`, "content-type": "application/json", accept: "application/vnd.github+json" },
-        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 16000 }),
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json", accept: "application/vnd.github+json" },
+        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 8000 }),
+        signal: AbortSignal.timeout(180000),
       });
       if (!res.ok) throw new Error(`GitHub Models answered ${res.status}: ${(await res.text()).slice(0, 300)}`);
       const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };

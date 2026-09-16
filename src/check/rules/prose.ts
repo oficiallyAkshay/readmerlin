@@ -9,7 +9,7 @@ export const noDashes: Rule = {
   run: ({ doc }) => {
     const out = [];
     for (const [i, line] of proseLines(doc)) {
-      const stripped = line.replace(/<img[^>]*>/g, "").replace(/\((https?:)?[^)\s]*\)/g, "").replace(/src="[^"]*"|href="[^"]*"/g, "").replace(/`[^`]*`/g, "");
+      const stripped = line.replace(/<img[^>]*>/g, "").replace(/!\[[^\]]*\]/g, "").replace(/\((https?:)?[^)\s]*\)/g, "").replace(/src="[^"]*"|href="[^"]*"/g, "").replace(/`[^`]*`/g, "");
       if (/[—–]/.test(stripped)) out.push({ message: "Em or en dash in prose.", line: i + 1, repair: "Split into two sentences, or use a comma or colon." });
     }
     return out;
@@ -52,7 +52,7 @@ export const sentenceCase: Rule = {
     const out = [];
     for (const s of doc.sections) {
       let title = s.title;
-      for (const a of [...config.headingAllowlist].sort((x, y) => y.length - x.length)) title = title.split(a).join(" ");
+      for (const a of [...config.headingAllowlist].sort((x, y) => y.length - x.length)) title = title.replace(new RegExp(`(^|[^\\p{L}\\p{N}])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^\\p{L}\\p{N}])`, "gu"), "$1 ");
       const words = title.split(/\s+/).filter(Boolean);
       const bad = words.slice(1).filter((w) => /^[A-Z][a-z]+$/.test(w));
       if (bad.length) out.push({ message: `Heading "${s.title}" is not sentence case (${bad.join(", ")}).`, line: s.startLine, repair: "Lower-case every word after the first unless it is a name. Add names to headingAllowlist." });

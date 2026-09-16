@@ -18,6 +18,7 @@ Options
   --format <fmt>         context: json | md (default json). check: text | github | json (default text)
   --config <file>        check: path to readmerlin.json (default ./readmerlin.json)
   --no-links             check: skip external link checks
+  --no-exec              check: never run count-source commands from readmerlin.json
   --backend <name>       write: auto | claude | anthropic | github | codex | gemini | prompt
   --model <id>           write: model id for the chosen backend
   --out <file>           write: output path (default README.md)
@@ -27,13 +28,15 @@ Options
   --version, -v          Print the version
   --help, -h             This text`;
 
-const { values, positionals } = parseArgs({
+function parse() {
+  return parseArgs({
   args: process.argv.slice(2),
   allowPositionals: true,
   options: {
     format: { type: "string" },
     config: { type: "string" },
     "no-links": { type: "boolean", default: false },
+    "no-exec": { type: "boolean", default: false },
     backend: { type: "string" },
     model: { type: "string" },
     out: { type: "string" },
@@ -43,9 +46,33 @@ const { values, positionals } = parseArgs({
     version: { type: "boolean", short: "v", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
-});
+  });
+}
 
+let parsed: ReturnType<typeof parse>;
+try {
+  parsed = parse();
+} catch (err) {
+  console.error(`${err instanceof Error ? err.message : String(err)}\n\n${HELP}`);
+  process.exitCode = 2;
+  parsed = { values: { help: true }, positionals: ["help"] } as never;
+}
+const { values, positionals } = parsed;
 const [command, target] = positionals;
+
+const FORMATS = { context: ["json", "md"], check: ["text", "github", "json"] } as const;
+function pickFormat<T extends string>(allowed: readonly T[], given: unknown, fallback: T): T {
+  if (given === undefined) return fallback;
+  if ((allowed as readonly string[]).includes(String(given))) return given as T;
+  throw new Error(`Unknown --format ${String(given)}. Use one of: ${allowed.join(", ")}.`);
+}
+
+function parseRounds(v: unknown): number | undefined {
+  if (v === undefined) return undefined;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 1 || n > 10) throw new Error(`--rounds must be a whole number from 1 to 10, got ${String(v)}.`);
+  return n;
+}
 
 async function main(): Promise<number> {
   if (values.version) {
@@ -53,26 +80,28 @@ async function main(): Promise<number> {
     return 0;
   }
   if (values.help || !command) {
+    if (process.exitCode === 2) return 2;
     console.log(HELP);
     return command ? 0 : 1;
   }
   switch (command) {
     case "context":
-      return runContext(target ?? process.cwd(), (values.format as "json" | "md" | undefined) ?? "json");
+      return runContext(target ?? process.cwd(), pickFormat(FORMATS.context, values.format, "json"));
     case "rules":
       return runRules();
     case "check":
       return runCheck(target ?? "README.md", {
-        format: (values.format as "text" | "github" | "json" | undefined) ?? "text",
+        format: pickFormat(FORMATS.check, values.format, "text"),
         configPath: values.config,
         links: !values["no-links"],
+        exec: !values["no-exec"],
       });
     case "write":
       return runWrite(target ?? process.cwd(), {
         backend: values.backend,
         model: values.model,
         out: values.out,
-        rounds: values.rounds ? Number(values.rounds) : undefined,
+        rounds: parseRounds(values.rounds),
         instructions: values.instructions,
         dryRun: values["dry-run"],
       });

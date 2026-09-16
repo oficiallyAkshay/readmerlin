@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { remoteOf } from "../../context/git.js";
-import { collectImages } from "../util.js";
+import { collectImages, safeDecode } from "../util.js";
 import type { Rule } from "../types.js";
 
 const svgCache = new Map<string, Promise<string | null>>();
@@ -92,17 +92,21 @@ export const countSource: Rule = {
   id: "badges/count-source",
   level: "fail",
   description: "Every numeric badge has a source command whose output matches",
-  run: ({ doc, config }) => {
+  run: ({ doc, config, exec }) => {
     const out = [];
     for (const i of collectImages(doc).filter((b) => b.badge)) {
       const m = /shields\.io\/badge\/([^-]+)-(\d{1,3}(?:,\d{3})*|\d+)-/i.exec(i.src);
       if (!m) continue;
-      const label = decodeURIComponent(m[1]).replace(/_/g, " ").toLowerCase();
+      const label = safeDecode(m[1]).replace(/_/g, " ").toLowerCase();
       if (/^(python|node|nodejs|node\.js|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|version|v|release|api|schema|since)$/.test(label)) continue;
       const number = m[2].replace(/,/g, "");
-      const cmd = config.counts[label] ?? config.counts[decodeURIComponent(m[1])];
+      const cmd = config.counts[label] ?? config.counts[safeDecode(m[1])];
       if (!cmd) {
         out.push({ message: `Count badge "${label}: ${number}" has no source command.`, line: i.line, repair: `Add counts["${label}"] = "<command that prints the number>" to readmerlin.json.` });
+        continue;
+      }
+      if (!exec) {
+        out.push({ message: `Count badge "${label}: ${number}" was not verified, commands are off.`, line: i.line, repair: "Run without --no-exec on a machine you trust." });
         continue;
       }
       let got: string;

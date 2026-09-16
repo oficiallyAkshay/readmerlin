@@ -1,11 +1,11 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname } from "node:path";
 import { imageSize } from "image-size";
-import { collectImages } from "../util.js";
+import { collectImages, localPath as repoPath } from "../util.js";
 import type { Doc, Rule } from "../types.js";
 
 const isRemote = (s: string) => /^(https?:)?\/\//i.test(s) || /^data:/i.test(s);
-const localPath = (root: string, src: string) => resolve(root, decodeURIComponent(src.split(/[?#]/)[0]));
+const localPath = (root: string, src: string): string => repoPath(root, src) ?? "\0outside";
 
 export const imagesExist: Rule = {
   id: "visuals/images-exist",

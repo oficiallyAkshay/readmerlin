@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { collectImages, collectLinks, slug } from "../util.js";
+import { join } from "node:path";
+import { collectImages, collectLinks, localPath, safeDecode, slug } from "../util.js";
 import type { Rule } from "../types.js";
 
 const isExternal = (h: string) => /^(https?:)?\/\//i.test(h);
@@ -26,7 +26,11 @@ export const relativeLinks: Rule = {
       if (!href || isExternal(href) || isSkippable(href)) continue;
       const [pathPart, anchor] = href.split("#");
       if (pathPart) {
-        const p = resolve(doc.repoRoot, decodeURIComponent(pathPart.split("?")[0]));
+        const p = localPath(doc.repoRoot, pathPart);
+        if (!p) {
+          out.push({ message: `Link points outside the repo: ${pathPart}`, line: r.line, repair: "Link to a file in the repo or to a URL." });
+          continue;
+        }
         if (!existsSync(p)) {
           out.push({ message: `Link target not found: ${pathPart}`, line: r.line, repair: "Fix the path or commit the file." });
           continue;
@@ -34,7 +38,7 @@ export const relativeLinks: Rule = {
       }
       if (anchor !== undefined && !pathPart) {
         const a = anchor.toLowerCase();
-        if (!slugs.has(a) && !slugs.has(slug(decodeURIComponent(a)))) out.push({ message: `Anchor not found: #${anchor}`, line: r.line, repair: "Match the heading text, lower-cased with hyphens." });
+        if (!slugs.has(a) && !slugs.has(slug(safeDecode(a)))) out.push({ message: `Anchor not found: #${anchor}`, line: r.line, repair: "Match the heading text, lower-cased with hyphens." });
       }
     }
     return out;
@@ -55,8 +59,12 @@ function loadCache(): Record<string, CacheEntry> {
 
 function saveCache(c: Record<string, CacheEntry>): void {
   try {
+    const week = 7 * DAY;
+    for (const [k, v] of Object.entries(c)) if (Date.now() - v.at > week) delete c[k];
     mkdirSync(join(tmpdir(), "readmerlin"), { recursive: true });
-    writeFileSync(CACHE_FILE, JSON.stringify(c));
+    const tmp = `${CACHE_FILE}.${process.pid}.tmp`;
+    writeFileSync(tmp, JSON.stringify(c));
+    renameSync(tmp, CACHE_FILE);
   } catch {
     /* cache is best effort */
   }

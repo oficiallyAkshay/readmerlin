@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oficiallyAkshay/readmerlin@v1
-# To let the action write the README and open a pull request, add ANTHROPIC_API_KEY as a
-# repo secret, set mode: write on the step above with env ANTHROPIC_API_KEY, and follow it with
-# peter-evans/create-pull-request.
+# Write mode: let the action draft the README and open a pull request.
+#   - add `permissions: { contents: write, pull-requests: write, models: read }` to the job
+#   - set `with: { mode: write }` on the step, and `env: { ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} }`
+#     to use Claude, or leave the env out to use GitHub Models with the job token
+#   - follow it with peter-evans/create-pull-request

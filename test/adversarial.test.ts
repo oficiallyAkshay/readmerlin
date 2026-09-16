@@ -159,3 +159,60 @@ describe("writer", () => {
     }
   });
 });
+
+describe("review regressions", () => {
+  it("does not crash on a bare percent in a link and rejects paths outside the repo", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n- see [a](docs/100%.md) and [b](/examples/claim.pdf) and [c](../../etc/passwd)\n\n" + AGENTS);
+    const r = await check(join(dir, "README.md"), { format: "json", links: false });
+    const rel = r.findings.filter((f) => f.id === "links/relative").map((f) => f.message);
+    expect(rel.some((m) => m.includes("100%"))).toBe(true);
+    expect(rel.some((m) => m.includes("outside the repo"))).toBe(true);
+    expect(rel.some((m) => m.includes("/examples/claim.pdf"))).toBe(false);
+  });
+  it("ignores links and images inside fences, inline code and comments", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n```html\n<a href=\"docs/nope.md\">x</a>\n```\n\nUse `<img src=\"https://img.shields.io/badge/a-b-c\">` in yours.\n\n<!-- <img src=\"https://img.shields.io/badge/a-b-c\"> -->\n\n" + AGENTS);
+    const ids = (await check(join(dir, "README.md"), { format: "json", links: false })).findings.map((f) => f.id);
+    expect(ids).not.toContain("links/relative");
+    expect(ids).not.toContain("shape/badges-in-hero");
+    expect(ids).not.toContain("badges/linked");
+  });
+  it("wants a plain one-liner in a markdown hero too", async () => {
+    const dir = repo("# t\n\n**b**\n\n" + QUICK + "\n" + AGENTS);
+    const r = await check(join(dir, "README.md"), { format: "json", links: false });
+    expect(r.findings.some((f) => f.id === "hero/exists" && /one-liner/.test(f.message))).toBe(true);
+  });
+  it("ignores a dash inside a markdown image alt", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n![a — b](assets/readme/hero.svg)\n\n" + AGENTS);
+    expect(await ids(dir)).not.toContain("prose/no-dashes");
+  });
+  it("keeps count-source commands off with exec false and names a missing config", async () => {
+    const dir = repo(HERO.replace('<a href="LICENSE">', '<a href="docs/v.md"><img alt="vendors" src="https://img.shields.io/badge/vendors-3-6f42c1?logo=databricks"></a><a href="LICENSE">') + "\n" + QUICK + "\n" + AGENTS, { "readmerlin.json": JSON.stringify({ counts: { vendors: "echo 99" } }), "docs/v.md": "" });
+    const r = await check(join(dir, "README.md"), { format: "json", links: false, exec: false });
+    const c = r.findings.filter((f) => f.id === "badges/count-source");
+    expect(c.length).toBe(1);
+    expect(c[0].message).toMatch(/not verified/);
+    await expect(check(join(dir, "README.md"), { format: "json", links: false, configPath: join(dir, "missing.json") })).rejects.toThrow(/Config not found/);
+  });
+  it("clamps a bad rounds value in the writer", async () => {
+    const bad = HERO + "\n" + QUICK + "\nOne — two.\n\n" + AGENTS;
+    let calls = 0;
+    const stubborn: Backend = { name: "claude", complete: async () => { calls++; return `<readme>${bad}</readme>`; } };
+    const r = await write(repo("# old"), { backend: stubborn, dryRun: true, rounds: Number.NaN });
+    expect(r.rounds).toBe(3);
+    expect(calls).toBe(3);
+  });
+  it("allowlist matches whole words only", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## SCIM Provisioning\n\n- x\n\n" + AGENTS, { "readmerlin.json": JSON.stringify({ headingAllowlist: ["CI"] }) });
+    const r = await check(join(dir, "README.md"), { format: "json", links: false });
+    expect(r.findings.some((f) => f.id === "prose/sentence-case")).toBe(true);
+  });
+});
+
+describe("format", () => {
+  it("prints github annotations", async () => {
+    const { format } = await import("../src/check/format.js");
+    const out = format({ file: "README.md", findings: [{ id: "prose/no-dashes", level: "fail", message: "Em dash.", line: 3, repair: "Split it." }], fails: 1, warns: 0, ran: ["prose/no-dashes"] }, "github");
+    expect(out).toContain("::error file=README.md,line=3,title=prose/no-dashes::Em dash. Repair: Split it.");
+    expect(out).toContain("::notice::");
+  });
+});

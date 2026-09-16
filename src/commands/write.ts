@@ -14,6 +14,10 @@ export async function runWrite(dir: string, opts: WriteCliOptions): Promise<numb
   const backend = (opts.backend ?? "auto") as BackendName | "auto";
   const result = await write(dir, { ...opts, backend, log: (l) => console.error(`readmerlin: ${l}`) });
   if (result.backend === "prompt") {
+    if (process.env.GITHUB_ACTIONS) {
+      console.error("readmerlin: no model reachable on this runner. Set ANTHROPIC_API_KEY, or pass GITHUB_TOKEN with permissions models: read.");
+      return 2;
+    }
     console.error("readmerlin: no model found. The prompt above is ready to paste into any agent.");
     return 0;
   }

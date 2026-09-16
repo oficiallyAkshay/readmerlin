@@ -8,16 +8,19 @@ inputs:
     description: README to check
     default: README.md
   mode:
-    description: check or write. write needs a model, see the readme.
+    description: check or write. write needs ANTHROPIC_API_KEY in env, or GITHUB_TOKEN with permissions models read.
     default: check
   version:
-    description: readmerlin version to run
+    description: readmerlin version to run. Pin it for reproducible runs.
     default: latest
   links:
-    description: Check external links
+    description: Check external links and badge logos
     default: "true"
+  exec:
+    description: Run the count-source commands from readmerlin.json. Off by default, since they are shell commands from the repo.
+    default: "false"
   model:
-    description: Model id for write mode, backend specific
+    description: Model id for write mode, used by the anthropic and github backends
     default: ""
 runs:
   using: composite
@@ -28,12 +31,21 @@ runs:
         RM_PATH: ${{ inputs.path }}
         RM_VERSION: ${{ inputs.version }}
         RM_LINKS: ${{ inputs.links }}
+        RM_EXEC: ${{ inputs.exec }}
         RM_MODEL: ${{ inputs.model }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
-        LINKS=""; [ "$RM_LINKS" = "true" ] || LINKS="--no-links"
-        MODEL=""; [ -z "$RM_MODEL" ] || MODEL="--model $RM_MODEL"
+        FLAGS=()
+        [ "$RM_LINKS" = "true" ] || FLAGS+=(--no-links)
+        [ "$RM_EXEC" = "true" ] || FLAGS+=(--no-exec)
+        MODEL=()
+        [ -z "$RM_MODEL" ] || MODEL=(--model "$RM_MODEL")
         if [ "$RM_MODE" = "write" ]; then
-          npx -y "readmerlin@$RM_VERSION" write . --out "$RM_PATH" $MODEL
+          if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+            npx -y -p "readmerlin@$RM_VERSION" -p @anthropic-ai/sdk readmerlin write . --out "$RM_PATH" --backend anthropic "${MODEL[@]}"
+          else
+            npx -y "readmerlin@$RM_VERSION" write . --out "$RM_PATH" --backend github "${MODEL[@]}"
+          fi
         fi
-        npx -y "readmerlin@$RM_VERSION" check "$RM_PATH" --format github $LINKS
+        npx -y "readmerlin@$RM_VERSION" check "$RM_PATH" --format github "${FLAGS[@]}"
