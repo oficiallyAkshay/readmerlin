@@ -1,0 +1,25 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - name: self check
+        run: node dist/cli.js check README.md --format github
+      - name: pack size
+        run: |
+          npm pack --dry-run --json | node -e 'const p=JSON.parse(require("fs").readFileSync(0))[0]; console.log(`tarball ${Math.round(p.size/1024)} KB, unpacked ${Math.round(p.unpackedSize/1024)} KB`); if (p.unpackedSize > 1500*1024) { console.error("unpacked size over 1.5 MB"); process.exit(1) }'

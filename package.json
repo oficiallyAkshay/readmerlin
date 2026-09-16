@@ -1,0 +1,76 @@
+{
+  "name": "readmerlin",
+  "version": "0.1.0",
+  "description": "Writes and checks value-first READMEs for skill, agent and MCP server repos.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "readmerlin": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "templates",
+    "action.yml",
+    "readmerlin.schema.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsup && tsc -p tsconfig.build.json",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "check": "node dist/cli.js check README.md",
+    "prepublishOnly": "npm run typecheck && npm run build && npm test && npm run check -- --no-links",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oficiallyAkshay/readmerlin.git"
+  },
+  "keywords": [
+    "readme",
+    "skill",
+    "agent",
+    "mcp",
+    "linter",
+    "claude-code",
+    "cursor",
+    "codex"
+  ],
+  "dependencies": {
+    "image-size": "^2.0.4",
+    "mdast-util-to-string": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.20.3",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.120.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
+  }
+}

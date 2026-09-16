@@ -1,0 +1,39 @@
+name: readmerlin
+description: Checks, or writes, the README of a skill, agent or MCP server repo. Value first, honest badges, no slop.
+branding:
+  icon: book-open
+  color: purple
+inputs:
+  path:
+    description: README to check
+    default: README.md
+  mode:
+    description: check or write. write needs a model, see the readme.
+    default: check
+  version:
+    description: readmerlin version to run
+    default: latest
+  links:
+    description: Check external links
+    default: "true"
+  model:
+    description: Model id for write mode, backend specific
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        RM_MODE: ${{ inputs.mode }}
+        RM_PATH: ${{ inputs.path }}
+        RM_VERSION: ${{ inputs.version }}
+        RM_LINKS: ${{ inputs.links }}
+        RM_MODEL: ${{ inputs.model }}
+      run: |
+        set -euo pipefail
+        LINKS=""; [ "$RM_LINKS" = "true" ] || LINKS="--no-links"
+        MODEL=""; [ -z "$RM_MODEL" ] || MODEL="--model $RM_MODEL"
+        if [ "$RM_MODE" = "write" ]; then
+          npx -y "readmerlin@$RM_VERSION" write . --out "$RM_PATH" $MODEL
+        fi
+        npx -y "readmerlin@$RM_VERSION" check "$RM_PATH" --format github $LINKS

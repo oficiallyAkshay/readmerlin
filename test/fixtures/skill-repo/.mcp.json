@@ -1,0 +1,1 @@
+{ "mcpServers": { "receipts": { "command": "npx", "args": ["-y", "receipts-mcp"] }, "remote": { "url": "https://example.invalid/mcp" } } }

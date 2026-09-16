@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "readmerlin: code gathers and checks, the agent writes",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "external": {
+          "label": "What you already have"
+        },
+        "backend": {
+          "label": "readmerlin code"
+        },
+        "database": {
+          "label": "File in the repo"
+        },
+        "cloud": {
+          "label": "Agent judgment"
+        },
+        "messagebus": {
+          "label": "Peer skill the agent calls"
+        },
+        "frontend": {
+          "label": "Deliverable"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "repo",
+      "type": "external",
+      "label": "Your repo",
+      "sublabel": "SKILL.md, manifests",
+      "pos": [
+        32,
+        60
+      ],
+      "size": [
+        164,
+        62
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "external",
+      "label": "Your agent",
+      "sublabel": "Claude Code, Cursor, Codex",
+      "pos": [
+        32,
+        220
+      ],
+      "size": [
+        164,
+        62
+      ]
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "context",
+      "sublabel": "what the repo offers",
+      "pos": [
+        262,
+        60
+      ],
+      "size": [
+        164,
+        62
+      ]
+    },
+    {
+      "id": "rules",
+      "type": "database",
+      "label": "rules",
+      "sublabel": "shipped in the package",
+      "pos": [
+        262,
+        220
+      ],
+      "size": [
+        164,
+        62
+      ]
+    },
+    {
+      "id": "write",
+      "type": "cloud",
+      "label": "The agent writes",
+      "sublabel": "value first, your words kept",
+      "pos": [
+        492,
+        140
+      ],
+      "size": [
+        176,
+        62
+      ],
+      "tag": "judgment"
+    },
+    {
+      "id": "visuals",
+      "type": "messagebus",
+      "label": "herofold + Archify",
+      "sublabel": "hero and diagram from specs",
+      "pos": [
+        492,
+        300
+      ],
+      "size": [
+        176,
+        62
+      ]
+    },
+    {
+      "id": "readme",
+      "type": "frontend",
+      "label": "README.md",
+      "sublabel": "plus two SVGs",
+      "pos": [
+        734,
+        140
+      ],
+      "size": [
+        164,
+        62
+      ]
+    },
+    {
+      "id": "check",
+      "type": "backend",
+      "label": "check",
+      "sublabel": "43 rules, off / warn / fail",
+      "pos": [
+        964,
+        140
+      ],
+      "size": [
+        164,
+        62
+      ],
+      "tag": "loops until clean"
+    },
+    {
+      "id": "action",
+      "type": "backend",
+      "label": "CI action",
+      "sublabel": "every push, weekly",
+      "pos": [
+        964,
+        300
+      ],
+      "size": [
+        164,
+        62
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Nothing leaves your machine, links and badge logos excepted",
+      "wraps": [
+        "context",
+        "rules",
+        "write",
+        "visuals",
+        "readme",
+        "check"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "repo-context",
+      "from": "repo",
+      "to": "context",
+      "label": "read"
+    },
+    {
+      "id": "agent-write",
+      "from": "agent",
+      "to": "write",
+      "label": "runs the skill",
+      "variant": "emphasis"
+    },
+    {
+      "id": "context-write",
+      "from": "context",
+      "to": "write"
+    },
+    {
+      "id": "rules-write",
+      "from": "rules",
+      "to": "write"
+    },
+    {
+      "id": "write-visuals",
+      "from": "write",
+      "to": "visuals",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "write-readme",
+      "from": "write",
+      "to": "readme",
+      "variant": "emphasis"
+    },
+    {
+      "id": "visuals-readme",
+      "from": "visuals",
+      "to": "readme",
+      "label": "SVGs",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "bottom"
+    },
+    {
+      "id": "readme-check",
+      "from": "readme",
+      "to": "check",
+      "variant": "emphasis"
+    },
+    {
+      "id": "check-action",
+      "from": "check",
+      "to": "action",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Code",
+      "items": [
+        "Reads manifests, never source",
+        "Every rule has a repair line"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Agent",
+      "items": [
+        "Writes with the model you already pay for",
+        "Draws through two peer skills"
+      ]
+    }
+  ]
+}

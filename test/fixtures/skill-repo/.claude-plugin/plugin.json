@@ -1,0 +1,1 @@
+{ "name": "tidy", "description": "Receipts to claims", "version": "1.2.0", "commands": ["commands/claim.md"], "agents": ["agents/reviewer.md"], "skills": ["./"], "mcpServers": { "receipts": { "command": "npx", "args": ["receipts-mcp"] } } }

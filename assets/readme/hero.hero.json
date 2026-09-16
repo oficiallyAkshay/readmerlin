@@ -1,0 +1,18 @@
+{
+  "title": "A skill repo and an agent go in, and one README comes out that reads in ten seconds and stays honest on every push",
+  "sources": [
+    { "label": "Your skill repo", "icon": "folder", "gives": "manifests" },
+    { "label": "Your agent", "icon": "sparkles", "gives": "the writing" }
+  ],
+  "handled": [
+    { "label": "The value line", "icon": "target" },
+    { "label": "Honest badges", "icon": "badge-check" },
+    { "label": "One picture", "icon": "image" },
+    { "label": "The install line", "icon": "terminal" },
+    { "label": "Nothing private", "icon": "shield" },
+    { "label": "Dead links", "icon": "link" },
+    { "label": "Boilerplate", "icon": "scissors" }
+  ],
+  "more": true,
+  "deliverable": { "label": "one README", "kind": "document", "backing": "checked on every push" }
+}

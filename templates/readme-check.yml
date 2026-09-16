@@ -1,0 +1,15 @@
+name: readme check
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 9 * * 1"
+jobs:
+  readmerlin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oficiallyAkshay/readmerlin@v1
+# To let the action write the README and open a pull request, add ANTHROPIC_API_KEY as a
+# repo secret, set mode: write on the step above with env ANTHROPIC_API_KEY, and follow it with
+# peter-evans/create-pull-request.

@@ -1,0 +1,21 @@
+{
+  "$schema": "./readmerlin.schema.json",
+  "headingAllowlist": [
+    "readmerlin",
+    "Archify",
+    "herofold",
+    "MCP",
+    "CI",
+    "README",
+    "Claude Code",
+    "Cursor",
+    "Codex",
+    "Gemini CLI",
+    "Copilot",
+    "GitHub",
+    "npm"
+  ],
+  "counts": {
+    "checks": "node -e \"import('./dist/index.js').then(m => console.log(m.RULES.length))\""
+  }
+}

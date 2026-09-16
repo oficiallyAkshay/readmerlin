@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/oficiallyAkshay/readmerlin/readmerlin.schema.json",
+  "title": "readmerlin.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "rules": { "type": "object", "additionalProperties": { "enum": ["off", "warn", "fail"] }, "description": "Level per rule id, for example prose/no-dashes." },
+    "killList": { "type": "array", "items": { "type": "string" } },
+    "disclaimers": { "type": "array", "items": { "type": "string" } },
+    "headingAllowlist": { "type": "array", "items": { "type": "string" }, "description": "Names allowed to keep their capitals in headings." },
+    "sectionOrder": { "type": "array", "items": { "type": "string" }, "description": "Optional required order of second-level headings." },
+    "maxSections": { "type": "integer", "minimum": 1 },
+    "maxSectionLines": { "type": "integer", "minimum": 1 },
+    "maxParagraphSentences": { "type": "integer", "minimum": 1 },
+    "maxBadgesPerRow": { "type": "integer", "minimum": 1 },
+    "maxImageHeight": { "type": "integer", "minimum": 1 },
+    "productNames": { "type": "array", "items": { "type": "string" } },
+    "denylistFile": { "type": "string", "description": "File of sha256 hashes, one per line. Default .readmerlin/denylist.sha256" },
+    "counts": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Badge label to a shell command that prints the true number." }
+  }
+}
