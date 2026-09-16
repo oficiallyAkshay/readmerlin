@@ -32,7 +32,7 @@ The reader does not install a library and call it. They enable a skill and then 
 This is the shape that has worked. It is a default, not a law. Drop a section that has nothing to say. Never add one that restates a badge, a diagram or a table.
 
 - Header: emoji plus name centered, tagline in bold, one-liner under it.
-- Badge row 1: CI, coverage, runtime, a count badge if one matters (kept honest by a test), license.
+- Badge row 1: CI, coverage, runtime, then for every package the repo publishes its registry version and downloads badges (npm, PyPI, crates.io, RubyGems), a count badge if one matters (kept honest by a test), a clone count when the repo runs the clone-count workflow, license.
 - Badge row 2: "Runs on" hosts, logo only where it renders, each linking to that host's install notes.
 - Hero graphic: what the reader has on the left, what gets handled fanning out in the middle with a distinct icon each and an "and more" card, the one thing they wanted on the right shown with what backs it. Drawn from the reader's chair, never from the builder's. Drawn with the herofold skill from a committed spec.
 - One bold centered link to the example artifact. No disclaimer sentence.

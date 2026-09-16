@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { firstParagraph, headingsOf, splitFrontmatter } from "./frontmatter.js";
-import type { McpFileInfo, NamedDoc, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
+import type { McpFileInfo, NamedDoc, PackageInfo, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
 
 const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".venv", "venv", "__pycache__", ".next", "target", "vendor", "test", "tests", "__tests__", "fixtures", "spec", ".readmerlin"]);
 
@@ -213,12 +213,69 @@ export function detectHosts(root: string, plugin: PluginInfo | undefined, skills
   return [...found];
 }
 
-export function installLines(repo: { owner?: string; name?: string }, plugin: PluginInfo | undefined, skills: SkillInfo[], marketplace: { name?: string } | undefined): string[] {
+export function installLines(repo: { owner?: string; name?: string }, plugin: PluginInfo | undefined, skills: SkillInfo[], marketplace: { name?: string } | undefined, packages: PackageInfo[] = []): string[] {
   const out: string[] = [];
+  for (const p of packages) {
+    if (p.registry === "npm") out.push(`npx ${p.name}`);
+    if (p.registry === "pypi") out.push(`uvx ${p.name}`);
+    if (p.registry === "crates") out.push(`cargo install ${p.name}`);
+    if (p.registry === "gems") out.push(`gem install ${p.name}`);
+  }
   const slug = repo.owner && repo.name ? `${repo.owner}/${repo.name}` : "owner/repo";
   if (skills.length > 0) out.push(`npx skills add ${slug} -g`);
   if (plugin && plugin.name) out.push(`/plugin install ${plugin.name}${marketplace?.name ? `@${marketplace.name}` : ""}`);
   if (marketplace) out.push(`/plugin marketplace add ${slug}`);
+  return out;
+}
+
+/** Published packages the repo declares. A package is published when it has a name and is not marked private. */
+export function readPackages(root: string): PackageInfo[] {
+  const out: PackageInfo[] = [];
+  const npm = readJson(root, "package.json");
+  // A package.json is published when it is not private and has something to publish: a bin, an entry point or a files list.
+  if (npm && str(npm.name) && npm.private !== true && (npm.bin || npm.main || npm.exports || npm.files || npm.publishConfig)) {
+    const name = str(npm.name)!;
+    const enc = encodeURIComponent(name);
+    out.push({ registry: "npm", name, file: "package.json", badges: [
+      { label: "npm version", src: `https://img.shields.io/npm/v/${enc}?logo=npm&logoColor=white`, href: `https://www.npmjs.com/package/${name}`, logo: "npm" },
+      { label: "npm downloads per week", src: `https://img.shields.io/npm/dw/${enc}?logo=npm&logoColor=white`, href: `https://www.npmjs.com/package/${name}`, logo: "npm" },
+    ] });
+  }
+  if (existsSync(join(root, "pyproject.toml"))) {
+    const toml = readText(root, "pyproject.toml");
+    const inProject = /\[project\][\s\S]*?name\s*=\s*"([^"]+)"/.exec(toml) ?? /\[tool\.poetry\][\s\S]*?name\s*=\s*"([^"]+)"/.exec(toml);
+    const priv = /Private\s*::\s*Do Not Upload/i.test(toml);
+    // Published when it declares a build system; a pyproject that only configures tools is not a package.
+    if (inProject && !priv && /\[build-system\]/.test(toml)) {
+      const name = inProject[1];
+      out.push({ registry: "pypi", name, file: "pyproject.toml", badges: [
+        { label: "PyPI version", src: `https://img.shields.io/pypi/v/${name}?logo=pypi&logoColor=white`, href: `https://pypi.org/project/${name}/`, logo: "pypi" },
+        { label: "PyPI downloads per month", src: `https://img.shields.io/pypi/dm/${name}?logo=pypi&logoColor=white`, href: `https://pypi.org/project/${name}/`, logo: "pypi" },
+      ] });
+    }
+  }
+  if (existsSync(join(root, "Cargo.toml"))) {
+    const toml = readText(root, "Cargo.toml");
+    const m = /\[package\][\s\S]*?name\s*=\s*"([^"]+)"/.exec(toml);
+    if (m && !/publish\s*=\s*false/.test(toml)) {
+      const name = m[1];
+      out.push({ registry: "crates", name, file: "Cargo.toml", badges: [
+        { label: "crates.io version", src: `https://img.shields.io/crates/v/${name}?logo=rust&logoColor=white`, href: `https://crates.io/crates/${name}`, logo: "rust" },
+        { label: "crates.io downloads", src: `https://img.shields.io/crates/d/${name}?logo=rust&logoColor=white`, href: `https://crates.io/crates/${name}`, logo: "rust" },
+      ] });
+    }
+  }
+  const gemspec = readdirSync(root).find((n) => n.endsWith(".gemspec"));
+  if (gemspec) {
+    const m = /\.name\s*=\s*["']([^"']+)["']/.exec(readText(root, gemspec));
+    if (m) {
+      const name = m[1];
+      out.push({ registry: "gems", name, file: gemspec, badges: [
+        { label: "gem version", src: `https://img.shields.io/gem/v/${name}?logo=rubygems&logoColor=white`, href: `https://rubygems.org/gems/${name}`, logo: "rubygems" },
+        { label: "gem downloads", src: `https://img.shields.io/gem/dt/${name}?logo=rubygems&logoColor=white`, href: `https://rubygems.org/gems/${name}`, logo: "rubygems" },
+      ] });
+    }
+  }
   return out;
 }
 

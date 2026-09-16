@@ -5,6 +5,7 @@ const define = {
   __VERSION__: JSON.stringify(JSON.parse(readFileSync("package.json", "utf8")).version),
   __RULES_MD__: JSON.stringify(readFileSync("src/rules/RULES.md", "utf8")),
   __WORKFLOW_YML__: JSON.stringify(readFileSync("templates/readme-check.yml", "utf8")),
+  __CLONES_YML__: JSON.stringify(readFileSync("templates/clone-count.yml", "utf8")),
 };
 
 // One build, two entries, shared chunks: the CLI and the library carry the code once.

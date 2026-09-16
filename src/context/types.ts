@@ -57,8 +57,17 @@ export interface ReadmeInfo {
   words: number;
 }
 
+export interface PackageInfo {
+  registry: "npm" | "pypi" | "crates" | "gems" | "docker";
+  name: string;
+  file: string;
+  /** shields badge urls the README should carry for this package */
+  badges: Array<{ label: string; src: string; href: string; logo: string }>;
+}
+
 export interface RepoContext {
   root: string;
+  packages: PackageInfo[];
   repo: { remote?: string; host?: string; owner?: string; name?: string };
   license?: { file: string; spdx?: string };
   install: string[];

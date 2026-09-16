@@ -12,7 +12,7 @@ Commands
   rules                  Print the writing rules
   check [README.md]      Check a README. Exit 1 on any fail
   write [dir]            Write README.md from the repo, using a model already on the machine
-  init-workflow [dir]    Add .github/workflows/readme-check.yml
+  init-workflow [dir]    Add .github/workflows/readme-check.yml. With --clones, also a daily clone counter
 
 Options
   --format <fmt>         context: json | md (default json). check: text | github | json (default text)
@@ -25,6 +25,7 @@ Options
   --rounds <n>           write: repair rounds against check (default 3)
   --instructions <text>  write: extra guidance for the model
   --dry-run              write: print the README instead of saving it
+  --clones               init-workflow: also add the clone-count workflow and badge
   --version, -v          Print the version
   --help, -h             This text`;
 
@@ -43,6 +44,7 @@ function parse() {
     rounds: { type: "string" },
     instructions: { type: "string" },
     "dry-run": { type: "boolean", default: false },
+    clones: { type: "boolean", default: false },
     version: { type: "boolean", short: "v", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
@@ -106,7 +108,7 @@ async function main(): Promise<number> {
         dryRun: values["dry-run"],
       });
     case "init-workflow":
-      return runInitWorkflow(target ?? process.cwd());
+      return runInitWorkflow(target ?? process.cwd(), { clones: values.clones });
     default:
       console.error(`Unknown command: ${command}\n\n${HELP}`);
       return 1;

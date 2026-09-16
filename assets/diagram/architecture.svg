@@ -5069,15 +5069,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="context" x="816" y="185" class="t-muted" font-size="9" text-anchor="middle">plus two SVGs</text>
         </g>
 
-        <g id="node-check" data-node-id="check" data-node-label="check" tabindex="0" role="button" aria-label="Focus check, 43 rules, off / warn / fail, Nothing leaves your machine, links and badge logos excepted" aria-pressed="false" data-node-kind="backend" data-node-sublabel="43 rules, off / warn / fail" data-node-tag="loops until clean" data-node-context="Nothing leaves your machine, links and badge logos excepted">
-          <title>check · 43 rules, off / warn / fail · Nothing leaves your machine, links and badge logos excepted · loops until clean</title>
+        <g id="node-check" data-node-id="check" data-node-label="check" tabindex="0" role="button" aria-label="Focus check, 44 rules, off / warn / fail, Nothing leaves your machine, links and badge logos excepted" aria-pressed="false" data-node-kind="backend" data-node-sublabel="44 rules, off / warn / fail" data-node-tag="loops until clean" data-node-context="Nothing leaves your machine, links and badge logos excepted">
+          <title>check · 44 rules, off / warn / fail · Nothing leaves your machine, links and badge logos excepted · loops until clean</title>
           <rect x="964" y="140" width="164" height="62" rx="6" class="c-mask"/>
           <rect x="964" y="140" width="164" height="62" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(970 146) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="1046" y="169" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">check</text>
-        <text data-detail="context" x="1046" y="185" class="t-muted" font-size="9" text-anchor="middle">43 rules, off / warn / fail</text>
+        <text data-detail="context" x="1046" y="185" class="t-muted" font-size="9" text-anchor="middle">44 rules, off / warn / fail</text>
         <text data-detail="fine" x="1046" y="194" class="t-backend" font-size="7" text-anchor="middle">loops until clean</text>
         </g>
 

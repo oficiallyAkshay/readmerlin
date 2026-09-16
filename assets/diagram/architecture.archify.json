@@ -133,7 +133,7 @@
       "id": "check",
       "type": "backend",
       "label": "check",
-      "sublabel": "43 rules, off / warn / fail",
+      "sublabel": "44 rules, off / warn / fail",
       "pos": [
         964,
         140

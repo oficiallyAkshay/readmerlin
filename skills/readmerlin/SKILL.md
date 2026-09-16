@@ -18,7 +18,7 @@ Write the README from the reader's chair. The reader has ten seconds and has not
 3. Draw first. Write the hero spec and render it with the herofold skill. Write the architecture source and render it with Archify. If either skill is missing, tell the user the one install command and stop. Do not draw either graphic by hand and never use Mermaid.
 4. Write. Derive the one-liner from the outcome, not the file tree. Keep the user's own sentences verbatim; restructure, do not rewrite, and say when a sentence changes. Show each section in chat before writing it to disk.
 5. Check. Run `npx -y readmerlin@latest check README.md` and fix every fail. Repeat until clean. Warnings are judgment calls; mention them, do not silently accept them.
-6. Install the workflow. Run `npx -y readmerlin@latest init-workflow` so the check runs on every push, pull request and once a week.
+6. Install the workflow. Run `npx -y readmerlin@latest init-workflow` so the check runs on every push, pull request and once a week. Add `--clones` when the user wants a clone count badge; tell them it needs a CLONE_TOKEN secret and that the first run prints the badge.
 
 ## Register
 

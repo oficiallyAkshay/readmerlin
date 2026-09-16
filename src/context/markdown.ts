@@ -9,6 +9,13 @@ export function toMarkdown(c: RepoContext): string {
   s += line("Hosts", c.hosts.join(", ") || undefined);
   s += line("Install", c.install.map((i) => `\`${i}\``).join(" or ") || undefined);
   s += line("Root files", c.rootFiles.join(", "));
+  if (c.packages.length) {
+    s += `\n## Published packages\n\n`;
+    for (const p of c.packages) {
+      s += `- ${p.registry}: ${p.name} (${p.file}). Badges to carry, each linked to ${p.badges[0].href}:\n`;
+      for (const b of p.badges) s += `  - ${b.label}: ${b.src}\n`;
+    }
+  }
   if (c.skills.length) {
     s += `\n## Skills\n\n`;
     for (const k of c.skills) {
