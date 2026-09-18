@@ -76,7 +76,7 @@
       "id": "rules",
       "type": "database",
       "label": "rules",
-      "sublabel": "shipped in the package",
+      "sublabel": "carried by the skill",
       "pos": [
         262,
         220
@@ -133,7 +133,7 @@
       "id": "check",
       "type": "backend",
       "label": "check",
-      "sublabel": "44 rules, off / warn / fail",
+      "sublabel": "rules, off / warn / fail",
       "pos": [
         964,
         140

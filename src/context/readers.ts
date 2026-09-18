@@ -1,13 +1,31 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { firstParagraph, headingsOf, splitFrontmatter } from "./frontmatter.js";
 import type { McpFileInfo, NamedDoc, PackageInfo, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
 
-const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".venv", "venv", "__pycache__", ".next", "target", "vendor", "test", "tests", "__tests__", "fixtures", "spec", ".readmerlin"]);
+// Never entered, at any depth.
+const SKIP_ALWAYS = new Set(["node_modules", ".git", ".readmerlin"]);
+// Skipped only at the repo root: a skill or command may be named test, spec or build.
+const SKIP_AT_ROOT = new Set(["dist", "build", ".venv", "venv", "__pycache__", ".next", "target", "vendor", "test", "tests", "__tests__", "fixtures", "spec", "examples", "example"]);
+const SKIP_DIRS = new Set([...SKIP_ALWAYS, ...SKIP_AT_ROOT]);
 
+const posix = (p: string): string => p.split(sep).join("/");
+
+function realpathOr(p: string): string | undefined {
+  try {
+    return realpathSync(p);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Lists files under root to maxDepth. A symlink is followed once and only when it stays inside root, so a link out of the repo or back into it never adds files. */
 export function walk(root: string, maxDepth: number, pred: (rel: string, name: string) => boolean): string[] {
   const out: string[] = [];
+  const rootReal = realpathOr(root) ?? root;
+  const seen = new Set<string>([rootReal]);
+  const inside = (real: string) => real === rootReal || real.startsWith(rootReal + sep);
   const visit = (dir: string, depth: number) => {
     if (depth > maxDepth) return;
     let entries: string[];
@@ -18,17 +36,23 @@ export function walk(root: string, maxDepth: number, pred: (rel: string, name: s
     }
     for (const name of entries) {
       const full = join(dir, name);
-      const rel = relative(root, full);
+      const rel = posix(relative(root, full));
       let st;
       try {
         st = statSync(full);
       } catch {
         continue;
       }
+      const real = realpathOr(full);
+      if (!real || !inside(real)) continue;
       if (st.isDirectory()) {
-        if (SKIP_DIRS.has(name)) continue;
+        if (SKIP_ALWAYS.has(name) || (depth === 0 && SKIP_AT_ROOT.has(name))) continue;
+        if (seen.has(real)) continue;
+        seen.add(real);
         visit(full, depth + 1);
       } else if (pred(rel, name)) {
+        if (seen.has(real)) continue;
+        seen.add(real);
         out.push(rel);
       }
     }
@@ -44,7 +68,7 @@ function readText(root: string, rel: string): string {
 function readJson(root: string, rel: string): Record<string, unknown> | undefined {
   try {
     const v = JSON.parse(readText(root, rel));
-    return v && typeof v === "object" ? (v as Record<string, unknown>) : undefined;
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
   } catch {
     return undefined;
   }
@@ -70,11 +94,16 @@ export function readSkills(root: string): SkillInfo[] {
 
 export function readNamedDocs(root: string, dirs: string[]): NamedDoc[] {
   const out: NamedDoc[] = [];
+  // The same file reached through two folders, one a link to the other, is listed once.
+  const seen = new Set<string>();
   for (const d of dirs) {
     const full = join(root, d);
     if (!existsSync(full)) continue;
     for (const rel of walk(full, 2, (_r, name) => name.endsWith(".md") && name !== "README.md")) {
-      const path = join(d, rel);
+      const path = posix(join(d, rel));
+      const real = realpathOr(join(root, path)) ?? path;
+      if (seen.has(real)) continue;
+      seen.add(real);
       const { data, body } = splitFrontmatter(readText(root, path));
       out.push({ path, name: str(data.name) ?? rel.replace(/\.md$/, ""), description: str(data.description) ?? firstParagraph(body) });
     }
@@ -118,11 +147,12 @@ export function readMcp(root: string): McpFileInfo[] {
     const table = (j.mcpServers ?? j.servers) as Record<string, Record<string, unknown>> | undefined;
     if (table && typeof table === "object") {
       for (const [name, cfg] of Object.entries(table)) {
+        if (!cfg || typeof cfg !== "object") continue;
         servers.push({ name, command: str(cfg.command), args: strList(cfg.args), url: str(cfg.url) });
       }
     } else if (str(j.name)) {
       const pk = Array.isArray(j.packages) ? (j.packages as Array<Record<string, unknown>>)[0] : undefined;
-      servers.push({ name: str(j.name)!, command: pk ? str(pk.registry_name) : undefined, url: str(j.url) });
+      servers.push({ name: str(j.name)!, command: pk ? str(pk.identifier) ?? str(pk.name) : undefined, url: str(j.url) });
     }
     out.push({ path: rel, servers });
   }
@@ -150,20 +180,20 @@ export function readWorkflows(root: string): WorkflowInfo[] {
     } catch {
       name = undefined;
     }
-    return { file: join(dir, file), name };
+    return { file: posix(join(dir, file)), name };
   });
 }
 
 export function readLicense(root: string): { file: string; spdx?: string } | undefined {
-  const file = readdirSync(root).find((n) => /^(LICENSE|LICENCE|COPYING)(\..*)?$/i.test(n));
+  const file = readdirSync(root).find((n) => /^(LICENSE|LICENCE|COPYING)([.-].*)?$/i.test(n) && existsSync(join(root, n)));
   if (!file) return undefined;
   const head = readText(root, file).slice(0, 400);
-  const spdx = /MIT License/i.test(head) ? "MIT" : /Apache License/i.test(head) ? "Apache-2.0" : /GNU GENERAL PUBLIC/i.test(head) ? "GPL-3.0" : /BSD/i.test(head) ? "BSD" : /Mozilla Public/i.test(head) ? "MPL-2.0" : undefined;
+  const spdx = /MIT License/i.test(head) ? "MIT" : /Apache License/i.test(head) ? "Apache-2.0" : /GNU GENERAL PUBLIC/i.test(head) ? (/Version 2\b/.test(head) ? "GPL-2.0" : "GPL-3.0") : /BSD/i.test(head) ? "BSD" : /Mozilla Public/i.test(head) ? "MPL-2.0" : undefined;
   return { file, spdx };
 }
 
 export function readReadme(root: string): ReadmeInfo {
-  const file = readdirSync(root).find((n) => /^readme\.md$/i.test(n));
+  const file = readdirSync(root).find((n) => /^readme\.md$/i.test(n) && existsSync(join(root, n)));
   if (!file) return { exists: false, headings: [], badges: 0, images: [], words: 0 };
   const text = readText(root, file);
   const { body } = splitFrontmatter(text);
@@ -172,7 +202,7 @@ export function readReadme(root: string): ReadmeInfo {
   const images = [...body.matchAll(/(?:<img[^>]+src="([^"]+)"|!\[[^\]]*\]\(([^)\s]+))/g)].map((m) => m[1] ?? m[2]);
   const badges = images.filter((s) => /shields\.io|badge|\/actions\/workflows\/.*\.svg/.test(s)).length;
   const prose = body.replace(/<[^>]+>/g, " ").replace(/```[\s\S]*?```/g, " ").replace(/!\[[^\]]*\]\([^)]*\)/g, " ");
-  const words = prose.split(/\s+/).filter(Boolean).length;
+  const words = prose.split(/\s+/).filter((w) => /\w/.test(w)).length;
   return { exists: true, title, tagline, headings: headingsOf(body), badges, images: images.filter((s) => !/shields\.io|badge/.test(s)), words };
 }
 
@@ -196,11 +226,12 @@ export function detectHosts(root: string, plugin: PluginInfo | undefined, skills
     if (existsSync(join(root, rel))) texts.push(headingsOf(readText(root, rel)).join("\n"));
   }
   if (texts.length === 0) {
-    const readme = readdirSync(root).find((n) => /^readme\.md$/i.test(n));
+    // The hero names the hosts, so read the README up to its first section and no further.
+    const readme = readdirSync(root).find((n) => /^readme\.md$/i.test(n) && existsSync(join(root, n)));
     if (readme) {
-      const body = readText(root, readme);
-      const runsOn = /runs on([\s\S]{0,1500})/i.exec(body)?.[1];
-      if (runsOn) texts.push(runsOn);
+      const body = splitFrontmatter(readText(root, readme)).body;
+      const hero = body.split(/^##\s/m)[0];
+      texts.push(hero);
     }
   }
   for (const t of texts) for (const [re, host] of HOST_HINTS) if (re.test(t)) found.add(host);
@@ -221,7 +252,7 @@ export function installLines(repo: { owner?: string; name?: string }, plugin: Pl
     if (p.registry === "crates") out.push(`cargo install ${p.name}`);
     if (p.registry === "gems") out.push(`gem install ${p.name}`);
   }
-  const slug = repo.owner && repo.name ? `${repo.owner}/${repo.name}` : "owner/repo";
+  const slug = repo.owner && repo.name ? `${repo.owner}/${repo.name}` : "<owner>/<repo>";
   if (skills.length > 0) out.push(`npx skills add ${slug} -g`);
   if (plugin && plugin.name) out.push(`/plugin install ${plugin.name}${marketplace?.name ? `@${marketplace.name}` : ""}`);
   if (marketplace) out.push(`/plugin marketplace add ${slug}`);
@@ -243,11 +274,13 @@ export function readPackages(root: string): PackageInfo[] {
   }
   if (existsSync(join(root, "pyproject.toml"))) {
     const toml = readText(root, "pyproject.toml");
-    const inProject = /\[project\][\s\S]*?name\s*=\s*"([^"]+)"/.exec(toml) ?? /\[tool\.poetry\][\s\S]*?name\s*=\s*"([^"]+)"/.exec(toml);
+    // The name key of the [project] or [tool.poetry] table itself, not of a later table or an inline author.
+    const tableName = (table: string) => new RegExp(`^\\[${table}\\]\\s*\\n((?:(?!^\\[)[^\\n]*\\n)*?)^name\\s*=\\s*"([^"]+)"`, "m").exec(toml)?.[2];
+    const inProject = tableName("project") ?? tableName("tool\\.poetry");
     const priv = /Private\s*::\s*Do Not Upload/i.test(toml);
     // Published when it declares a build system; a pyproject that only configures tools is not a package.
     if (inProject && !priv && /\[build-system\]/.test(toml)) {
-      const name = inProject[1];
+      const name = inProject;
       out.push({ registry: "pypi", name, file: "pyproject.toml", badges: [
         { label: "PyPI version", src: `https://img.shields.io/pypi/v/${name}?logo=pypi&logoColor=white`, href: `https://pypi.org/project/${name}/`, logo: "pypi" },
         { label: "PyPI downloads per month", src: `https://img.shields.io/pypi/dm/${name}?logo=pypi&logoColor=white`, href: `https://pypi.org/project/${name}/`, logo: "pypi" },

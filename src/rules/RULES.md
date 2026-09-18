@@ -38,7 +38,7 @@ These six parts, in this order. A part with nothing to say is dropped. The set i
 - One tagline in bold. It states the problem and the fix in a single line, about the count or the outcome.
 - The hero graphic comes next. Badge rows go below the graphic.
 - The hero takes the shape of the product's own verb. A product that gathers many things into one is a fan-in. A product that makes one thing better is a before and after. A product that watches something over time is a timeline. Learn from a good hero how it thinks: the reader's nouns, the real output at real proportions, the mechanism as one arrow. Its layout belongs to its own product.
-- Badge row 1: coverage, licence, language version, dependency count, Scorecard, and for every published package its registry version and downloads. Badge row 2: the product's own live badges. A repo with no registry package carries a clone count from clonometer, since clones are its only count; a published package lets its downloads badge do that job.
+- Badge row 1 holds at most six of: coverage, licence, language version, dependency count, Scorecard, and the registry version and downloads of each published package. Past six, start a second row. Badge row 2: the product's own live badges. A repo with no registry package carries a clone count from clonometer, since clones are its only count; a published package lets its downloads badge do that job.
 - Number format in a badge: short form above a thousand, such as 1.2k. The label carries the unit.
 - The first paragraph names every supported approach, the default and the rest. It adds to the tagline.
 - The install step is one plain sentence. It names the secret to store, if any, and the action, skill or package to add.
@@ -86,7 +86,7 @@ Only when the product ships badges or numbers a reader will reuse.
 
 The one list of what to cut, kept so the rest of this page can say what to write.
 
-Limits, Configuration, Quick start, How it works, Common workflows, For agents, "Where it runs", "Example", "What you need", "Contributing and license" sections. Host-path pointer lines, "fully synthetic" disclaimers, screenshot captions, meta sentences about the tools that drew a diagram, a settings table, a schema block at the top, any paragraph that restates what a badge, the hero or a table already says.
+Limits, Configuration, Configuration and security, Quick start, Quickstart, Getting started, How it works, Common workflows, For agents, Where it runs, Example, Examples, What you need, Prerequisites, Requirements, Contributing, Contributing and license, License, Acknowledgments, Roadmap, Built with and Table of contents sections. Host-path pointer lines, "fully synthetic" disclaimers, screenshot captions, meta sentences about the tools that drew a diagram, a settings table, a schema block at the top, any paragraph that restates what a badge, the hero or a table already says.
 
 ## What CONTRIBUTING holds
 
@@ -94,9 +94,9 @@ Under the .github folder: the workflow YAML, CLI usage, the settings table, badg
 
 ## Specs the check accepts beside an SVG
 
-- A hero: `<name>.hero.json`. The check reads it and fails a hero that does not show every label the spec names.
+- A hero: `<name>.hero.json`. The check reads it and fails a hero that does not show every label the spec names. Any other `<name>.<kind>.json` beside a hero passes spec-beside but is not read.
 - A diagram: `<name>.archify.json`, `<name>.d2` or `<name>.mmd`.
-- Anything else: `<name>.json` with a generator script and a rebuild test beside it.
+- Anything else: `<name>.json`. The check only looks for it, so keep its generator script and a rebuild test in the repo.
 
 ## Process that produced good results
 

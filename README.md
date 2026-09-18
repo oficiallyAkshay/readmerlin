@@ -31,7 +31,7 @@ Add the oficiallyAkshay/readmerlin skill to your agent with the skills installer
 - 🏷️ **Badges stay true.** Every badge links somewhere, its logo renders, and a number is tied to a command that prints it.
 - 🔒 **Private stays private.** Emails, home paths, keys and your own hashed word list stop the run.
 - ✂️ **One shape holds.** Six parts in one order, said in plain sentences.
-- 📦 **Packages get badges.** Every package the repo publishes carries its registry version and downloads.
+- 📦 **Packages get badges.** A package on npm, PyPI, crates.io or RubyGems gets its version and downloads badges.
 - 🧳 **One folder, complete.** The skill carries its own script and needs only Node.
 - 🎛️ **Rules, your way.** Every rule is off, warn or fail in one small JSON file.
 
@@ -39,7 +39,7 @@ Add the oficiallyAkshay/readmerlin skill to your agent with the skills installer
 
 readmerlin needs no credential; your agent does the writing with the login it already has.
 
-- ❌ reads your source tree
+- ❌ reads your code. It opens manifests, skill, command and agent files, workflows, the licence and the README, and lists the rest by name
 - ❌ sends your files anywhere, to a model or to anyone else
 - ❌ updates itself, it tells you a newer version is out and waits
 - ❌ names a word from your hashed denylist in its output
@@ -54,13 +54,13 @@ readmerlin needs no credential; your agent does the writing with the login it al
 | Link checks | ✅ | ❌ | Anchors only | ✅ |
 | Privacy checks | ✅ | ❌ | ❌ | ❌ |
 | Installation | Skill | pip | npm | Binary |
-| Model | Your agent | Key or local | None | None |
+| Model | Your agent | Optional | None | None |
 
 ## Callouts
 
 - It needs an agent, and Node 20 or newer on the machine.
 - The hero must be an SVG drawn from a committed spec, so plan to draw one.
-- Link checks need the network, and results are cached for a day.
+- Link checks need the network, and a link that answered is not asked again for a day.
 - New rules reach you when you update the skill, never on their own.
 - A count badge fails until you name the command that prints its number.
 - A private repository gets every check. Its clone badge works through a clonometer gist only.

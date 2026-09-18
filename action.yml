@@ -21,7 +21,6 @@ runs:
         RM_PATH: ${{ inputs.path }}
         RM_LINKS: ${{ inputs.links }}
         RM_EXEC: ${{ inputs.exec }}
-        GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
         FLAGS=()

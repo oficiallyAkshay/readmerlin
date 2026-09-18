@@ -8,7 +8,10 @@ export function remoteOf(dir: string): { remote?: string; host?: string; owner?:
     return {};
   }
   if (!remote) return {};
-  const m = /(?:@|:\/\/)([^/:]+)[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(remote);
+  // A credential in the URL never leaves this function.
+  remote = remote.replace(/\/\/[^@/]+@/, "//");
+  // ssh://host:port/owner/name, git@host:owner/name, https://host/group/sub/name; the last two segments are owner and name.
+  const m = /(?:@|:\/\/)([^/:]+)(?::\d+)?[/:](.+?)\/([^/]+?)(?:\.git)?\/?$/.exec(remote);
   if (!m) return { remote };
   return { remote, host: m[1], owner: m[2], name: m[3] };
 }

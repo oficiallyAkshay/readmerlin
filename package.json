@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "hero": "node scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg && node scripts/hero-svg.mjs examples/tidy-inbox/assets/readme/hero.hero.json > examples/tidy-inbox/assets/readme/hero.svg",
+    "hero": "node skills/readmerlin/scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg && node skills/readmerlin/scripts/hero-svg.mjs examples/tidy-inbox/assets/readme/hero.hero.json > examples/tidy-inbox/assets/readme/hero.svg",
     "test": "vitest run",
     "check": "node skills/readmerlin/scripts/readmerlin.mjs check README.md",
     "typecheck": "tsc --noEmit -p tsconfig.json"
