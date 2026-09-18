@@ -1,6 +1,6 @@
 {
   "name": "readmerlin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",

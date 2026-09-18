@@ -3,7 +3,7 @@ name: readmerlin
 description: Write or rewrite the README of a skill, agent, plugin or MCP server repo so it leads with the value to the reader, shows instead of narrates, and passes an honesty check. Use when the user asks for a README, a repo landing page, a rewrite of an existing README, or says a README is too long, too code-centric or unclear. Also use to check a README against the rules.
 license: MIT
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   peers: herofold for the hero graphic, archify for the architecture diagram in CONTRIBUTING
 ---
 
