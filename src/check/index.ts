@@ -26,7 +26,7 @@ export async function check(file: string, opts: CheckOptions): Promise<CheckResu
     ran.push(rule.id);
     const out = await rule.run({ doc, config, links: opts.links, exec: opts.exec ?? true, fetch: globalThis.fetch });
     const cap = Math.max(1, config.maxFindingsPerRule);
-    for (const f of out.slice(0, cap)) findings.push({ id: rule.id, level, ...f });
+    for (const f of out.slice(0, cap)) findings.push({ id: rule.id, ...f, level: f.level ?? level });
     if (out.length > cap) findings.push({ id: rule.id, level, message: `${out.length - cap} more of the same. Fix these and run again.`, line: out[cap].line });
   }
   return {

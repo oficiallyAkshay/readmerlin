@@ -108,7 +108,7 @@ export const countSource: Rule = {
         continue;
       }
       if (!exec) {
-        out.push({ message: `Count badge "${label}: ${number}" was not verified, commands are off.`, line: i.line, repair: "Run without --no-exec on a machine you trust." });
+        out.push({ level: "warn" as const, message: `Count badge "${label}: ${number}" was not verified, commands are off.`, line: i.line, repair: "Run without --no-exec on a machine you trust." });
         continue;
       }
       let got: string;
@@ -176,4 +176,25 @@ export const noRawUrls: Rule = {
   },
 };
 
-export const BADGE_RULES: Rule[] = [badgesLinked, badgesLogoPresent, badgesLogo, ciMatchesRemote, noCiBadge, staticStatus, countSource, rowLength, noRawUrls];
+const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|deno|bun|typescript|platform|os|agent|version|v|release|api|schema|since|made with|built with|runs on|style|code style)$/i;
+
+export const claimsBacked: Rule = {
+  id: "badges/claims-backed",
+  level: "warn",
+  description: "A badge that states a claim reads it from a file a tested job writes",
+  run: ({ doc }) => {
+    const out = [];
+    for (const i of collectImages(doc).filter((b) => b.badge)) {
+      const m = /shields\.io\/badge\/([^-?]+)-([^-?]+)-/i.exec(i.src.replace(/--/g, "\u2010"));
+      if (!m) continue;
+      const label = safeDecode(m[1]).replace(/_/g, " ").trim();
+      const message = safeDecode(m[2]).replace(/_/g, " ").trim();
+      // A name with no message is a host badge, a bare number belongs to badges/count-source, and a version or licence is a fact of the manifest.
+      if (!label || !message || FACT_LABELS.test(label) || /^[\d.,+%\sv<>=]+$/.test(message)) continue;
+      out.push({ message: `Hand-written badge states a claim: "${label}: ${message}".`, line: i.line, repair: "Have a tested CI job write the claim to a JSON file and read it with a shields endpoint or dynamic badge, or say it in a sentence." });
+    }
+    return out;
+  },
+};
+
+export const BADGE_RULES: Rule[] = [badgesLinked, badgesLogoPresent, badgesLogo, ciMatchesRemote, noCiBadge, staticStatus, countSource, claimsBacked, rowLength, noRawUrls];

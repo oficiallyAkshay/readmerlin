@@ -38,11 +38,14 @@ export interface RuleContext {
   fetch: typeof fetch;
 }
 
+export type RuleFinding = Omit<Finding, "id" | "level"> & { level?: "warn" };
+
 export interface Rule {
   id: string;
   level: Level;
   description: string;
-  run: (ctx: RuleContext) => Promise<Omit<Finding, "id" | "level">[]> | Omit<Finding, "id" | "level">[];
+  /** A finding may lower itself to a warning, for what could not be verified rather than what is wrong. */
+  run: (ctx: RuleContext) => Promise<RuleFinding[]> | RuleFinding[];
 }
 
 export interface Config {

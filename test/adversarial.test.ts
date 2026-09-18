@@ -153,6 +153,7 @@ describe("review regressions", () => {
     const c = r.findings.filter((f) => f.id === "badges/count-source");
     expect(c.length).toBe(1);
     expect(c[0].message).toMatch(/not verified/);
+    expect(c[0].level).toBe("warn");
     await expect(check(join(dir, "README.md"), { format: "json", links: false, configPath: join(dir, "missing.json") })).rejects.toThrow(/Config not found/);
   });
   it("allowlist matches whole words only", async () => {
@@ -166,7 +167,7 @@ describe("the six-section shape", () => {
   const SHAPED = [
     HERO,
     QUICK,
-    '## Badges\n\nClick a badge for its recipe.\n\n<table width="100%">\n<tr><th></th><th>All time</th></tr>\n<tr><td>Claims</td><td><a href="https://img.shields.io/badge/claims-many-blue?logo=github"><img alt="claims" src="https://img.shields.io/badge/claims-many-blue?logo=github"></a></td></tr>\n</table>\n',
+    '## Badges\n\nClick a badge for its recipe.\n\n<table width="100%">\n<tr><th></th><th>All time</th></tr>\n<tr><td>Claims</td><td><a href="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"><img alt="claims" src="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"></a></td></tr>\n</table>\n',
     "## Security\n\nIt needs no credential of its own and reads mail through your agent.\n\n- ❌ sends a receipt anywhere\n- ❌ keeps a copy\n",
     "## How it compares\n\n| | [owner/tidy](https://github.com/owner/tidy) | [other/claims](https://github.com/other/claims) |\n|---|---|---|\n| Installation | Skill | Script |\n| Calendar | ✅ | ❌ |\n",
     "## Callouts\n\n- It reads the inbox your agent can already read.\n",
@@ -207,6 +208,23 @@ describe("the six-section shape", () => {
     const r = await check(join(dir, "README.md"), { format: "json", links: false });
     expect(r.findings.map((f) => f.id)).toEqual(["shape/agents-in-contributing"]);
     expect(r.findings[0].message).toContain("45 lines");
+  });
+  it("warns on a hand-written claim badge, and leaves facts, counts and hosts alone", async () => {
+    const badge = (src: string) => HERO.replace('<a href="LICENSE">', `<a href="LICENSE"><img alt="x" src="${src}"></a><a href="LICENSE">`);
+    const claims = async (src: string) => (await ids(repo(badge(src) + "\n" + QUICK), "warn")).includes("badges/claims-backed");
+    expect(await claims("https://img.shields.io/badge/tests-passing-green?logo=github")).toBe(true);
+    expect(await claims("https://img.shields.io/badge/privacy-local_only-blue?logo=github")).toBe(true);
+    expect(await claims("https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python")).toBe(false);
+    expect(await claims("https://img.shields.io/badge/Claude%20Code-3f3f46?logo=anthropic")).toBe(false);
+  });
+  it("fails a hero that does not show what its spec names", async () => {
+    const spec = JSON.stringify({ title: "t", sources: [{ label: "Inbox" }], handled: [{ label: "Rides" }], deliverable: { label: "one claim" } });
+    const svg = (words: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40"><title>t</title><style>text{font-family:system-ui}</style><text x="4" y="20" font-size="12" textLength="200">${words}</text></svg>`;
+    const agrees = repo(SHAPED, { "assets/readme/hero.hero.json": spec, "assets/readme/hero.svg": svg("Inbox Rides one claim") });
+    expect(await ids(agrees)).not.toContain("visuals/spec-agrees");
+    const drifted = repo(SHAPED, { "assets/readme/hero.hero.json": spec, "assets/readme/hero.svg": svg("Inbox one claim") });
+    const r = await check(join(drifted, "README.md"), { format: "json", links: false });
+    expect(r.findings.find((f) => f.id === "visuals/spec-agrees")?.message).toContain("Rides");
   });
   it("measures a label with textLength and only guesses with a wide margin without it", async () => {
     const svg = (t: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><style>text{font-family:system-ui}</style>${t}</svg>`;

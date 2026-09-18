@@ -29,6 +29,4 @@ export const skillScript: Options = {
   minify: true,
 };
 
-// The CLI and the library share chunks, so dist carries the code once.
-// The hashbang banner lands on every output file; Node accepts it at the top of any module.
-export default defineConfig([{ ...shared, entry: { cli: "src/cli.ts", index: "src/index.ts" }, splitting: true }, skillScript]);
+export default defineConfig(skillScript);

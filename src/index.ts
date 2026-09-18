@@ -1,9 +1,0 @@
-export { check } from "./check/index.js";
-export type { CheckOptions } from "./check/index.js";
-export { RULES } from "./check/rules/index.js";
-export { DEFAULT_CONFIG, loadConfig } from "./check/config.js";
-export type { CheckResult, Config, Finding, Level, Rule, RuleContext, Doc, Section } from "./check/types.js";
-export { gather } from "./context/index.js";
-export { toMarkdown as contextToMarkdown } from "./context/markdown.js";
-export type { RepoContext, SkillInfo, PluginInfo, McpFileInfo, ReadmeInfo } from "./context/types.js";
-export const rules: string = __RULES_MD__;
