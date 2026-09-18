@@ -13,6 +13,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/oficiallyAkshay/clonometer"><img alt="clones of this repository, last seven days and all time" src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/oficiallyAkshay/readmerlin/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white"></a>
+</p>
+
+<p align="center">
   <b><a href="examples/tidy-inbox/README.md">See a README it wrote</a></b>
 </p>
 
