@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { remoteOf } from "../context/git.js";
 
 function put(dir: string, name: string, content: string): void {
   const target = join(dir, ".github", "workflows", name);
@@ -12,11 +13,33 @@ function put(dir: string, name: string, content: string): void {
   console.log(`wrote: ${target}`);
 }
 
-export function runInitWorkflow(dir: string, opts: { clones?: boolean } = {}): number {
+const CLONOMETER = "oficiallyAkshay/clonometer";
+
+/** The commit clonometer's main branch points at, so the workflow pins a sha and never a moving tag. */
+async function clonometerSha(fetchFn: typeof fetch): Promise<string | undefined> {
+  try {
+    const res = await fetchFn(`https://api.github.com/repos/${CLONOMETER}/commits/main`, { headers: { accept: "application/vnd.github.sha", "user-agent": "readmerlin" }, signal: AbortSignal.timeout(8000) });
+    const sha = res.ok ? (await res.text()).trim() : "";
+    return /^[0-9a-f]{40}$/.test(sha) ? sha : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const recipe = (slug: string, file: string, label: string) => `https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/${slug}/badges/${file}.json&query=$.badge&label=${label}&logo=github&logoColor=white`;
+
+export async function runInitWorkflow(dir: string, opts: { clones?: boolean; fetch?: typeof fetch } = {}): Promise<number> {
   put(dir, "readme-check.yml", __WORKFLOW_YML__);
   if (opts.clones) {
-    put(dir, "clone-count.yml", __CLONES_YML__);
-    console.log("clone-count.yml needs a CLONE_TOKEN secret: a fine-grained token with Administration read on the repo and Gists write. The first run prints the badge in its job summary.");
+    const sha = await clonometerSha(opts.fetch ?? globalThis.fetch);
+    put(dir, "clonometer.yml", sha ? __CLONES_YML__.replace("<sha>", sha) : __CLONES_YML__);
+    if (!sha) console.log(`GitHub did not answer. Replace <sha> in clonometer.yml with a commit of ${CLONOMETER} before you push.`);
+    const remote = remoteOf(dir);
+    const slug = remote.owner && remote.name ? `${remote.owner}/${remote.name}` : "<owner>/<repo>";
+    console.log("clonometer.yml needs a TRAFFIC_TOKEN secret: a fine-grained token scoped to this repository, with Contents write and Administration read.");
+    console.log("After the first run, the badges read the numbers from the badges branch:");
+    console.log(`  clones: ${recipe(slug, "clones", "clones")}`);
+    console.log(`  views:  ${recipe(slug, "views", "views")}`);
   }
   return 0;
 }

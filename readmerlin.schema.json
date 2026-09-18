@@ -6,17 +6,16 @@
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
-    "rules": { "type": "object", "additionalProperties": { "enum": ["off", "warn", "fail"] }, "description": "Level per rule id, for example prose/no-dashes." },
+    "rules": { "type": "object", "additionalProperties": { "enum": ["off", "warn", "fail"] }, "description": "Level per rule id, for example prose/plain-punctuation." },
     "killList": { "type": "array", "items": { "type": "string" } },
     "disclaimers": { "type": "array", "items": { "type": "string" } },
     "headingAllowlist": { "type": "array", "items": { "type": "string" }, "description": "Names allowed to keep their capitals in headings." },
-    "sectionOrder": { "type": "array", "items": { "type": "string" }, "description": "Optional required order of second-level headings." },
+    "sectionOrder": { "type": "array", "items": { "type": "string" }, "description": "The set and order of second-level headings. An empty list turns the check off." },
     "maxSections": { "type": "integer", "minimum": 1 },
     "maxSectionLines": { "type": "integer", "minimum": 1 },
     "maxParagraphSentences": { "type": "integer", "minimum": 1 },
     "maxBadgesPerRow": { "type": "integer", "minimum": 1 },
     "maxImageHeight": { "type": "integer", "minimum": 1 },
-    "productNames": { "type": "array", "items": { "type": "string" } },
     "denylistFile": { "type": "string", "description": "File of sha256 hashes, one per line. Default .readmerlin/denylist.sha256" },
     "counts": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Badge label to a shell command that prints the true number." }
   }

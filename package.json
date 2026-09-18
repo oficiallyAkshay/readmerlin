@@ -1,7 +1,8 @@
 {
   "name": "readmerlin",
-  "version": "0.1.0",
-  "description": "Writes and checks value-first READMEs for skill, agent and MCP server repos.",
+  "version": "0.2.0",
+  "private": true,
+  "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -22,7 +23,6 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "check": "node dist/cli.js check README.md",
-    "prepublishOnly": "npm run typecheck && npm run build && npm test && npm run check -- --no-links",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "repository": {
@@ -49,7 +49,6 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.126.0",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.3",
     "tsup": "^8.5.1",
@@ -65,13 +64,5 @@
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
-  },
-  "peerDependencies": {
-    "@anthropic-ai/sdk": ">=0.120.0"
-  },
-  "peerDependenciesMeta": {
-    "@anthropic-ai/sdk": {
-      "optional": true
-    }
   }
 }

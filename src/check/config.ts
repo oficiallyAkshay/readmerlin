@@ -3,16 +3,15 @@ import type { Config, Level } from "./types.js";
 
 export const DEFAULT_CONFIG: Config = {
   rules: {},
-  killList: ["Where it runs", "Example", "Examples", "What you need", "Prerequisites", "Requirements", "Contributing", "Contributing and license", "License", "Acknowledgments", "Acknowledgements", "Roadmap", "Built with", "Table of contents"],
+  killList: ["Limits", "Configuration", "Configuration and security", "Quick start", "Quickstart", "Getting started", "Where it runs", "Example", "Examples", "What you need", "Prerequisites", "Requirements", "Contributing", "Contributing and license", "License", "Acknowledgments", "Acknowledgements", "Roadmap", "Built with", "Table of contents"],
   disclaimers: ["fully synthetic", "for illustration", "or the HTML master", "illustrative purposes"],
   headingAllowlist: ["README", "CI", "MCP", "API", "CLI", "PDF", "SVG", "JSON", "YAML", "URL", "HTML", "Claude", "Claude Code", "Cursor", "Codex", "Gemini", "Copilot", "GitHub", "OpenAI", "Anthropic", "Archify", "Wi-Fi", "Node", "Python"],
-  sectionOrder: [],
+  sectionOrder: ["Features", "Badges", "Security", "How it compares", "Callouts"],
   maxSections: 8,
   maxSectionLines: 40,
   maxParagraphSentences: 4,
   maxBadgesPerRow: 6,
   maxImageHeight: 700,
-  productNames: [],
   counts: {},
   maxFindingsPerRule: 10,
 };

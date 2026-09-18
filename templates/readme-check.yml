@@ -4,14 +4,11 @@ on:
   pull_request:
   schedule:
     - cron: "0 9 * * 1"
+permissions:
+  contents: read
 jobs:
   readmerlin:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oficiallyAkshay/readmerlin@v1
-# Write mode: let the action draft the README and open a pull request.
-#   - add `permissions: { contents: write, pull-requests: write, models: read }` to the job
-#   - set `with: { mode: write }` on the step, and `env: { ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} }`
-#     to use Claude, or leave the env out to use GitHub Models with the job token
-#   - follow it with peter-evans/create-pull-request
+      - uses: oficiallyAkshay/readmerlin@v1   # or pin a commit sha
