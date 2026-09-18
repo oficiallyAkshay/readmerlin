@@ -21,6 +21,15 @@ describe("the script the skill carries", () => {
   });
 });
 
+describe("the version", () => {
+  it("is the same in package.json, in SKILL.md and in the committed script", () => {
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf8")).version;
+    const skill = /^\s*version:\s*"([^"]+)"/m.exec(readFileSync(resolve(__dirname, "../skills/readmerlin/SKILL.md"), "utf8"))?.[1];
+    expect(skill).toBe(pkg);
+    expect(execFileSync("node", [SCRIPT, "--version"], { encoding: "utf8" }).trim()).toBe(pkg);
+  });
+});
+
 describe("update notice", () => {
   it("compares versions by number", () => {
     expect(newer("0.10.0", "0.9.3")).toBe(true);

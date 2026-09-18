@@ -36,7 +36,7 @@ Add the oficiallyAkshay/readmerlin skill to your agent with the skills installer
 readmerlin needs no credential; your agent does the writing with the login it already has.
 
 - ❌ reads your source tree
-- ❌ sends your files anywhere when you only check
+- ❌ sends your files anywhere, to a model or to anyone else
 - ❌ updates itself, it tells you a newer version is out and waits
 - ❌ names a word from your hashed denylist in its output
 - ❌ sends telemetry

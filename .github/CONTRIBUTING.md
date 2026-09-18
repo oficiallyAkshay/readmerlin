@@ -4,7 +4,7 @@ Everything the README leaves out lives here: commands, settings, workflows, badg
 
 ## How it ships
 
-readmerlin is an agent skill, not a package. The writing needs the user's agent, and an agent finds a skill in its skills folder, so the skill folder is the whole product. The rules that thinking cannot settle, such as whether a link answers, run from one script inside that folder: `skills/readmerlin/scripts/readmerlin.mjs`, built from `src`, committed, and held to the source by a rebuild test. A release is a merge to main. Nothing is published to npm.
+readmerlin is an agent skill, not a package. The writing needs the user's agent, and an agent finds a skill in its skills folder, so the skill folder is the whole product. The rules that thinking cannot settle, such as whether a link answers, run from one script inside that folder: `skills/readmerlin/scripts/readmerlin.mjs`, built from `src`, committed, and held to the source by a rebuild test. A release is a merge to main with the version bumped in `package.json` and in SKILL.md together, then a tag. The update notice reads the version from `package.json` on main, and a test holds the two files and the script to the same number. Nothing is published to npm.
 
 ```text
 npx skills add oficiallyAkshay/readmerlin -g
@@ -21,11 +21,10 @@ With `readmerlin` standing for `node skills/readmerlin/scripts/readmerlin.mjs`:
 readmerlin context [dir] --format md|json
 readmerlin rules
 readmerlin check [README.md] --format text|github|json [--no-links] [--no-exec]
-readmerlin write [dir] --backend auto|claude|anthropic|github|codex|gemini|prompt [--model id] [--rounds 1..10] [--dry-run]
 readmerlin init-workflow [dir] [--clones]
 ```
 
-Exit codes: 0 clean or warnings only, 1 any fail, 2 the tool itself failed. `--model` applies to the anthropic and github backends.
+Exit codes: 0 clean or warnings only, 1 any fail, 2 the tool itself failed.
 
 ## Settings
 
@@ -46,12 +45,11 @@ What leaves the machine, and the guard for each:
 | Concern | What happens | Guard |
 |---|---|---|
 | The check fetches links | External links are requested, results cached for a day; badge logos and registry lookups each run; this repo's version number once a day | `--no-links` |
-| The writer sends the repo to a model | Manifests, commands and the old README go to the chosen backend | `--backend prompt` prints instead of sending |
-| The action runs code on the runner | One `npx` of the version set, no cache. Count-source commands stay off | the `version` and `exec` inputs |
+| The action runs code on the runner | The committed script, from the commit the workflow pins. Count-source commands stay off | pin a commit sha; the `exec` input |
 
 ## Workflows
 
-`init-workflow` writes `.github/workflows/readme-check.yml`, which runs the check on every push, pull request and once a week through `oficiallyAkshay/readmerlin@v1`. For write mode, give the job `contents: write`, `pull-requests: write` and `models: read`, set `mode: write`, and pass `ANTHROPIC_API_KEY` to use Claude or leave it out to use GitHub Models with the job token.
+`init-workflow` writes `.github/workflows/readme-check.yml`, which runs the rules on every push, pull request and once a week through the action. The action runs the script the skill carries from its own checkout, so the ref a workflow names, `v1` or a commit sha, is exactly the code that runs. It only checks; the writing is the agent's job.
 
 For a repo with no registry package, clones are the only count there is. `init-workflow --clones` also writes `.github/workflows/clonometer.yml`, the consumer workflow of [clonometer](https://github.com/oficiallyAkshay/clonometer) pinned to its current commit. It needs a `TRAFFIC_TOKEN` secret: a fine-grained token scoped to the one repository, with Contents write and Administration read.
 

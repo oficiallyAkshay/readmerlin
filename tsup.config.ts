@@ -13,8 +13,7 @@ const shared: Options = {
   target: "node20",
   platform: "node",
   bundle: true,
-  noExternal: [/^(?!@anthropic-ai\/sdk$)/],
-  external: ["@anthropic-ai/sdk"],
+  noExternal: [/.*/],
   banner: { js: "#!/usr/bin/env node\nimport { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
   define,
 };

@@ -7,11 +7,12 @@ What is still open after the 2026-09-18 session folded the earlier handoff notes
 readmerlin is an agent skill, not an npm package. The writing needs the user's agent, an agent finds a skill in its skills folder, and everything readmerlin needs fits in that folder: the instructions plus one committed script. Installed with `npx skills add`, updated with `npx skills update`, counted by clones through clonometer. Rules are stated positively. A README has no Quick start and no section for agents.
 
 1. Done: the skill shape. `skills/readmerlin/scripts/readmerlin.mjs` is built from `src`, committed, and a rebuild test fails when it is stale. SKILL.md runs it. `package.json` is private. The script prints one line when a newer version is out and never updates itself.
-2. Owner: clonometer. The workflow and its badge sit in a local commit this session could not push, because its token has no `workflow` scope. Push it, add a `TRAFFIC_TOKEN` secret (fine-grained, this repository, Contents write and Administration read), and run the workflow once.
-3. Next: the action. `action.yml` and `templates/readme-check.yml` still call `npx readmerlin` from npm, which will never exist. Make the action run the committed script from its own checkout, so it can be pinned to a commit. Until then the action does not work.
-4. Next: decide on `write`. The command and its six model backends write a README without an agent. Under the skill shape the agent is the writer, so they are likely dead weight, and removing them makes "never sends your repo to a model" true by construction. Owner's call.
-5. Then: a release habit. Bump the version in `package.json` and SKILL.md together, since the update notice reads `package.json` on main. Tag releases. Move `v1` once the action works.
-6. Then: list on the skills directory and the action Marketplace, and re-run calibration on about twenty real READMEs.
+2. Done: the action runs that same script from its own checkout, so the ref a workflow names is the code that runs. It only checks.
+3. Done: `write` and its model backends are gone. The agent is the writer, and the script never talks to a model. The commit that removed them can be reverted if that turns out wrong.
+4. Done: the release habit. Version lives in `package.json` and SKILL.md, a test holds them and the script together, and this release is 0.2.0.
+5. Owner, because it needs rights a session does not have: clonometer. The workflow and its badge are the last local commit on the branch; the session token has no `workflow` scope. Run `gh auth refresh -s workflow`, push, create a fine-grained token for this repository (Contents write, Administration read), store it as the `TRAFFIC_TOKEN` secret, and run the workflow once. The count starts that day.
+6. After the merge: tag `v0.2.0`, move `v1` to it, then list the skill on the skills directory and the action on the Marketplace.
+7. Then: re-run calibration on about twenty real READMEs.
 
 ## Still to build
 

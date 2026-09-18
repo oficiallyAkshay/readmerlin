@@ -4,9 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { check } from "../src/check/index.js";
 import { gather } from "../src/context/index.js";
-import { write } from "../src/write/index.js";
-import { extractReadme, buildRepairPrompt } from "../src/write/prompt.js";
-import type { Backend } from "../src/write/backends.js";
 
 const HERO = `<h1 align="center">🧾 tidy</h1>\n\n<p align="center"><b>Receipts in, claim out.</b><br>One week of receipts becomes one claim.</p>\n\n<p align="center"><a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative"></a></p>\n\n<p align="center"><img alt="Receipts flow into one claim" src="assets/readme/hero.svg" width="900"></p>\n\n<p align="center"><b><a href="examples/claim.pdf">See the example claim</a></b></p>\n\nAdd the tidy skill to your agent, then hand it the week.\n`;
 const QUICK = `## Features\n\n- 🧾 **Every receipt found.** The inbox is searched for the trip window only.\n`;
@@ -125,43 +122,6 @@ describe("context", () => {
   });
 });
 
-describe("writer", () => {
-  it("extracts a README from tags, a fence, or raw text", () => {
-    expect(extractReadme("junk <readme>\n# a\n</readme> junk")).toBe("# a\n");
-    expect(extractReadme("```markdown\n# a\n\n## b\n```")).toBe("# a\n\n## b\n");
-    expect(extractReadme("# a\n")).toBe("# a\n");
-  });
-  it("repairs through the check loop and stops at the round limit", async () => {
-    const bad = HERO + "\n" + QUICK + "\nOne — two.\n\n" + AGENTS;
-    const good = bad.replace(" — ", ", ");
-    let calls = 0;
-    const fixer: Backend = { name: "claude", complete: async (p) => { calls++; return `<readme>${calls === 1 ? bad : good}</readme>`; } };
-    const dir = repo("# old");
-    const r = await write(dir, { backend: fixer, dryRun: true });
-    expect(r.rounds).toBe(2);
-    expect(r.findings).toEqual([]);
-    expect(r.readme).toBe(good);
-    const stubborn: Backend = { name: "claude", complete: async () => `<readme>${bad}</readme>` };
-    const r2 = await write(dir, { backend: stubborn, dryRun: true, rounds: 2 });
-    expect(r2.rounds).toBe(2);
-    expect(r2.findings.map((f) => f.id)).toContain("prose/plain-punctuation");
-    expect(buildRepairPrompt("x", r2.findings)).toContain("prose/plain-punctuation");
-  });
-  it("writes nothing on the prompt backend", async () => {
-    const dir = repo("# old");
-    const orig = process.stdout.write;
-    let printed = "";
-    process.stdout.write = ((s: string) => { printed += s; return true; }) as typeof process.stdout.write;
-    try {
-      const r = await write(dir, { backend: "prompt" });
-      expect(r.rounds).toBe(0);
-      expect(printed).toContain("# Rules");
-    } finally {
-      process.stdout.write = orig;
-    }
-  });
-});
-
 describe("review regressions", () => {
   it("does not crash on a bare percent in a link and rejects paths outside the repo", async () => {
     const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n- see [a](docs/100%.md) and [b](/examples/claim.pdf) and [c](../../etc/passwd)\n\n" + AGENTS);
@@ -194,14 +154,6 @@ describe("review regressions", () => {
     expect(c.length).toBe(1);
     expect(c[0].message).toMatch(/not verified/);
     await expect(check(join(dir, "README.md"), { format: "json", links: false, configPath: join(dir, "missing.json") })).rejects.toThrow(/Config not found/);
-  });
-  it("clamps a bad rounds value in the writer", async () => {
-    const bad = HERO + "\n" + QUICK + "\nOne — two.\n\n" + AGENTS;
-    let calls = 0;
-    const stubborn: Backend = { name: "claude", complete: async () => { calls++; return `<readme>${bad}</readme>`; } };
-    const r = await write(repo("# old"), { backend: stubborn, dryRun: true, rounds: Number.NaN });
-    expect(r.rounds).toBe(3);
-    expect(calls).toBe(3);
   });
   it("allowlist matches whole words only", async () => {
     const dir = repo(HERO + "\n" + QUICK + "\n## SCIM Provisioning\n\n- x\n\n" + AGENTS, { "readmerlin.json": JSON.stringify({ headingAllowlist: ["CI"] }) });

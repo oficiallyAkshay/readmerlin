@@ -49,7 +49,6 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.126.0",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.3",
     "tsup": "^8.5.1",
@@ -65,13 +64,5 @@
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
-  },
-  "peerDependencies": {
-    "@anthropic-ai/sdk": ">=0.120.0"
-  },
-  "peerDependenciesMeta": {
-    "@anthropic-ai/sdk": {
-      "optional": true
-    }
   }
 }

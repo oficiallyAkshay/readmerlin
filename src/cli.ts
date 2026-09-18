@@ -3,7 +3,6 @@ import { runContext } from "./commands/context.js";
 import { runRules } from "./commands/rules.js";
 import { runCheck } from "./commands/check.js";
 import { runInitWorkflow } from "./commands/init-workflow.js";
-import { runWrite } from "./commands/write.js";
 
 const HELP = `readmerlin <command> [options]
 
@@ -11,7 +10,6 @@ Commands
   context [dir]          What the repo offers: skills, commands, agents, manifests, hosts, README
   rules                  Print the writing rules
   check [README.md]      Check a README. Exit 1 on any fail
-  write [dir]            Write README.md from the repo, using a model already on the machine
   init-workflow [dir]    Add .github/workflows/readme-check.yml. With --clones, also the clonometer workflow
 
 Options
@@ -19,12 +17,6 @@ Options
   --config <file>        check: path to readmerlin.json (default ./readmerlin.json)
   --no-links             check: skip external link checks
   --no-exec              check: never run count-source commands from readmerlin.json
-  --backend <name>       write: auto | claude | anthropic | github | codex | gemini | prompt
-  --model <id>           write: model id for the chosen backend
-  --out <file>           write: output path (default README.md)
-  --rounds <n>           write: repair rounds against check (default 3)
-  --instructions <text>  write: extra guidance for the model
-  --dry-run              write: print the README instead of saving it
   --clones               init-workflow: also add the clonometer workflow and print its badges
   --version, -v          Print the version
   --help, -h             This text`;
@@ -38,12 +30,6 @@ function parse() {
     config: { type: "string" },
     "no-links": { type: "boolean", default: false },
     "no-exec": { type: "boolean", default: false },
-    backend: { type: "string" },
-    model: { type: "string" },
-    out: { type: "string" },
-    rounds: { type: "string" },
-    instructions: { type: "string" },
-    "dry-run": { type: "boolean", default: false },
     clones: { type: "boolean", default: false },
     version: { type: "boolean", short: "v", default: false },
     help: { type: "boolean", short: "h", default: false },
@@ -69,13 +55,6 @@ function pickFormat<T extends string>(allowed: readonly T[], given: unknown, fal
   throw new Error(`Unknown --format ${String(given)}. Use one of: ${allowed.join(", ")}.`);
 }
 
-function parseRounds(v: unknown): number | undefined {
-  if (v === undefined) return undefined;
-  const n = Number(v);
-  if (!Number.isInteger(n) || n < 1 || n > 10) throw new Error(`--rounds must be a whole number from 1 to 10, got ${String(v)}.`);
-  return n;
-}
-
 async function main(): Promise<number> {
   if (values.version) {
     console.log(__VERSION__);
@@ -97,15 +76,6 @@ async function main(): Promise<number> {
         configPath: values.config,
         links: !values["no-links"],
         exec: !values["no-exec"],
-      });
-    case "write":
-      return runWrite(target ?? process.cwd(), {
-        backend: values.backend,
-        model: values.model,
-        out: values.out,
-        rounds: parseRounds(values.rounds),
-        instructions: values.instructions,
-        dryRun: values["dry-run"],
       });
     case "init-workflow":
       return runInitWorkflow(target ?? process.cwd(), { clones: values.clones });
