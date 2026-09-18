@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { toString } from "mdast-util-to-string";
 import { visit } from "unist-util-visit";
 import type { Table, TableCell } from "mdast";
@@ -12,8 +12,8 @@ import type { Doc, Rule } from "../types.js";
 const CONVENTIONAL = [
   /^readme(\.[a-z]{2})?\.md$/i, /^licen[cs]e(\..*)?$/i, /^changelog(\..*)?$/i, /^contributing(\..*)?$/i, /^security(\..*)?$/i, /^code_of_conduct(\..*)?$/i, /^codeowners$/i,
   /^skill\.md$/i, /^agents\.md$/i, /^claude\.md$/i, /^gemini\.md$/i, /^\.cursorrules$/i,
-  /^package(-lock)?\.json$/, /^pnpm-lock\.yaml$/, /^yarn\.lock$/, /^bun\.lockb?$/, /^pyproject\.toml$/, /^requirements.*\.txt$/, /^setup\.(py|cfg)$/, /^uv\.lock$/, /^poetry\.lock$/, /^cargo\.(toml|lock)$/i, /^go\.(mod|sum)$/, /^makefile$/i, /^dockerfile$/i, /^docker-compose.*\.ya?ml$/, /^tsconfig.*\.json$/, /^.*\.config\.(js|ts|mjs|cjs)$/, /^action\.ya?ml$/, /^readmerlin(\.schema)?\.json$/, /^codecov\.ya?ml$/, /^\.pre-commit-config\.yaml$/, /^\.editorconfig$/, /^\.prettierrc.*$/, /^\.eslintrc.*$/, /^\.npmrc$/, /^\.nvmrc$/, /^\.python-version$/, /^\.env\.example$/, /^\.gitignore$/, /^\.gitattributes$/, /^\.gitmodules$/, /^vitest\.config\.ts$/,
-  /^\.github$/, /^\.claude$/, /^\.claude-plugin$/, /^\.mcp\.json$/, /^\.cursor$/, /^\.codex$/, /^\.agents$/, /^\.vscode$/,
+  /^package(-lock)?\.json$/, /^pnpm-lock\.yaml$/, /^yarn\.lock$/, /^bun\.lockb?$/, /^pyproject\.toml$/, /^requirements.*\.txt$/, /^setup\.(py|cfg)$/, /^uv\.lock$/, /^poetry\.lock$/, /^cargo\.(toml|lock)$/i, /^go\.(mod|sum)$/, /^makefile$/i, /^dockerfile$/i, /^docker-compose.*\.ya?ml$/, /^tsconfig.*\.json$/, /^.*\.config\.(js|ts|mjs|cjs)$/, /^action\.ya?ml$/, /^readmerlin(\.schema)?\.json$/, /^codecov\.ya?ml$/, /^\.pre-commit-config\.yaml$/, /^\.editorconfig$/, /^\.prettierrc.*$/, /^\.eslintrc.*$/, /^\.npmrc$/, /^\.nvmrc$/, /^\.python-version$/, /^\.env\.example$/, /^\.gitignore$/, /^\.gitattributes$/, /^\.gitmodules$/, /^vitest\.config\.ts$/, /\.gemspec$/,
+  /^\.github$/, /^\.readmerlin$/, /^\.claude$/, /^\.claude-plugin$/, /^\.mcp\.json$/, /^\.cursor$/, /^\.codex$/, /^\.agents$/, /^\.vscode$/,
   /^(src|lib|bin|dist|docs|examples?|tests?|scripts?|assets|references?|skills?|commands?|agents?|hooks?|templates?|schemas?|renderers?|tools?|integrations?|benchmarks?|public|static)$/i,
 ];
 
@@ -126,7 +126,7 @@ export const denylist: Rule = {
   level: "fail",
   description: "Every word is clear of the committed hashed denylist",
   run: ({ doc, config }) => {
-    const file = config.denylistFile ?? join(doc.repoRoot, ".readmerlin", "denylist.sha256");
+    const file = config.denylistFile ? resolve(doc.repoRoot, config.denylistFile) : join(doc.repoRoot, ".readmerlin", "denylist.sha256");
     if (!existsSync(file)) return [];
     const hashes = new Set(readFileSync(file, "utf8").split(/\r?\n/).map((l) => l.trim().toLowerCase()).filter((l) => /^[0-9a-f]{64}$/.test(l)));
     if (hashes.size === 0) return [];
@@ -134,10 +134,13 @@ export const denylist: Rule = {
     for (let i = 0; i < doc.lines.length; i++) {
       const tokens = new Set<string>();
       for (const t of doc.lines[i].split(/[\s<>"'()[\],;:|]+/)) {
-        const clean = t.replace(/^[^\w@.-]+|[^\w@.-]+$/g, "");
-        if (clean.length >= 3) {
-          tokens.add(clean);
-          tokens.add(clean.toLowerCase());
+        const clean = t.replace(/^[^\p{L}\p{N}_@.-]+|[^\p{L}\p{N}_@-]+$/gu, "");
+        // The token itself, and each part of a compound such as acme-corp or acme.example.com.
+        for (const part of [clean, ...clean.split(/[.@-]/)]) {
+          if (part.length >= 3) {
+            tokens.add(part);
+            tokens.add(part.toLowerCase());
+          }
         }
       }
       for (const t of tokens) {
@@ -151,7 +154,7 @@ export const denylist: Rule = {
   },
 };
 
-const EMAIL_RE = /(?<![\w/:])([\w.+-]+)@([\w-]+(?:\.[\w-]+)*\.[a-z]{2,})(?![\w:/])/gi;
+const EMAIL_RE = /(?<![\w/])([\w.+-]+)@([\w-]+(?:\.[\w-]+)*\.[a-z]{2,})(?![\w:/])/gi;
 const SAFE_EMAIL = /@(example\.(com|org|net)|.*\.invalid|users\.noreply\.github\.com)$/i;
 const HOME_RE = /(^|[\s"'(=:`])(\/Users\/[\w.-]+|\/home\/[\w.-]+|[A-Z]:\\Users\\[\w.-]+)(?=[\/\s"'`)]|$)/;
 const KEY_RE = /\b(sk-(ant-)?[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;

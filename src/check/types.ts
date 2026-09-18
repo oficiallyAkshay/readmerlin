@@ -26,6 +26,9 @@ export interface Doc {
   tree: Root;
   hero: RootContent[];
   sections: Section[];
+  /** The README's own folder. Relative links start here. */
+  dir: string;
+  /** The nearest folder above holding .git, else dir. Root-relative links, the config and the denylist start here. */
   repoRoot: string;
 }
 

@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -7,10 +7,23 @@ import { toString } from "mdast-util-to-string";
 import type { Root, RootContent, Heading } from "mdast";
 import type { Doc, Section } from "./types.js";
 
+/** The nearest folder at or above dir that holds .git, a folder or a file. */
+function gitRoot(dir: string): string | undefined {
+  let d = dir;
+  for (;;) {
+    if (existsSync(join(d, ".git"))) return d;
+    const up = dirname(d);
+    if (up === d) return undefined;
+    d = up;
+  }
+}
+
 export function parseDoc(file: string, repoRoot?: string): Doc {
-  const text = readFileSync(file, "utf8");
+  // One line ending, so offsets from the parser match offsets in text.
+  const text = readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
   const tree = unified().use(remarkParse).use(remarkGfm).parse(text) as Root;
-  const lines = text.split(/\r?\n/);
+  const lines = text.split("\n");
+  const dir = resolve(dirname(file));
   const hero: RootContent[] = [];
   const sections: Section[] = [];
   let current: Section | undefined;
@@ -27,7 +40,7 @@ export function parseDoc(file: string, repoRoot?: string): Doc {
       hero.push(node);
     }
   }
-  return { file, text, lines, tree, hero, sections, repoRoot: repoRoot ? resolve(repoRoot) : resolve(dirname(file)) };
+  return { file, text, lines, tree, hero, sections, dir, repoRoot: repoRoot ? resolve(repoRoot) : gitRoot(dir) ?? dir };
 }
 
 export function lineOf(node: { position?: { start: { line: number } } }): number | undefined {
