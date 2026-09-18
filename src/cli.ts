@@ -12,7 +12,7 @@ Commands
   rules                  Print the writing rules
   check [README.md]      Check a README. Exit 1 on any fail
   write [dir]            Write README.md from the repo, using a model already on the machine
-  init-workflow [dir]    Add .github/workflows/readme-check.yml. With --clones, also a daily clone counter
+  init-workflow [dir]    Add .github/workflows/readme-check.yml. With --clones, also the clonometer workflow
 
 Options
   --format <fmt>         context: json | md (default json). check: text | github | json (default text)
@@ -25,7 +25,7 @@ Options
   --rounds <n>           write: repair rounds against check (default 3)
   --instructions <text>  write: extra guidance for the model
   --dry-run              write: print the README instead of saving it
-  --clones               init-workflow: also add the clone-count workflow and badge
+  --clones               init-workflow: also add the clonometer workflow and print its badges
   --version, -v          Print the version
   --help, -h             This text`;
 

@@ -8,13 +8,13 @@ describe("check", () => {
   it("finds the kill-list heading, the em dash and the meta sentence, and passes the hero", async () => {
     const r = await check(README, { format: "json", links: false });
     const ids = r.findings.map((f) => f.id);
-    expect(ids).toContain("shape/kill-list");
-    expect(ids).toContain("prose/no-dashes");
-    expect(ids).toContain("prose/meta-narration");
+    expect(ids).toContain("shape/earned-headings");
+    expect(ids).toContain("prose/plain-punctuation");
+    expect(ids).toContain("prose/about-the-product");
     expect(ids).not.toContain("hero/exists");
     expect(ids).toContain("shape/hero-visual");
     expect(ids).toContain("shape/enable-step");
-    expect(r.findings.filter((f) => f.level === "fail").map((f) => f.id).sort()).toEqual(["prose/meta-narration", "prose/no-dashes", "shape/enable-step", "shape/hero-visual", "shape/kill-list"]);
+    expect(r.findings.filter((f) => f.level === "fail").map((f) => f.id).sort()).toEqual(["prose/about-the-product", "prose/plain-punctuation", "shape/earned-headings", "shape/enable-step", "shape/hero-visual"]);
   });
 });
 
@@ -22,13 +22,13 @@ import { writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-describe("prose/meta-narration", () => {
+describe("prose/about-the-product", () => {
   const run = async (body: string) => {
     const dir = mkdtempSync(join(tmpdir(), "rm-"));
     const f = join(dir, "README.md");
     writeFileSync(f, `# t\n\n**b**\n\nc\n\n## s\n\n${body}\n`);
     const r = await check(f, { format: "json", links: false });
-    return r.findings.filter((x) => x.id === "prose/meta-narration").length;
+    return r.findings.filter((x) => x.id === "prose/about-the-product").length;
   };
   it("flags a diagram making-of and leaves product output alone", async () => {
     expect(await run("The diagram is rendered once from source with Archify.")).toBe(1);

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { collectImages, collectLinks, localPath, safeDecode, slug } from "../util.js";
+import { collectImages, collectLinks, localPath, maskedText, safeDecode, slug } from "../util.js";
 import type { Rule } from "../types.js";
 
 const isExternal = (h: string) => /^(https?:)?\/\//i.test(h);
@@ -39,6 +39,23 @@ export const relativeLinks: Rule = {
       if (anchor !== undefined && !pathPart) {
         const a = anchor.toLowerCase();
         if (!slugs.has(a) && !slugs.has(slug(safeDecode(a)))) out.push({ message: `Anchor not found: #${anchor}`, line: r.line, repair: "Match the heading text, lower-cased with hyphens." });
+      }
+    }
+    return out;
+  },
+};
+
+export const noWorkflowFiles: Rule = {
+  id: "links/reader-can-act",
+  level: "fail",
+  description: "Every link goes to something the reader acts on; YAML files are described in CONTRIBUTING",
+  run: ({ doc }) => {
+    const out = [];
+    const lines = maskedText(doc).split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const hrefs = [...lines[i].matchAll(/\]\(\s*<?([^)\s>]+)/g), ...lines[i].matchAll(/\bhref\s*=\s*["']([^"']+)["']/gi)].map((m) => m[1]);
+      for (const h of hrefs) {
+        if (/\.ya?ml$/i.test(h.split(/[?#]/)[0])) out.push({ message: `Link to a YAML file: ${h}`, line: i + 1, repair: "Link only to what a reader acts on. Workflow files are described in CONTRIBUTING." });
       }
     }
     return out;
@@ -131,4 +148,4 @@ export const externalLinks: Rule = {
   },
 };
 
-export const LINK_RULES: Rule[] = [relativeLinks, externalLinks];
+export const LINK_RULES: Rule[] = [relativeLinks, noWorkflowFiles, externalLinks];

@@ -48,7 +48,7 @@ export function maskedText(doc: Doc): string {
   return text;
 }
 
-export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|\/workflows\/[^"'\s)]*\.svg/i;
+export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|api\.scorecard\.dev\/|api\.securityscorecards\.dev\/|\/workflows\/[^"'\s)]*\.svg/i;
 export const isBadge = (src: string): boolean => BADGE_RE.test(src);
 
 export interface ImageRef {

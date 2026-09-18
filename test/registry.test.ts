@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { describe, expect, it, vi } from "vitest";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readPackages } from "../src/context/readers.js";
@@ -31,14 +31,33 @@ describe("published packages", () => {
     const d = dir({ "package.json": JSON.stringify({ name: "thing", main: "i.js" }), "README.md": "# t\n\n**b**\n\nc\n\n## s\n\n- x\n" });
     const r = await check(join(d, "README.md"), { format: "json", links: false });
     const f = r.findings.find((x) => x.id === "badges/registry-present");
-    expect(f?.message).toMatch(/thing is published on npm/);
+    expect(f?.message).toMatch(/thing is set up to publish to npm/);
     expect(f?.repair).toContain("shields.io/npm/v/thing");
   });
-  it("writes the clone-count workflow on request", () => {
+  it("asks the registry before warning, and stays quiet for a package that is not there", async () => {
+    const d = dir({ "package.json": JSON.stringify({ name: "thing", main: "i.js" }), "README.md": "# t\n\n**b**\n\nc\n\n## s\n\n- x\n" });
+    const answer = (status: number) => vi.stubGlobal("fetch", async () => new Response("{}", { status }));
+    try {
+      answer(404);
+      expect((await check(join(d, "README.md"), { format: "json", links: true })).findings.map((x) => x.id)).not.toContain("badges/registry-present");
+      answer(200);
+      expect((await check(join(d, "README.md"), { format: "json", links: true })).findings.find((x) => x.id === "badges/registry-present")?.message).toMatch(/is published on npm/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+  it("writes the clonometer workflow pinned to a commit on request", async () => {
     const d = dir({});
-    runInitWorkflow(d, { clones: true });
-    const { existsSync } = require("node:fs");
+    const sha = "a".repeat(40);
+    await runInitWorkflow(d, { clones: true, fetch: (async () => new Response(sha)) as typeof fetch });
     expect(existsSync(join(d, ".github/workflows/readme-check.yml"))).toBe(true);
-    expect(existsSync(join(d, ".github/workflows/clone-count.yml"))).toBe(true);
+    const yml = readFileSync(join(d, ".github/workflows/clonometer.yml"), "utf8");
+    expect(yml).toContain(`oficiallyAkshay/clonometer@${sha}`);
+    expect(yml).toContain("secrets.TRAFFIC_TOKEN");
+  });
+  it("leaves the placeholder when GitHub does not answer", async () => {
+    const d = dir({});
+    await runInitWorkflow(d, { clones: true, fetch: (async () => { throw new Error("offline"); }) as typeof fetch });
+    expect(readFileSync(join(d, ".github/workflows/clonometer.yml"), "utf8")).toContain("clonometer@<sha>");
   });
 });

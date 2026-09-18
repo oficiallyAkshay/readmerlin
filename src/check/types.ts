@@ -56,7 +56,6 @@ export interface Config {
   maxParagraphSentences: number;
   maxBadgesPerRow: number;
   maxImageHeight: number;
-  productNames: string[];
   denylistFile?: string;
   counts: Record<string, string>;
   maxFindingsPerRule: number;

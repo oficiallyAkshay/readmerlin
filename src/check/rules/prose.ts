@@ -3,9 +3,9 @@ import { EMOJI_RE, paragraphs, proseLines, sentences } from "../util.js";
 import type { Rule } from "../types.js";
 
 export const noDashes: Rule = {
-  id: "prose/no-dashes",
+  id: "prose/plain-punctuation",
   level: "fail",
-  description: "No em dashes or en dashes",
+  description: "Sentences are joined with commas, colons and full stops",
   run: ({ doc }) => {
     const out = [];
     for (const [i, line] of proseLines(doc)) {
@@ -24,9 +24,9 @@ const META: Array<[RegExp, string]> = [
 ];
 
 export const metaNarration: Rule = {
-  id: "prose/meta-narration",
+  id: "prose/about-the-product",
   level: "fail",
-  description: "No sentences about how the README or its visuals were produced",
+  description: "Every sentence is about the product",
   run: ({ doc }) => {
     const out = [];
     for (const [i, line] of proseLines(doc)) {
@@ -62,19 +62,35 @@ export const sentenceCase: Rule = {
 };
 
 export const noEmojiDecoration: Rule = {
-  id: "prose/no-emoji-decoration",
+  id: "prose/plain-headings",
   level: "warn",
-  description: "No emoji at the start of headings or bullets outside the hero",
+  description: "Section headings are words only",
+  run: ({ doc }) =>
+    doc.sections
+      .filter((s) => EMOJI_RE.test(s.title))
+      .map((s) => ({ message: `Heading "${s.title}" starts with an emoji.`, line: s.startLine, repair: "Drop it. Emoji belong in the title and at the start of feature bullets." })),
+};
+
+const STOP = new Set("a an and are as at be but by for from in is it its of on or so that the this to with you your".split(" "));
+const words = (t: string): string[] => t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w && !STOP.has(w));
+
+export const taglineRepeat: Rule = {
+  id: "prose/says-it-once",
+  level: "warn",
+  description: "The opening paragraphs add to the tagline",
   run: ({ doc }) => {
+    const html = doc.hero.filter((n) => n.type === "html").map((n) => (n as { value: string }).value).join("\n");
+    const bolds = [...html.matchAll(/<(b|strong)>([\s\S]*?)<\/\1>/gi)].map((m) => m[2].replace(/<[^>]+>/g, ""));
+    for (const p of paragraphs(doc.hero)) for (const c of p.children) if (c.type === "strong") bolds.push(toString(c));
+    const tagline = bolds.flatMap((b) => sentences(b)).map(words).filter((w) => w.length >= 3);
+    if (tagline.length === 0) return [];
     const out = [];
-    for (const s of doc.sections) {
-      if (EMOJI_RE.test(s.title)) out.push({ message: `Heading "${s.title}" starts with an emoji.`, line: s.startLine, repair: "Drop it. Emoji belong in the title only." });
-      for (const n of s.nodes) {
-        if (n.type !== "list") continue;
-        for (const item of n.children) {
-          const text = toString(item);
-          if (EMOJI_RE.test(text)) out.push({ message: "Bullet starts with an emoji.", line: item.position?.start.line, repair: "Drop it. Let the words carry it." });
-        }
+    const body = [...paragraphs(doc.hero).filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link")), ...(doc.sections[0] ? paragraphs(doc.sections[0].nodes) : [])];
+    for (const p of body) {
+      for (const sentence of sentences(toString(p))) {
+        const w = new Set(words(sentence));
+        const repeat = tagline.some((t) => t.filter((x) => w.has(x)).length / t.length >= 0.75);
+        if (repeat) out.push({ message: "A sentence restates the tagline.", line: p.position?.start.line, repair: "Say it once. Let the body add what the tagline does not." });
       }
     }
     return out;
@@ -84,7 +100,7 @@ export const noEmojiDecoration: Rule = {
 export const paragraphLength: Rule = {
   id: "prose/paragraph-length",
   level: "warn",
-  description: "Paragraph sentence count under the limit",
+  description: "A paragraph stays within the sentence limit",
   run: ({ doc, config }) => {
     const out = [];
     for (const s of doc.sections) {
@@ -98,9 +114,9 @@ export const paragraphLength: Rule = {
 };
 
 export const inlineCode: Rule = {
-  id: "prose/inline-code",
+  id: "prose/code-outside-sentences",
   level: "warn",
-  description: "No inline code inside a sentence",
+  description: "Code sits in a table or a link, outside sentences",
   run: ({ doc }) => {
     const out = [];
     for (const s of doc.sections) {
@@ -117,9 +133,9 @@ export const inlineCode: Rule = {
 };
 
 export const disclaimers: Rule = {
-  id: "prose/disclaimers",
+  id: "prose/unhedged",
   level: "warn",
-  description: "No disclaimer phrases",
+  description: "The artifact speaks for itself, without disclaimers",
   run: ({ doc, config }) => {
     const out = [];
     for (const [i, line] of proseLines(doc)) {
@@ -130,4 +146,4 @@ export const disclaimers: Rule = {
   },
 };
 
-export const PROSE_RULES: Rule[] = [noDashes, metaNarration, sentenceCase, noEmojiDecoration, paragraphLength, inlineCode, disclaimers];
+export const PROSE_RULES: Rule[] = [noDashes, metaNarration, sentenceCase, noEmojiDecoration, taglineRepeat, paragraphLength, inlineCode, disclaimers];

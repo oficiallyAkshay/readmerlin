@@ -25,7 +25,7 @@ export const imagesExist: Rule = {
 export const svgLocal: Rule = {
   id: "visuals/svg-local",
   level: "fail",
-  description: "SVG diagrams are committed in the repo, not remote",
+  description: "SVG diagrams are committed in the repo",
   run: ({ doc }) =>
     collectImages(doc)
       .filter((i) => !i.badge && isRemote(i.src) && /\.svg(\?|$)/i.test(i.src))
@@ -35,7 +35,7 @@ export const svgLocal: Rule = {
 export const rasterWarning: Rule = {
   id: "visuals/raster",
   level: "warn",
-  description: "Raster images only for real output",
+  description: "A raster image shows real output at real proportions",
   run: ({ doc }) =>
     collectImages(doc)
       .filter((i) => !i.badge && /\.(png|jpe?g|gif|webp)(\?|$)/i.test(i.src))
@@ -45,7 +45,7 @@ export const rasterWarning: Rule = {
 export const imageHeight: Rule = {
   id: "visuals/height",
   level: "warn",
-  description: "No image taller than the limit",
+  description: "Every image shows within the height limit",
   run: ({ doc, config }) => {
     const out = [];
     for (const i of collectImages(doc)) {
@@ -73,6 +73,8 @@ export const imageHeight: Rule = {
 export const specBeside: Rule = {
   id: "visuals/spec-beside",
   level: "fail",
+  // Accepted specs: <name>.hero.json for a hero, <name>.archify.json, <name>.d2 or <name>.mmd for a diagram,
+  // and any <name>.json or <name>.<kind>.json, which stands for a spec with its own generator script and rebuild test.
   description: "Every diagram SVG has its source spec beside it",
   run: ({ doc }) => {
     const out = [];
@@ -98,7 +100,7 @@ export const specBeside: Rule = {
 
 interface Box { x: number; y: number; w: number; h: number; line: number }
 
-function parseSvg(text: string): { vb?: { w: number; h: number }; rects: Box[]; texts: Array<{ x: number; y: number; size: number; len: number; anchor: string }>; hasText: boolean; fontStack: boolean; badAmp: boolean; groups: string[] } {
+function parseSvg(text: string): { vb?: { w: number; h: number }; rects: Box[]; texts: Array<{ x: number; y: number; size: number; len: number; anchor: string; width?: number }>; hasText: boolean; fontStack: boolean; badAmp: boolean; groups: string[] } {
   const vbm = /viewBox\s*=\s*"([^"]+)"/i.exec(text);
   const vbParts = vbm ? vbm[1].trim().split(/[\s,]+/).map(Number) : [];
   const vb = vbParts.length === 4 ? { w: vbParts[2], h: vbParts[3] } : undefined;
@@ -115,13 +117,13 @@ function parseSvg(text: string): { vb?: { w: number; h: number }; rects: Box[]; 
     const h = num(t, "height");
     if (w !== undefined && h !== undefined) rects.push({ x, y, w, h, line: 0 });
   }
-  const texts: Array<{ x: number; y: number; size: number; len: number; anchor: string }> = [];
+  const texts: Array<{ x: number; y: number; size: number; len: number; anchor: string; width?: number }> = [];
   for (const m of text.matchAll(/<text\b([^>]*)>([\s\S]*?)<\/text>/g)) {
     const t = m[1];
     const content = m[2].replace(/<[^>]+>/g, "").trim();
     const size = num(t, "font-size") ?? parseFloat(/font-size:\s*([\d.]+)/.exec(t)?.[1] ?? "16");
     const anchor = /text-anchor\s*=\s*"([^"]+)"/.exec(t)?.[1] ?? "start";
-    texts.push({ x: num(t, "x") ?? 0, y: num(t, "y") ?? 0, size, len: content.length, anchor });
+    texts.push({ x: num(t, "x") ?? 0, y: num(t, "y") ?? 0, size, len: content.length, anchor, width: num(t, "textLength") });
   }
   const hasText = texts.length > 0;
   const fontStack = /font-family\s*[:=]/i.test(text);
@@ -163,7 +165,7 @@ export const svgFontStack: Rule = {
 export const svgClipping: Rule = {
   id: "visuals/svg-clipping",
   level: "fail",
-  description: "Nothing in an SVG sits outside its viewBox",
+  description: "Every SVG shape sits inside its viewBox",
   run: ({ doc }) => {
     const out = [];
     for (const s of localSvgs(doc)) {
@@ -185,13 +187,17 @@ export const svgTextOverflow: Rule = {
     for (const s of localSvgs(doc)) {
       const p = parseSvg(s.text);
       if (!p.vb) continue;
-      let n = 0;
+      let measured = 0;
+      let guessed = 0;
       for (const t of p.texts) {
-        const width = t.len * t.size * 0.58;
+        // textLength is the label's own width. Without it the width is a guess from character count, so allow a wide margin.
+        const width = t.width ?? t.len * t.size * 0.58;
+        const slack = t.width === undefined ? p.vb.w * 0.1 : 0.5;
         const left = t.anchor === "middle" ? t.x - width / 2 : t.anchor === "end" ? t.x - width : t.x;
-        if (left < -0.5 || left + width > p.vb.w + 0.5) n++;
+        if (left < -slack || left + width > p.vb.w + slack) t.width === undefined ? guessed++ : measured++;
       }
-      if (n) out.push({ message: `${n} labels may run past the edge of ${s.src}.`, line: s.line, repair: "Shorten the label or widen the canvas. Estimated from character count." });
+      if (measured) out.push({ message: `${measured} labels run past the edge of ${s.src}.`, line: s.line, repair: "Shorten the label or widen the canvas." });
+      if (guessed) out.push({ message: `${guessed} labels may run past the edge of ${s.src}, going by character count.`, line: s.line, repair: "Open the SVG at full width and look. Set textLength on a label to have it measured instead of guessed." });
     }
     return out;
   },
@@ -200,7 +206,7 @@ export const svgTextOverflow: Rule = {
 export const distinctIcons: Rule = {
   id: "visuals/distinct-icons",
   level: "warn",
-  description: "No icon repeated inside an SVG",
+  description: "Every item in an SVG has its own icon",
   run: ({ doc }) => {
     const out = [];
     for (const s of localSvgs(doc)) {

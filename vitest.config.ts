@@ -6,7 +6,7 @@ export default defineConfig({
     __VERSION__: JSON.stringify("test"),
     __RULES_MD__: JSON.stringify(readFileSync("src/rules/RULES.md", "utf8")),
     __WORKFLOW_YML__: JSON.stringify(readFileSync("templates/readme-check.yml", "utf8")),
-    __CLONES_YML__: JSON.stringify(readFileSync("templates/clone-count.yml", "utf8")),
+    __CLONES_YML__: JSON.stringify(readFileSync("templates/clonometer.yml", "utf8")),
   },
   test: { include: ["test/**/*.test.ts"] },
 });

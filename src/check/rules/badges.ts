@@ -1,5 +1,7 @@
 import { execSync } from "node:child_process";
 import { remoteOf } from "../../context/git.js";
+import { visit } from "unist-util-visit";
+import { toString } from "mdast-util-to-string";
 import { collectImages, safeDecode } from "../util.js";
 import type { Rule } from "../types.js";
 
@@ -79,9 +81,9 @@ export const ciMatchesRemote: Rule = {
 };
 
 export const staticStatus: Rule = {
-  id: "badges/no-static-status",
+  id: "badges/live-status",
   level: "fail",
-  description: "No hand-written status badge",
+  description: "A status badge reads from the live service",
   run: ({ doc }) =>
     collectImages(doc)
       .filter((i) => i.badge && /shields\.io\/badge\/(build|ci|tests?|coverage|status)-/i.test(i.src))
@@ -126,7 +128,7 @@ export const countSource: Rule = {
 export const rowLength: Rule = {
   id: "badges/row-length",
   level: "warn",
-  description: "No badge row longer than the limit",
+  description: "A badge row stays within the limit",
   run: ({ doc, config }) => {
     const out = [];
     const counts = new Map<number, number>();
@@ -143,4 +145,35 @@ export const rowLength: Rule = {
   },
 };
 
-export const BADGE_RULES: Rule[] = [badgesLinked, badgesLogoPresent, badgesLogo, ciMatchesRemote, staticStatus, countSource, rowLength];
+const CI_BADGE_RE = /actions\/workflow\/status\/|\/actions\/workflows\/[^"'\s)]*badge\.svg|\/workflows\/[^"'\s)]*\.svg|shields\.io\/(github\/checks-status|github\/check-runs|circleci|travis|gitlab\/pipeline|appveyor|azure-devops\/build)\b|circleci\.com\/[^"'\s)]*\.svg|travis-ci\.(com|org)\/[^"'\s)]*\.svg/i;
+
+export const noCiBadge: Rule = {
+  id: "badges/carry-facts",
+  level: "fail",
+  description: "Every badge carries a number or a fact; CI status is table stakes and stays out",
+  run: ({ doc }) =>
+    collectImages(doc)
+      .filter((i) => i.badge && CI_BADGE_RE.test(i.src))
+      .map((i) => ({ message: "CI status badge.", line: i.line, repair: "Drop it. Green CI is table stakes once merges require it. Keep badges that carry a number or a fact." })),
+};
+
+const RAW_BADGE_RE = /https?:\/\/(img\.shields\.io|badgen\.net)\/\S+/i;
+
+export const noRawUrls: Rule = {
+  id: "badges/shown-as-badges",
+  level: "fail",
+  description: "A badge URL appears only as the badge itself, linked",
+  run: ({ doc }) => {
+    const out: Array<{ message: string; line?: number; repair: string }> = [];
+    const hit = (line: number | undefined) => out.push({ message: "Raw badge URL.", line, repair: "Show the badge itself, linked to its own URL. Recipe templates live in CONTRIBUTING." });
+    visit(doc.tree, (node) => {
+      if ((node.type === "code" || node.type === "inlineCode") && RAW_BADGE_RE.test(node.value)) hit(node.position?.start.line);
+      // A bare URL that GFM autolinks, or a link whose visible words are the URL.
+      if (node.type === "link" && RAW_BADGE_RE.test(toString(node))) hit(node.position?.start.line);
+      if (node.type === "html" && RAW_BADGE_RE.test(node.value.replace(/<!--[\s\S]*?-->/g, "").replace(/<[^>]+>/g, " "))) hit(node.position?.start.line);
+    });
+    return out;
+  },
+};
+
+export const BADGE_RULES: Rule[] = [badgesLinked, badgesLogoPresent, badgesLogo, ciMatchesRemote, noCiBadge, staticStatus, countSource, rowLength, noRawUrls];

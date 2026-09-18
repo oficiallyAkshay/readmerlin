@@ -13,6 +13,6 @@ export function format(r: CheckResult, fmt: "text" | "github" | "json"): string 
       if (f.repair) out += `\t\trepair: ${f.repair}\n`;
     }
   }
-  out += fmt === "github" ? `::notice::readmerlin ${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} checks\n` : `\n${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} checks\n`;
+  out += fmt === "github" ? `::notice::readmerlin ${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} rules\n` : `\n${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} rules\n`;
   return out;
 }

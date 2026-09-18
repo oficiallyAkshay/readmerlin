@@ -9,11 +9,32 @@ const PATTERNS: Record<string, RegExp> = {
   gems: /shields\.io\/gem\/(v|dt|dv)\//i,
 };
 
+const LOOKUP: Record<string, (name: string) => string> = {
+  npm: (n) => `https://registry.npmjs.org/${n.replace("/", "%2F")}`,
+  pypi: (n) => `https://pypi.org/pypi/${n}/json`,
+  crates: (n) => `https://crates.io/api/v1/crates/${n}`,
+  gems: (n) => `https://rubygems.org/api/v1/gems/${n}.json`,
+};
+
+/** True when the registry knows the package, false on a 404, undefined when it could not be asked. */
+async function published(fetchFn: typeof fetch, registry: string, name: string): Promise<boolean | undefined> {
+  const url = LOOKUP[registry]?.(name);
+  if (!url) return undefined;
+  try {
+    const res = await fetchFn(url, { headers: { accept: "application/json", "user-agent": "readmerlin registry check" }, signal: AbortSignal.timeout(8000) });
+    await res.body?.cancel();
+    if (res.status === 404) return false;
+    return res.ok ? true : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const registryBadges: Rule = {
   id: "badges/registry-present",
   level: "warn",
   description: "A published package carries its registry version and downloads badges",
-  run: ({ doc }) => {
+  run: async ({ doc, links, fetch }) => {
     const out = [];
     const badges = collectImages(doc).filter((i) => i.badge).map((i) => i.src);
     for (const p of readPackages(doc.repoRoot)) {
@@ -22,8 +43,10 @@ export const registryBadges: Rule = {
       const hasVersion = badges.some((b) => re.test(b) && /\/(v)\//.test(b));
       const hasDownloads = badges.some((b) => re.test(b) && !/\/(v)\//.test(b));
       if (!hasVersion || !hasDownloads) {
+        // The manifest says publishable. Only the registry says published.
+        if (links && (await published(fetch, p.registry, p.name)) === false) continue;
         out.push({
-          message: `${p.name} is published on ${p.registry} but the README carries no ${!hasVersion && !hasDownloads ? "version or downloads" : !hasVersion ? "version" : "downloads"} badge for it.`,
+          message: `${p.name} ${links ? "is published on" : "is set up to publish to"} ${p.registry} but the README carries no ${!hasVersion && !hasDownloads ? "version or downloads" : !hasVersion ? "version" : "downloads"} badge for it.`,
           line: 1,
           repair: `Add, linked to ${p.badges[0].href}: ${p.badges.map((b) => b.src).join(" and ")}`,
         });

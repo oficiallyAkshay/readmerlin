@@ -1,10 +1,10 @@
 <h1 align="center">🧾 tidy-inbox</h1>
 
 <p align="center">
-  <b>Your money went out. Bring it back.</b>
-  <br>
-  Turn a week of receipts into one claim.
+  <b>Your money went out and the receipts are scattered. tidy-inbox turns the week into one claim.</b>
 </p>
+
+<p align="center"><img alt="Inbox and calendar feed receipts of every kind into one claim with the receipts behind the summary" src="assets/readme/hero.svg" width="900"></p>
 
 <p align="center">
   <a href="SKILL.md"><img alt="agent skill" src="https://img.shields.io/badge/agent-skill-7C3AED?logo=anthropic&logoColor=white"></a>
@@ -12,61 +12,31 @@
 </p>
 
 <p align="center">
-  <sub>Runs on</sub>
-  <br>
-  <a href="#quick-start"><img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-3f3f46?logo=anthropic&logoColor=white"></a>
-  <a href="#quick-start"><img alt="Cursor" src="https://img.shields.io/badge/Cursor-3f3f46"></a>
-  <a href="#quick-start"><img alt="Codex" src="https://img.shields.io/badge/Codex-3f3f46"></a>
-</p>
-
-<p align="center"><img alt="Inbox and calendar feed receipts of every kind into one claim with the receipts behind the summary" src="assets/readme/hero.svg" width="900"></p>
-
-<p align="center">
   <b><a href="SKILL.md">See the skill it documents</a></b>
 </p>
 
-You spent your own money on someone else's behalf. An interview, a client trip, a contract gig. Now the receipts are scattered across your inbox and the claim is the last thing you have time to build.
+You spent your own money on someone else's behalf. An interview, a client trip, a contract gig. It works in Claude Code, Cursor and Codex, from your calendar or from dates you give it.
 
-tidy-inbox builds it. Every receipt, the right total, one claim.
+Add the owner/tidy-inbox skill to your agent, then say "Build my claim for the trip on June 11." It needs no secret.
 
 ## Features
 
-- **Finding**
-  - Reads the trip dates from your calendar, or asks once
-  - Searches the inbox for that window only
-- **Deciding**
-  - Shows the candidate list before anything is built
-  - Takes corrections in plain words
-- **Delivering**
-  - One summary, then every receipt behind it
-  - Nothing is sent anywhere. You send it.
+- 📅 **Trip dates found.** It reads them from your calendar, or asks once.
+- 🔎 **One window searched.** The inbox is searched for those days only.
+- 📋 **Candidates shown first.** You see the list before anything is built.
+- 🧾 **Every receipt attached.** One summary, then each receipt behind it.
+- 🗣️ **Corrections, your way.** Say "the flight was on the corporate card" and the total follows.
 
-## Quick start
+## Security
 
-```bash
-npx skills add owner/tidy-inbox -g
-```
+It needs no credential of its own; it reads mail through the mail tool your agent already has.
 
-Then tell your agent: "Build my claim for the trip on June 11."
+- ❌ sends the claim to anyone
+- ❌ copies mail out of your inbox
+- ❌ reads outside the trip window
+- ❌ writes anywhere but the folder you name
 
-## Configuration and security
+## Callouts
 
-What leaves your machine: nothing.
-
-| Concern | What happens | Guard |
-|---|---|---|
-| Your inbox | Read through the agent's own mail tool, never copied out | the agent's permissions |
-| The claim | Written to a folder you name | you send it |
-
-## Common workflows
-
-| Situation | What you say | What comes back |
-|---|---|---|
-| A trip last month | "Build my claim for the Denver trip" | Candidates in chat, then one claim |
-| A receipt got missed | "Add the Tuesday dinner" | The claim rebuilt with it |
-| Company paid some of it | "The flight was on the corporate card" | Those lines dropped, total corrected |
-
-## For agents
-
-- Read [SKILL.md](SKILL.md) first. The four steps there are the whole contract.
-- Never send the claim. Hand it back and stop.
+- It finds only receipts that reached the inbox your agent can read.
+- You send the claim. The skill stops once it hands it back.

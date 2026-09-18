@@ -16,6 +16,6 @@
     "npm"
   ],
   "counts": {
-    "checks": "node -e \"import('./dist/index.js').then(m => console.log(m.RULES.length))\""
+    "rules": "node -e \"import('./dist/index.js').then(m => console.log(m.RULES.length))\""
   }
 }
