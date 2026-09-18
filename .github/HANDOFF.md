@@ -2,20 +2,16 @@
 
 What is still open after the 2026-09-18 session folded the earlier handoff notes and the clonometer README rules into the rules text, the checker, the writer prompt, the skill, the templates and this repo's own README. Delete this file once the items are picked up; it is not documentation.
 
-## Owner steps
+## The plan, decided 2026-09-18
 
-- `npm login`, then `npm publish` in the repo (prepublishOnly runs typecheck, build, tests and the self check). The action and the skill both call `npx readmerlin`, so they fail until this happens.
-- `claude login`, then `readmerlin write --backend claude --dry-run` on `examples/tidy-inbox` to prove the backend end to end.
-- Marketplace listing for the action. Move the `v1` tag once this work is on main.
+readmerlin is an agent skill, not an npm package. The writing needs the user's agent, an agent finds a skill in its skills folder, and everything readmerlin needs fits in that folder: the instructions plus one committed script. Installed with `npx skills add`, updated with `npx skills update`, counted by clones through clonometer. Rules are stated positively. A README has no Quick start and no section for agents.
 
-## Decided on 2026-09-18, already applied
-
-- They are rules, not checks, and each one is stated positively: what a good README has. Rule ids follow, such as `prose/plain-punctuation` and `shape/install-in-words`. The package name stays readmerlin.
-- A README never has a Quick start section. It is on the kill list and fails.
-- A README never has a section for agents. `shape/agents-in-contributing` fails on one; the agent block lives only in CONTRIBUTING, under forty lines.
-
-- readmerlin is a package first, with the action on top. It does not run clonometer on itself: the skill, the CLI and the action all call the npm package, so npm downloads count every channel. `init-workflow --clones` stays for skill-only repos, where clones are the only count.
-- To do with that: make the `v1` action run `readmerlin@1` instead of `@latest`, and ship new rules as warn in a minor release, fail only in a major.
+1. Done: the skill shape. `skills/readmerlin/scripts/readmerlin.mjs` is built from `src`, committed, and a rebuild test fails when it is stale. SKILL.md runs it. `package.json` is private. The script prints one line when a newer version is out and never updates itself.
+2. Owner: clonometer. The workflow and its badge sit in a local commit this session could not push, because its token has no `workflow` scope. Push it, add a `TRAFFIC_TOKEN` secret (fine-grained, this repository, Contents write and Administration read), and run the workflow once.
+3. Next: the action. `action.yml` and `templates/readme-check.yml` still call `npx readmerlin` from npm, which will never exist. Make the action run the committed script from its own checkout, so it can be pinned to a commit. Until then the action does not work.
+4. Next: decide on `write`. The command and its six model backends write a README without an agent. Under the skill shape the agent is the writer, so they are likely dead weight, and removing them makes "never sends your repo to a model" true by construction. Owner's call.
+5. Then: a release habit. Bump the version in `package.json` and SKILL.md together, since the update notice reads `package.json` on main. Tag releases. Move `v1` once the action works.
+6. Then: list on the skills directory and the action Marketplace, and re-run calibration on about twenty real READMEs.
 
 ## Still to build
 
@@ -24,7 +20,6 @@ What is still open after the 2026-09-18 session folded the earlier handoff notes
 - Rule candidate from pierless: flag a hand-written static shields badge that states a claim. Today this is rules text only. The reference README's static `dependencies-0` badge is covered by `badges/count-source` instead.
 - Re-run calibration after these rule changes: refetch about twenty starred skill and MCP READMEs and tally findings per rule. `shape/section-order` now warns on every section outside the six, so expect it to be the loudest.
 - pierless's README PR is not started. Boomerang is the second calibration case; it is private, so nothing public may link to it.
-- PyPI packaging is still deferred.
 
 ## Learnings worth keeping (readmerlin-specific)
 

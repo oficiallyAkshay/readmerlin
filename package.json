@@ -1,7 +1,8 @@
 {
   "name": "readmerlin",
   "version": "0.1.0",
-  "description": "Writes and checks value-first READMEs for skill, agent and MCP server repos.",
+  "private": true,
+  "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -22,7 +23,6 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "check": "node dist/cli.js check README.md",
-    "prepublishOnly": "npm run typecheck && npm run build && npm test && npm run check -- --no-links",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "repository": {

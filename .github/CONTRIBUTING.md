@@ -2,15 +2,27 @@
 
 Everything the README leaves out lives here: commands, settings, workflows, badge recipes, how the pieces fit, and the block an agent reads.
 
+## How it ships
+
+readmerlin is an agent skill, not a package. The writing needs the user's agent, and an agent finds a skill in its skills folder, so the skill folder is the whole product. The rules that thinking cannot settle, such as whether a link answers, run from one script inside that folder: `skills/readmerlin/scripts/readmerlin.mjs`, built from `src`, committed, and held to the source by a rebuild test. A release is a merge to main. Nothing is published to npm.
+
+```text
+npx skills add oficiallyAkshay/readmerlin -g
+npx skills update readmerlin
+```
+
+Installs are clones of this repository, so clonometer keeps the count. The script tells the user when a newer version is out and never updates anything itself.
+
 ## Commands
 
-```bash
-npx skills add oficiallyAkshay/readmerlin -g
-npx readmerlin context [dir] --format md|json
-npx readmerlin rules
-npx readmerlin check [README.md] --format text|github|json [--no-links] [--no-exec]
-npx readmerlin write [dir] --backend auto|claude|anthropic|github|codex|gemini|prompt [--model id] [--rounds 1..10] [--dry-run]
-npx readmerlin init-workflow [dir] [--clones]
+With `readmerlin` standing for `node skills/readmerlin/scripts/readmerlin.mjs`:
+
+```text
+readmerlin context [dir] --format md|json
+readmerlin rules
+readmerlin check [README.md] --format text|github|json [--no-links] [--no-exec]
+readmerlin write [dir] --backend auto|claude|anthropic|github|codex|gemini|prompt [--model id] [--rounds 1..10] [--dry-run]
+readmerlin init-workflow [dir] [--clones]
 ```
 
 Exit codes: 0 clean or warnings only, 1 any fail, 2 the tool itself failed. `--model` applies to the anthropic and github backends.
@@ -33,7 +45,7 @@ What leaves the machine, and the guard for each:
 
 | Concern | What happens | Guard |
 |---|---|---|
-| The check fetches links | External links are requested, results cached for a day; badge logos and registry lookups are requested each run | `--no-links` |
+| The check fetches links | External links are requested, results cached for a day; badge logos and registry lookups each run; this repo's version number once a day | `--no-links` |
 | The writer sends the repo to a model | Manifests, commands and the old README go to the chosen backend | `--backend prompt` prints instead of sending |
 | The action runs code on the runner | One `npx` of the version set, no cache. Count-source commands stay off | the `version` and `exec` inputs |
 
@@ -76,12 +88,12 @@ npm test
 npm run check
 ```
 
-Rules live in `src/check/rules`, one file per group. A rule has an id of the form `group/name`, a default level, a one-line description and a `run` that returns findings with a repair line. Add a test beside the others in `test`, and update the `rules` count badge, which the self check verifies.
+Rules live in `src/check/rules`, one file per group. A rule has an id of the form `group/name`, a default level, a one-line description and a `run` that returns findings with a repair line. Add a test beside the others in `test`, update the `rules` count badge, which the self check verifies, and commit the rebuilt script: `npm run build` writes it, and the tests fail while it is stale.
 
 ## For agents
 
 - Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
 - Order of work: `context`, `rules`, draw the hero with herofold, write the six parts, move the rest here, `check` until clean, `init-workflow`.
 - Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carry-facts`, `prose/plain-punctuation`, `visuals/spec-beside`, `privacy/denylist-clear`, `links/external`. Every finding carries the id and a repair line.
-- Library: `import { check, gather, write, rules } from "readmerlin"`. Types ship in the package.
+- The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
 - Peers, never dependencies: herofold draws the hero from `<name>.hero.json`, Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.
