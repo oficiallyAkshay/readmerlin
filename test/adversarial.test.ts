@@ -197,6 +197,11 @@ describe("the six-section shape", () => {
     const fails = f.findings.filter((x) => x.level === "fail").map((x) => `${x.id}: ${x.message}`);
     expect(fails).toEqual(['shape/earned-headings: Heading "Quick start" is on the kill list.', 'shape/agents-in-contributing: Section "For agents" is written for agents.']);
   });
+  it("tells a section for agents from a section about agents", async () => {
+    const titled = async (t: string) => (await ids(repo(SHAPED + `\n## ${t}\n\n- x\n`), "fail")).includes("shape/agents-in-contributing");
+    for (const t of ["For agents", "For AI agents", "Notes for LLMs", "Agent instructions", "AGENTS.md"]) expect(await titled(t), t).toBe(true);
+    for (const t of ["Supported agents", "Agent skills", "What are agent skills?", "Skill not loading in agent", "Hermes Agent"]) expect(await titled(t), t).toBe(false);
+  });
   it("lets emoji lead a bullet and keeps a long agent block out of CONTRIBUTING", async () => {
     const dir = repo(SHAPED, { ".github/CONTRIBUTING.md": "# Contributing\n\n## For agents\n\n" + Array.from({ length: 45 }, (_, i) => `- step ${i}`).join("\n") + "\n" });
     const r = await check(join(dir, "README.md"), { format: "json", links: false });
