@@ -13,7 +13,8 @@ const INSTALL_PROSE_RE = /\b(install|add|enable|copy)\b[^.\n]{0,80}\b(action|ski
 const BADGES_TITLE = /^badges?$/i;
 const FEATURES_TITLE = /^features$/i;
 const SECURITY_TITLE = /^security\b/i;
-const AGENT_TITLE = /\b(agents?|for the model|for claude|llms?)\b/i;
+// A section addressed to an agent ("For agents", "Agent instructions"), never one that is merely about agents ("Supported agents").
+const AGENT_TITLE = /^(?:#+\s*)?(?:(?:(?:notes?|instructions?|guidance|guide|context|reference)\s+)?for\s+(?:ai\s+|coding\s+)?(?:agents?|llms?|the model|claude|assistants?)\b|(?:ai\s+)?(?:agents?|llms?)\s+(?:instructions?|notes?|guide|reference|block)\b|agents\.md\s*$)/i;
 
 export const heroExists: Rule = {
   id: "hero/exists",

@@ -10,16 +10,19 @@ readmerlin is an agent skill, not an npm package. The writing needs the user's a
 2. Done: the action runs that same script from its own checkout, so the ref a workflow names is the code that runs. It only checks.
 3. Done: `write` and its model backends are gone. The agent is the writer, and the script never talks to a model. The commit that removed them can be reverted if that turns out wrong.
 4. Done: the release habit. Version lives in `package.json` and SKILL.md, a test holds them and the script together, and this release is 0.2.0.
-5. Owner, because it needs rights a session does not have: clonometer. The workflow and its badge are the last local commit on the branch; the session token has no `workflow` scope. Run `gh auth refresh -s workflow`, push, create a fine-grained token for this repository (Contents write, Administration read), store it as the `TRAFFIC_TOKEN` secret, and run the workflow once. The count starts that day.
-6. After the merge: tag `v0.2.0`, move `v1` to it, then list the skill on the skills directory and the action on the Marketplace.
-7. Then: re-run calibration on about twenty real READMEs.
+5. Done: clonometer runs on this repo, workflow and badge merged. Owner, because a session may not create or enter credentials: create a fine-grained token for this repository (Contents write, Administration read), store it as the `TRAFFIC_TOKEN` secret, and run the clonometer workflow once. The count starts that day, and the badge has nothing to read until then.
+6. Waiting on the owner's word: version tags. No `v0.2.0` tag exists and `v1` still points at the old npm-based action. Nothing is tagged or moved until the owner says so. Until `v1` moves, workflows that use `@v1` get the old, broken action; pinning a commit from main works today.
+7. Then: list the skill on the skills directory and the action on the Marketplace.
+
+## Calibration, 2026-09-18
+
+19 public skill and MCP READMEs, links and commands off: no crashes. Almost every real README fails, which is expected, since the shape is strict by design. Loudest rules, by repos hit: `shape/section-order` 18, `prose/code-outside-sentences` 17, `prose/sentence-case` 16, `hero/exists` 15, `shape/install-in-words` 14, `shape/earned-headings` 13, `prose/plain-punctuation` 13. `links/relative` and `visuals/images-exist` fired only because the READMEs were checked without their repos. One real false positive was found and fixed: `shape/agents-in-contributing` matched any heading containing "agent" (13 hits in 7 repos, such as "Supported agents"); it now matches only headings addressed to an agent.
 
 ## Still to build
 
 - A committed generator for this repo's own hero. `assets/readme/hero.svg` was drawn by a script that lived only in a session. It needs a generator that reads `assets/readme/hero.hero.json`, plus a rebuild test, or herofold once that ships. Check the result at full width and in dark theme.
 - `check` should verify that a hero spec agrees with its SVG, not only that it sits beside it.
 - Rule candidate from pierless: flag a hand-written static shields badge that states a claim. Today this is rules text only. The reference README's static `dependencies-0` badge is covered by `badges/count-source` instead.
-- Re-run calibration after these rule changes: refetch about twenty starred skill and MCP READMEs and tally findings per rule. `shape/section-order` now warns on every section outside the six, so expect it to be the loudest.
 - pierless's README PR is not started. Boomerang is the second calibration case; it is private, so nothing public may link to it.
 
 ## Learnings worth keeping (readmerlin-specific)
