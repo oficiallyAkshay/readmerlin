@@ -5,40 +5,21 @@
   "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",
   "type": "module",
-  "bin": {
-    "readmerlin": "./dist/cli.js"
-  },
-  "files": [
-    "dist",
-    "skills",
-    "templates",
-    "action.yml",
-    "readmerlin.schema.json"
-  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "rm -rf dist && tsup && tsc -p tsconfig.build.json",
+    "build": "tsup",
     "dev": "tsup --watch",
+    "hero": "node scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg && node scripts/hero-svg.mjs examples/tidy-inbox/assets/readme/hero.hero.json > examples/tidy-inbox/assets/readme/hero.svg",
     "test": "vitest run",
-    "check": "node dist/cli.js check README.md",
+    "check": "node skills/readmerlin/scripts/readmerlin.mjs check README.md",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oficiallyAkshay/readmerlin.git"
   },
-  "keywords": [
-    "readme",
-    "skill",
-    "agent",
-    "mcp",
-    "linter",
-    "claude-code",
-    "cursor",
-    "codex"
-  ],
   "dependencies": {
     "image-size": "^2.0.4",
     "mdast-util-to-string": "^4.0.0",
@@ -54,15 +35,5 @@
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
   }
 }

@@ -62,7 +62,7 @@ https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/
 https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/views.json&query=$.badge&label=views&logo=github&logoColor=white
 ```
 
-A count badge such as `rules-55` needs a source in `readmerlin.json` under `counts`, keyed by the badge label, holding a command that prints the number.
+A count badge such as `rules-57` needs a source in `readmerlin.json` under `counts`, keyed by the badge label, holding a command that prints the number.
 
 ## How it fits together
 
@@ -71,6 +71,10 @@ A count badge such as `rules-55` needs a source in `readmerlin.json` under `coun
 </p>
 
 Code gathers and checks. The agent does the writing. The diagram is rebuilt with `node scripts/archify-svg.mjs <archify checkout>` from `assets/diagram/architecture.archify.json`.
+
+## The hero
+
+`scripts/hero-svg.mjs` draws a hero from its spec, with no dependencies, in light and dark theme. It has one layout per verb: `fan` for a product that gathers many things into one, and `before-after` for a product that makes one thing better, which is this repo's own. `npm run hero` redraws both committed heroes, a test fails when an SVG has drifted from its spec, and `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in the script, never a borrowed one.
 
 ## Specs beside an SVG
 

@@ -4,11 +4,11 @@
   <b>A skill README gets ten seconds and then goes stale. readmerlin writes one people finish and checks it on every push.</b>
 </p>
 
-<p align="center"><img alt="A skill repo and an agent go in, and one README comes out that reads in ten seconds and stays honest on every push" src="assets/readme/hero.svg" width="900"></p>
+<p align="center"><img alt="A long README that opens on code, carries a stale badge and a dead link, and loses the reader at the fold becomes a short page that leads with what they get, shows one picture, and is checked on every push" src="assets/readme/hero.svg" width="900"></p>
 
 <p align="center">
   <a href="package.json"><img alt="Node 20 or newer" src="https://img.shields.io/badge/node-20%2B-339933?logo=nodedotjs&logoColor=white"></a>
-  <a href="src/check/rules"><img alt="rules" src="https://img.shields.io/badge/rules-55-6f42c1?logo=eslint&logoColor=white"></a>
+  <a href="src/check/rules"><img alt="rules" src="https://img.shields.io/badge/rules-57-6f42c1?logo=eslint&logoColor=white"></a>
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative&logoColor=white"></a>
 </p>
 

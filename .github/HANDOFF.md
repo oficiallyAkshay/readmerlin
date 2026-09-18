@@ -10,9 +10,11 @@ readmerlin is an agent skill, not an npm package. The writing needs the user's a
 2. Done: the action runs that same script from its own checkout, so the ref a workflow names is the code that runs. It only checks.
 3. Done: `write` and its model backends are gone. The agent is the writer, and the script never talks to a model. The commit that removed them can be reverted if that turns out wrong.
 4. Done: the release habit. Version lives in `package.json` and SKILL.md, a test holds them and the script together, and this release is 0.2.0.
-5. Done: clonometer runs on this repo, workflow and badge merged. Owner, because a session may not create or enter credentials: create a fine-grained token for this repository (Contents write, Administration read), store it as the `TRAFFIC_TOKEN` secret, and run the clonometer workflow once. The count starts that day, and the badge has nothing to read until then.
+5. Done: clonometer runs on this repo. The owner stored the `TRAFFIC_TOKEN` secret on 2026-09-18, the first run succeeded, and the badge reads live numbers.
 6. Waiting on the owner's word: version tags. No `v0.2.0` tag exists and `v1` still points at the old npm-based action. Nothing is tagged or moved until the owner says so. Until `v1` moves, workflows that use `@v1` get the old, broken action; pinning a commit from main works today.
 7. Then: list the skill on the skills directory and the action on the Marketplace.
+
+8. Done: the hero has a committed generator, `scripts/hero-svg.mjs`, with a rebuild test, and it is this repo's own shape, a before and after, not the fan borrowed from boomerang. `visuals/spec-agrees` holds a hero to its spec. `badges/claims-backed` warns on a hand-written claim badge. An unverified count badge is a warning, so the action passes with its defaults. The package-era leftovers are gone: no `dist`, no library entry, CI runs the committed script.
 
 ## Calibration, 2026-09-18
 
@@ -20,9 +22,6 @@ readmerlin is an agent skill, not an npm package. The writing needs the user's a
 
 ## Still to build
 
-- A committed generator for this repo's own hero. `assets/readme/hero.svg` was drawn by a script that lived only in a session. It needs a generator that reads `assets/readme/hero.hero.json`, plus a rebuild test, or herofold once that ships. Check the result at full width and in dark theme.
-- `check` should verify that a hero spec agrees with its SVG, not only that it sits beside it.
-- Rule candidate from pierless: flag a hand-written static shields badge that states a claim. Today this is rules text only. The reference README's static `dependencies-0` badge is covered by `badges/count-source` instead.
 - pierless's README PR is not started. Boomerang is the second calibration case; it is private, so nothing public may link to it.
 
 ## Learnings worth keeping (readmerlin-specific)

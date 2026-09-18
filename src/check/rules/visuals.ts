@@ -98,6 +98,46 @@ export const specBeside: Rule = {
   },
 };
 
+/** Every label a hero spec puts on the picture, whatever its layout: the string under any title, label, gives, heading, backing or with key. */
+function specLabels(spec: unknown): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown, key: string): void => {
+    if (typeof v === "string") {
+      if (["title", "label", "gives", "heading", "backing", "with"].includes(key) && v.trim()) out.push(v.trim());
+    } else if (Array.isArray(v)) v.forEach((x) => walk(x, key));
+    else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
+  };
+  walk(spec, "");
+  return out;
+}
+
+export const specAgrees: Rule = {
+  id: "visuals/spec-agrees",
+  level: "fail",
+  description: "A hero shows every label its spec names",
+  run: ({ doc }) => {
+    const out = [];
+    for (const i of collectImages(doc)) {
+      if (i.badge || !i.inHero || isRemote(i.src) || !/\.svg(\?|$)/i.test(i.src)) continue;
+      const p = localPath(doc.repoRoot, i.src);
+      const specFile = p.replace(/\.svg$/i, ".hero.json");
+      if (!existsSync(p) || !existsSync(specFile)) continue;
+      let labels: string[];
+      try {
+        labels = specLabels(JSON.parse(readFileSync(specFile, "utf8")));
+      } catch {
+        out.push({ message: `${basename(specFile)} is not valid JSON.`, line: i.line, repair: "Fix the spec, then redraw the hero from it." });
+        continue;
+      }
+      const unescape = (t: string) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+      const shown = unescape(readFileSync(p, "utf8").replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "\n"));
+      const missing = labels.filter((l) => !shown.includes(l));
+      if (missing.length) out.push({ message: `${i.src} does not show what its spec names: ${missing.slice(0, 5).join(", ")}${missing.length > 5 ? ", and more" : ""}.`, line: i.line, repair: "Redraw the hero from its spec. The spec is the source, the SVG is its output." });
+    }
+    return out;
+  },
+};
+
 interface Box { x: number; y: number; w: number; h: number; line: number }
 
 function parseSvg(text: string): { vb?: { w: number; h: number }; rects: Box[]; texts: Array<{ x: number; y: number; size: number; len: number; anchor: string; width?: number }>; hasText: boolean; fontStack: boolean; badAmp: boolean; groups: string[] } {
@@ -223,4 +263,4 @@ export const distinctIcons: Rule = {
   },
 };
 
-export const VISUAL_RULES: Rule[] = [imagesExist, svgLocal, rasterWarning, imageHeight, specBeside, svgEscaped, svgFontStack, svgClipping, svgTextOverflow, distinctIcons];
+export const VISUAL_RULES: Rule[] = [imagesExist, svgLocal, rasterWarning, imageHeight, specBeside, specAgrees, svgEscaped, svgFontStack, svgClipping, svgTextOverflow, distinctIcons];

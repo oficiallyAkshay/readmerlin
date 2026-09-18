@@ -19,7 +19,7 @@ Everything below runs one script that sits beside this file, at `scripts/readmer
 
 1. Gather. Run `readmerlin context --format md` and read what it prints. It lists the skills, commands, agents, manifests, hosts, workflows and the existing README. Do not walk the source tree.
 2. Read the rules. Run `readmerlin rules` and read all of it. The rules are short.
-3. Draw first. Write the hero spec and render it with the herofold skill. If the skill is missing, tell the user the one install command and stop. Never use Mermaid. Look at the hero at full width and in dark theme before moving on.
+3. Draw first. Name the product's verb before anything else: gather, improve, watch, translate. The hero takes that shape, in the reader's nouns, and another project's layout is never reused for a different verb. Write the hero spec and render it with the herofold skill. If the skill is missing, tell the user the one install command and stop. Never use Mermaid. Look at the hero at full width and in dark theme before moving on.
 4. Write. Six parts in this order and no others: hero, Features, Badges, Security, How it compares, Callouts. Derive the tagline from the outcome, not the file tree. Keep the user's own sentences verbatim; restructure, do not rewrite, and say when a sentence changes. Show each section in chat before writing it to disk.
 5. Compare truthfully. Columns are the real alternative repos, linked, this project first. Read each one's README and verify every cell before it ships.
 6. Move the rest. Workflow YAML, CLI usage, settings, badge recipes, the architecture diagram (drawn with Archify) and the agent block go to `.github/CONTRIBUTING.md`. The README holds no code.
