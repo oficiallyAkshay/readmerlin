@@ -41,7 +41,7 @@ What leaves the machine, and the guard for each:
 
 `init-workflow` writes `.github/workflows/readme-check.yml`, which runs the check on every push, pull request and once a week through `oficiallyAkshay/readmerlin@v1`. For write mode, give the job `contents: write`, `pull-requests: write` and `models: read`, set `mode: write`, and pass `ANTHROPIC_API_KEY` to use Claude or leave it out to use GitHub Models with the job token.
 
-`init-workflow --clones` also writes `.github/workflows/clonometer.yml`, the consumer workflow of [clonometer](https://github.com/oficiallyAkshay/clonometer) pinned to its current commit. It needs a `TRAFFIC_TOKEN` secret: a fine-grained token scoped to the one repository, with Contents write and Administration read. This repository runs the same workflow.
+For a repo with no registry package, clones are the only count there is. `init-workflow --clones` also writes `.github/workflows/clonometer.yml`, the consumer workflow of [clonometer](https://github.com/oficiallyAkshay/clonometer) pinned to its current commit. It needs a `TRAFFIC_TOKEN` secret: a fine-grained token scoped to the one repository, with Contents write and Administration read.
 
 ## Badge recipes
 

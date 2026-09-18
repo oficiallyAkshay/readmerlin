@@ -4,7 +4,6 @@ What is still open after the 2026-09-18 session folded the earlier handoff notes
 
 ## Owner steps
 
-- Add a `TRAFFIC_TOKEN` secret to this repository: a fine-grained token scoped to readmerlin, Contents write and Administration read. Then run the clonometer workflow once by hand. Until it has run, the clones badge in the README has no numbers file to read.
 - `npm login`, then `npm publish` in the repo (prepublishOnly runs typecheck, build, tests and the self check). The action and the skill both call `npx readmerlin`, so they fail until this happens.
 - `claude login`, then `readmerlin write --backend claude --dry-run` on `examples/tidy-inbox` to prove the backend end to end.
 - Marketplace listing for the action. Move the `v1` tag once this work is on main.
@@ -14,6 +13,9 @@ What is still open after the 2026-09-18 session folded the earlier handoff notes
 - They are rules, not checks, and each one is stated positively: what a good README has. Rule ids follow, such as `prose/plain-punctuation` and `shape/install-in-words`. The package name stays readmerlin.
 - A README never has a Quick start section. It is on the kill list and fails.
 - A README never has a section for agents. `shape/agents-in-contributing` fails on one; the agent block lives only in CONTRIBUTING, under forty lines.
+
+- readmerlin is a package first, with the action on top. It does not run clonometer on itself: the skill, the CLI and the action all call the npm package, so npm downloads count every channel. `init-workflow --clones` stays for skill-only repos, where clones are the only count.
+- To do with that: make the `v1` action run `readmerlin@1` instead of `@latest`, and ship new rules as warn in a minor release, fail only in a major.
 
 ## Still to build
 
