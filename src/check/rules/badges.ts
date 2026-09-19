@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { remoteOf } from "../../context/git.js";
+import { MARKLESS_HOST_BADGES } from "../../context/readers.js";
 import { visit } from "unist-util-visit";
 import { toString } from "mdast-util-to-string";
 import { collectImages, safeDecode } from "../util.js";
@@ -44,7 +45,7 @@ export const badgesLogoPresent: Rule = {
   description: "Shields badges carry a logo where one exists",
   run: ({ doc }) =>
     collectImages(doc)
-      .filter((i) => i.badge && /shields\.io/.test(i.src) && !/[?&]logo=/.test(i.src))
+      .filter((i) => i.badge && /shields\.io/.test(i.src) && !/[?&]logo=/.test(i.src) && !MARKLESS_HOST_BADGES().includes(i.src))
       .map((i) => ({ message: "Shields badge without a logo.", line: i.line, repair: "Add logo=<simple-icons slug> if one exists. Label-only is fine for a host with no mark." })),
 };
 
@@ -210,7 +211,7 @@ export const noRawUrls: Rule = {
   },
 };
 
-const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|deno|bun|typescript|platform|os|agent|version|v|release|api|schema|since|made with|built with|runs on|style|code style)$/i;
+const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|deno|bun|typescript|platform|os|agent|version|v|release|api|schema|since|made with|built with|runs on|works with|style|code style)$/i;
 
 export const claimsBacked: Rule = {
   id: "badges/claims-backed",

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 // @ts-expect-error a plain script, no types
 import { render } from "../skills/readmerlin/scripts/hero-svg.mjs";
 
-const HEROES = ["assets/readme/hero", "examples/tidy-inbox/assets/readme/hero"];
+const HEROES = ["assets/readme/hero"];
 
 describe("every committed hero", () => {
   for (const h of HEROES) {

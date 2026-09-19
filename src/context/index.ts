@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { remoteOf } from "./git.js";
-import { detectHosts, installLines, readHooks, readLicense, readMarketplace, readMcp, readNamedDocs, readPackages, readPlugin, readReadme, readSkills, readWorkflows, rootFiles } from "./readers.js";
+import { BADGED_HOSTS, badgeRow, detectHosts, installLines, isSelf, readCompare, readWorksWith, worksWithRow, readHooks, readLicense, readMarketplace, readMcp, readNamedDocs, readPackages, readPlugin, readReadme, readSkills, readWorkflows, rootFiles } from "./readers.js";
 import type { RepoContext } from "./types.js";
 
 export async function gather(dir: string): Promise<RepoContext> {
@@ -10,13 +10,15 @@ export async function gather(dir: string): Promise<RepoContext> {
   const plugin = readPlugin(root);
   const marketplace = readMarketplace(root);
   const packages = readPackages(root);
+  const license = readLicense(root);
+  const hosts = readWorksWith(root) ?? detectHosts(root, plugin, skills);
   return {
     root,
     packages,
     repo,
-    license: readLicense(root),
+    license,
     install: installLines(repo, plugin, skills, marketplace, packages),
-    hosts: detectHosts(root, plugin, skills),
+    hosts,
     skills,
     plugin,
     marketplace,
@@ -27,6 +29,11 @@ export async function gather(dir: string): Promise<RepoContext> {
     workflows: readWorkflows(root),
     readme: readReadme(root),
     rootFiles: rootFiles(root),
+    badgeRow: badgeRow(repo, license, packages),
+    worksWith: worksWithRow(hosts),
+    unbadgedHosts: hosts.filter((h) => !BADGED_HOSTS().includes(h)),
+    self: isSelf(skills),
+    compare: readCompare(root),
   };
 }
 

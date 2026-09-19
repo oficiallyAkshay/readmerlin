@@ -336,6 +336,7 @@ export const securityChecklist: Rule = {
       const items = topItems(s);
       if (items.length === 0) out.push({ message: "Security has no checklist.", line: s.startLine, repair: "List what the software never does, every item starting with \u274c." });
       for (const item of items) if (!/^\s*\u274c/u.test(toString(item))) out.push({ message: "Security item does not start with \u274c.", line: item.position?.start.line, repair: "The list says what never happens. Move what it does into the opening sentence, or cut it." });
+      for (const item of items) if (/^\s*\u274c\s*(never|does not|doesn't|won't|will not|no)\b/iu.test(toString(item))) out.push({ message: "Security item repeats the never the \u274c already says.", line: item.position?.start.line, repair: 'Write a bare verb phrase after the \u274c, such as "\u274c sends telemetry".' });
     }
     return out;
   },

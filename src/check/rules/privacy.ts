@@ -71,9 +71,10 @@ export const comparisonLinks: Rule = {
   id: "honesty/comparison-links",
   level: "warn",
   description: "Comparison columns are the real alternatives, each header a link to its repo",
-  run: ({ doc }) =>
-    comparisonTables(doc).flatMap((t) =>
-      columns(t).flatMap((c) => {
+  run: ({ doc, config }) =>
+    comparisonTables(doc).flatMap((t) => [
+      ...specFindings(t, doc.repoRoot, config.compare),
+      ...columns(t).flatMap((c) => {
         const text = toString(c).trim();
         const href = linkOf(c);
         const repair = "Head every column with the full owner/repo name, linked, this project's included. Check every cell against that repo's README.";
@@ -83,8 +84,27 @@ export const comparisonLinks: Rule = {
         if (repo && text.toLowerCase() !== repo.toLowerCase()) return [{ message: `Comparison column "${text}" does not name its repo as ${repo}.`, line: c.position?.start.line, repair }];
         return [];
       }),
-    ),
+    ]),
 };
+
+// A committed comparison spec fixes the columns and rows, so a rewrite keeps the table that was approved.
+function specFindings(t: Table, root: string, spec: { repos?: string[]; rows?: string[] } | undefined) {
+  const out = [];
+  const repair = "Match the compare spec in readmerlin.json: this repo first, then its repos, and its rows in order.";
+  if (spec?.repos?.length) {
+    const self = remoteOf(root);
+    const want = [self.owner && self.name ? `${self.owner}/${self.name}` : "", ...spec.repos].map((x) => x.toLowerCase());
+    const got = columns(t).map((c) => toString(c).trim().toLowerCase());
+    if (want[0] === "") want.shift(), got.shift();
+    if (want.join("|") !== got.join("|")) out.push({ message: `Comparison columns are ${got.join(", ")}, the spec says ${want.join(", ")}.`, line: t.position?.start.line, repair });
+  }
+  if (spec?.rows?.length) {
+    const got = t.children.slice(1).map((r) => toString(r.children[0] ?? "").trim().toLowerCase());
+    const want = spec.rows.map((x) => x.toLowerCase());
+    if (want.join("|") !== got.join("|")) out.push({ message: `Comparison rows are ${got.join(", ")}, the spec says ${want.join(", ")}.`, line: t.position?.start.line, repair });
+  }
+  return out;
+}
 
 export const comparisonProductFirst: Rule = {
   id: "honesty/comparison-product-first",

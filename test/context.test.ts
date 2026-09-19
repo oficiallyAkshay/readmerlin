@@ -129,3 +129,32 @@ describe("context on odd repos", () => {
     expect(c.hosts.sort()).toEqual(["Claude Code", "Cursor", "Gemini CLI"]);
   });
 });
+
+describe("badge row, own page and compare spec", () => {
+  it("gives a repo with no package a clone badge, from its shape alone", async () => {
+    const root = repo({ LICENSE: "MIT License\n", "skills/x/SKILL.md": "---\nname: x\ndescription: d\n---\n\nBody.\n" });
+    const c = await gather(root);
+    c.repo = { host: "github.com", owner: "o", name: "r" };
+    const { badgeRow } = await import("../src/context/readers.js");
+    const row = badgeRow(c.repo, c.license, c.packages);
+    expect(row.map((b) => b.alt)).toEqual(["MIT licence", "clones of this repository, last seven days and all time"]);
+    expect(row[1].src).toContain("raw.githubusercontent.com/o/r/badges/clones.json");
+    expect(c.self).toBe(false);
+  });
+  it("draws a works-with badge for a known host and names an unknown one", async () => {
+    const root = repo({ "readmerlin.json": JSON.stringify({ worksWith: ["Windsurf", "Hermes"] }) });
+    const c = await gather(root);
+    expect(c.worksWith.map((b) => b.alt)).toEqual(["works with Windsurf"]);
+    expect(c.unbadgedHosts).toEqual(["Hermes"]);
+    expect(toMarkdown(c)).toContain("No works-with badge recipe for Hermes");
+  });
+  it("marks readmerlin's own repo and reads its compare spec", async () => {
+    const root = repo({ "skills/readmerlin/SKILL.md": "---\nname: readmerlin\ndescription: d\n---\n\nBody.\n", "readmerlin.json": JSON.stringify({ compare: { repos: ["a/b"], rows: ["Output"] } }) });
+    const c = await gather(root);
+    expect(c.self).toBe(true);
+    expect(c.compare).toEqual({ repos: ["a/b"], rows: ["Output"] });
+    const md = toMarkdown(c);
+    expect(md).toContain("drops In action and Fit");
+    expect(md).toContain("- Rows, in order: Output");
+  });
+});

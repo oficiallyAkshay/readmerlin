@@ -83,4 +83,20 @@ export interface RepoContext {
   workflows: WorkflowInfo[];
   readme: ReadmeInfo;
   rootFiles: string[];
+  /** The badges the hero row carries, decided by the repo's shape: licence, then registry badges or a clone count. */
+  badgeRow: BadgeSpec[];
+  /** The second badge row: one works-with badge per host the skill runs in. */
+  worksWith: BadgeSpec[];
+  /** Hosts found or set that have no works-with badge recipe, so the agent adds those by hand. */
+  unbadgedHosts: string[];
+  /** True when this repo ships the readmerlin skill itself, so its README is the product's own page. */
+  self: boolean;
+  /** The comparison spec from readmerlin.json: the alternative repos and the row labels, in order. */
+  compare?: { repos: string[]; rows: string[] };
+}
+
+export interface BadgeSpec {
+  alt: string;
+  src: string;
+  href: string;
 }

@@ -1,4 +1,5 @@
-import { readPackages } from "../../context/readers.js";
+import { BADGED_HOSTS, hostBadgeSrc, readPackages } from "../../context/readers.js";
+import { remoteOf } from "../../context/git.js";
 import { collectImages } from "../util.js";
 import type { Rule } from "../types.js";
 
@@ -34,8 +35,8 @@ export const registryBadges: Rule = {
   id: "badges/registry-present",
   level: "warn",
   pages: true,
-  description: "A published package carries its registry version and downloads badges",
-  run: async ({ doc, links, fetch }) => {
+  description: "A published package carries its registry version and downloads badges; a repo with no package carries its clone count; each host in worksWith has its badge",
+  run: async ({ doc, config, links, fetch }) => {
     const out = [];
     const badges = collectImages(doc).filter((i) => i.badge).map((i) => i.src);
     // The manifest beside the README, or the repo's when the README's folder has none.
@@ -53,6 +54,19 @@ export const registryBadges: Rule = {
           line: 1,
           repair: `Add, linked to ${p.badges[0].href}: ${p.badges.map((b) => b.src).join(" and ")}`,
         });
+      }
+    }
+    if (doc.kind === "readme") {
+      for (const host of (config.worksWith ?? []).filter((h) => BADGED_HOSTS().includes(h))) {
+        const want = hostBadgeSrc(host).split("?")[0].toLowerCase();
+        if (!badges.some((b) => b.split("?")[0].toLowerCase() === want)) out.push({ message: `No works-with badge for ${host}.`, line: 1, repair: "Carry the works-with row from `readmerlin context`, one badge per host, under the first badge row." });
+      }
+    }
+    // No package means clones are the only count, so the README carries the clone badge from the first day.
+    if (doc.kind === "readme" && packages.length === 0 && !badges.some((b) => /\/badges\/clones\.json/.test(b))) {
+      const r = remoteOf(doc.repoRoot);
+      if (r.host === "github.com" && r.owner && r.name) {
+        out.push({ message: "The repo has no registry package, and the README carries no clone count.", line: 1, repair: `Add the clone badge from \`readmerlin context\`, linked to https://github.com/oficiallyAkshay/clonometer, and run \`readmerlin init-workflow --clones\` for its numbers.` });
       }
     }
     return out;

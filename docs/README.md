@@ -11,5 +11,4 @@ These pages are for the agent that writes or checks a README with readmerlin, an
 - [Rule ids](reference/rule-ids.md): the full table of the 57 rules, their levels and what a good README has.
 - [Settings](reference/settings.md): every key readmerlin.json accepts, with its default.
 - [Hero spec](reference/hero-spec.md): the three hero layouts, the fields each one takes, and how the drift test holds an SVG to its spec.
-- [Examples](examples.md): the tidy-inbox example and what it shows.
 - [Changelog](changelog.md): what shipped in each version.
