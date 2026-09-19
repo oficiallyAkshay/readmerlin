@@ -56,11 +56,11 @@ For a repo with no registry package, clones are the only count there is. `init-w
 
 ## Badge recipes
 
-After the first clonometer run, the numbers sit on the `badges` branch. Replace owner and repo:
+After the first clonometer run, the numbers sit on the `badges` branch. Replace owner and repo, then add the scheme:
 
 ```text
-https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white
-https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/views.json&query=$.badge&label=views&logo=github&logoColor=white
+//img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white
+//img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/views.json&query=$.badge&label=views&logo=github&logoColor=white
 ```
 
 A count badge such as `downloads-1.2k` needs a source in `readmerlin.json` under `counts`, keyed by the badge label, holding a command that prints the number.
