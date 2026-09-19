@@ -9,7 +9,8 @@ import type { Rule, Section } from "../types.js";
 const INSTALL_RE = /(\bmcpServers\b|\bnpx\s+-y\s+|\bclaude\s+mcp\s+add|\bcode\s+--add-mcp|\bnpx\s+(-y\s+)?skills\s+add|(?:\/|\bclaude\s+)plugin\s+(install|marketplace)|npm\s+i(nstall)?\b|pnpm\s+(add|i)\b|yarn\s+add|pip(x)?\s+install|uv(x)?\s+(tool\s+)?(install|run)?|brew\s+install|cargo\s+install|go\s+install|git\s+clone|curl\s+-[a-zA-Z]*s|docker\s+(run|pull)|claude\s+mcp\s+add|cp\s+-r)/i;
 
 /** An install step written as a plain sentence: what to add, and where. */
-const INSTALL_PROSE_RE = /\b(install|add|enable|copy)\b[^.\n]{0,80}\b(action|skill|plugin|package|server|extension|workflow|folder)\b/i;
+// A plain sentence that gets the thing onto the reader's machine: "Add the skill", "Clone the repo and build it", "Download the app".
+const INSTALL_PROSE_RE = /\b(install|add|enable|copy|clone|download)\b[^.\n]{0,80}\b(action|skill|plugin|package|server|extension|workflow|folder|repo|repository|app|binary|launcher|tool|CLI)\b/i;
 const BADGES_TITLE = /^badges?$/i;
 const FEATURES_TITLE = /^features$/i;
 const SECURITY_TITLE = /^security\b/i;
