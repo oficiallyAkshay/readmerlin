@@ -13,7 +13,12 @@ import { gather } from "../src/context/index.js";
 const COVERAGE_ON = Boolean(
   (globalThis as { __vitest_worker__?: { config?: { coverage?: { enabled?: boolean } } } }).__vitest_worker__?.config?.coverage?.enabled,
 );
-const HUGE_README_BUDGET_MS = COVERAGE_ON ? 15000 : 5000;
+// A coverage-enabled CI runner (ubuntu-latest) measured ~4x a coverage-enabled local run (5.8s
+// there against 1.4s here), so 15000ms left only ~2.6x headroom over that one measurement, too
+// tight against ordinary CI variance; 20000ms leaves closer to 3.4x. The test itself also gets an
+// explicit vitest timeout above this budget, so vitest's own default 5000ms test timeout can never
+// fire before this assertion gets to run.
+const HUGE_README_BUDGET_MS = COVERAGE_ON ? 20000 : 5000;
 
 const HERO = `<h1 align="center">🧾 tidy</h1>\n\n<p align="center"><b>Receipts in, claim out.</b><br>One week of receipts becomes one claim.</p>\n\n<p align="center"><a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative"></a></p>\n\n<p align="center"><img alt="Receipts flow into one claim" src="assets/readme/hero.svg" width="900"></p>\n\n<p align="center"><b><a href="examples/claim.pdf">See the example claim</a></b></p>\n\nAdd the tidy skill to your agent, then hand it the week.\n`;
 const QUICK = `## Features\n\n- 🧾 **Every receipt found.** The inbox is searched for the trip window only.\n`;
@@ -78,7 +83,7 @@ describe("shape tricks", () => {
     const t = Date.now();
     await ids(dir);
     expect(Date.now() - t).toBeLessThan(HUGE_README_BUDGET_MS);
-  });
+  }, 30000);
   it("leaves CJK and allowlisted headings alone", async () => {
     const dir = repo(HERO + "\n" + QUICK + "\n## 使い方\n\n- x\n\n## Runs on Claude Code\n\n- y\n\n" + AGENTS);
     expect(await ids(dir)).not.toContain("prose/sentence-case");
