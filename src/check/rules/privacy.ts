@@ -32,11 +32,12 @@ export const rootFiles: Rule = {
   id: "honesty/root-files",
   level: "warn",
   description: "Every tracked root file is one a host or a reader needs",
+  // The README's own folder: a package inside a monorepo is judged on its files, not the monorepo's.
   run: ({ doc }) => {
-    let names = trackedRootNames(doc.repoRoot);
+    let names = trackedRootNames(doc.dir);
     if (!names) {
       try {
-        names = readdirSync(doc.repoRoot).filter((n) => n !== ".git" && n !== "node_modules" && n !== ".DS_Store");
+        names = readdirSync(doc.dir).filter((n) => n !== ".git" && n !== "node_modules" && n !== ".DS_Store");
       } catch {
         return [];
       }

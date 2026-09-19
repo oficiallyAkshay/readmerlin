@@ -63,7 +63,7 @@ async function main(): Promise<number> {
   if (values.help || !command) {
     if (process.exitCode === 2) return 2;
     console.log(HELP);
-    return command ? 0 : 2;
+    return values.help ? 0 : 2;
   }
   switch (command) {
     case "context":
@@ -84,6 +84,12 @@ async function main(): Promise<number> {
       return 2;
   }
 }
+
+// A reader that stops early, such as head, closes the pipe. That is not an error of ours.
+process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") process.exit(process.exitCode ?? 0);
+  throw err;
+});
 
 main().then(
   (code) => {

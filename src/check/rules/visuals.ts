@@ -92,7 +92,7 @@ export const specBeside: Rule = {
       }
       const want = i.inHero ? [`${base}.hero.json`] : [`${base}.archify.json`, `${base}.json`, `${base}.d2`, `${base}.mmd`];
       const has = siblings.some((s) => want.includes(s) || (s.startsWith(base + ".") && s.endsWith(".json")));
-      if (!has) out.push({ message: `No source spec beside ${i.src}.`, line: i.line, repair: i.inHero ? `Commit ${base}.hero.json next to it and render with herofold.` : `Commit ${base}.archify.json next to it and render with Archify.` });
+      if (!has) out.push({ message: `No source spec beside ${i.src}.`, line: i.line, repair: i.inHero ? `Commit ${base}.hero.json next to it and render with hero-svg.mjs in the readmerlin skill, or with herofold.` : `Commit ${base}.archify.json next to it and render with Archify.` });
     }
     return out;
   },

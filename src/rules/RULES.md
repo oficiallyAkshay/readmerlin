@@ -86,7 +86,7 @@ Only when the product ships badges or numbers a reader will reuse.
 
 The one list of what to cut, kept so the rest of this page can say what to write.
 
-Limits, Configuration, Configuration and security, Quick start, Quickstart, Getting started, How it works, Common workflows, For agents, Where it runs, Example, Examples, What you need, Prerequisites, Requirements, Contributing, Contributing and license, License, Acknowledgments, Roadmap, Built with and Table of contents sections. Host-path pointer lines, "fully synthetic" disclaimers, screenshot captions, meta sentences about the tools that drew a diagram, a settings table, a schema block at the top, any paragraph that restates what a badge, the hero or a table already says.
+Limits, Configuration, Configuration and security, Quick start, Quickstart, Getting started, How it works, Common workflows, For agents, Where it runs, Example, Examples, What you need, Prerequisites, Requirements, Contributing, Contributing and license, License, Acknowledgments, Acknowledgements, Roadmap, Built with and Table of contents sections. Host-path pointer lines, "fully synthetic" disclaimers, screenshot captions, meta sentences about the tools that drew a diagram, a settings table, a schema block at the top, any paragraph that restates what a badge, the hero or a table already says.
 
 ## What CONTRIBUTING holds
 

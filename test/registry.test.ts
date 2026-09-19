@@ -48,12 +48,26 @@ describe("published packages", () => {
   });
   it("writes the clonometer workflow pinned to a commit on request", async () => {
     const d = dir({});
-    const sha = "a".repeat(40);
-    await runInitWorkflow(d, { clones: true, fetch: (async () => new Response(sha)) as typeof fetch });
-    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain(`oficiallyAkshay/readmerlin@${sha}`);
+    // Each workflow gets its own repo's commit, and the API answers first.
+    const shaOf = (url: string) => (/readmerlin/.test(url) ? "a" : "b").repeat(40);
+    const urls: string[] = [];
+    await runInitWorkflow(d, { clones: true, fetch: (async (url: string) => { urls.push(url); return new Response(shaOf(url)); }) as unknown as typeof fetch });
+    expect(urls).toEqual(["https://api.github.com/repos/oficiallyAkshay/readmerlin/commits/main", "https://api.github.com/repos/oficiallyAkshay/clonometer/commits/main"]);
+    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain(`oficiallyAkshay/readmerlin@${"a".repeat(40)}`);
     const yml = readFileSync(join(d, ".github/workflows/clonometer.yml"), "utf8");
-    expect(yml).toContain(`oficiallyAkshay/clonometer@${sha}`);
+    expect(yml).toContain(`oficiallyAkshay/clonometer@${"b".repeat(40)}`);
     expect(yml).toContain("secrets.TRAFFIC_TOKEN");
+  });
+  it("falls back to git's ref listing when the API is rate limited, and leaves an existing workflow alone", async () => {
+    const d = dir({});
+    const sha = "c".repeat(40);
+    const fetchFn = (async (url: string) => (/api\.github\.com/.test(url) ? new Response("rate limited", { status: 403 }) : new Response(`001e# service=git-upload-pack\n0000${sha} refs/heads/main\n0000`))) as unknown as typeof fetch;
+    await runInitWorkflow(d, { fetch: fetchFn });
+    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain(`oficiallyAkshay/readmerlin@${sha}`);
+    let asked = 0;
+    await runInitWorkflow(d, { fetch: (async () => { asked++; return new Response("x".repeat(40)); }) as typeof fetch });
+    expect(asked).toBe(0);
+    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain(`@${sha}`);
   });
   it("leaves the placeholder when GitHub does not answer", async () => {
     const d = dir({});

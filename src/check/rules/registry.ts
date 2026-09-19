@@ -37,7 +37,9 @@ export const registryBadges: Rule = {
   run: async ({ doc, links, fetch }) => {
     const out = [];
     const badges = collectImages(doc).filter((i) => i.badge).map((i) => i.src);
-    for (const p of readPackages(doc.repoRoot)) {
+    // The manifest beside the README, or the repo's when the README's folder has none.
+    const packages = readPackages(doc.dir).length ? readPackages(doc.dir) : readPackages(doc.repoRoot);
+    for (const p of packages) {
       const re = PATTERNS[p.registry];
       if (!re) continue;
       const hasVersion = badges.some((b) => re.test(b) && /\/(v)\//.test(b));

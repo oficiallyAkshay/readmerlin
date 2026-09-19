@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
@@ -12,8 +13,9 @@ function gitRoot(dir: string): string | undefined {
   let d = dir;
   for (;;) {
     if (existsSync(join(d, ".git"))) return d;
+    // A home directory under git is a dotfiles repo, never the root of a README below it.
     const up = dirname(d);
-    if (up === d) return undefined;
+    if (up === d || up === homedir()) return undefined;
     d = up;
   }
 }

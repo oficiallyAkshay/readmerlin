@@ -4,10 +4,6 @@ import { remoteOf } from "../context/git.js";
 
 function put(dir: string, name: string, content: string): void {
   const target = join(dir, ".github", "workflows", name);
-  if (existsSync(target)) {
-    console.log(`exists: ${target}`);
-    return;
-  }
   mkdirSync(join(dir, ".github", "workflows"), { recursive: true });
   writeFileSync(target, content);
   console.log(`wrote: ${target}`);
@@ -16,12 +12,20 @@ function put(dir: string, name: string, content: string): void {
 const READMERLIN = "oficiallyAkshay/readmerlin";
 const CLONOMETER = "oficiallyAkshay/clonometer";
 
-/** The commit a repo's main branch points at, so a workflow pins a sha and never a moving tag. */
+/** The commit a repo's main branch points at, so a workflow pins a sha and never a moving tag. Asks the API first, then git's own ref listing, which needs no credential and has no hourly limit. */
 async function mainSha(repo: string, fetchFn: typeof fetch): Promise<string | undefined> {
+  const opts = { headers: { accept: "application/vnd.github.sha", "user-agent": "readmerlin" }, signal: AbortSignal.timeout(8000) };
   try {
-    const res = await fetchFn(`https://api.github.com/repos/${repo}/commits/main`, { headers: { accept: "application/vnd.github.sha", "user-agent": "readmerlin" }, signal: AbortSignal.timeout(8000) });
+    const res = await fetchFn(`https://api.github.com/repos/${repo}/commits/main`, opts);
     const sha = res.ok ? (await res.text()).trim() : "";
-    return /^[0-9a-f]{40}$/.test(sha) ? sha : undefined;
+    if (/^[0-9a-f]{40}$/.test(sha)) return sha;
+  } catch {
+    /* the ref listing below is the second try */
+  }
+  try {
+    const res = await fetchFn(`https://github.com/${repo}.git/info/refs?service=git-upload-pack`, opts);
+    const sha = res.ok ? /([0-9a-f]{40}) refs\/heads\/main\b/.exec(await res.text())?.[1] : undefined;
+    return sha;
   } catch {
     return undefined;
   }
@@ -31,10 +35,15 @@ const recipe = (slug: string, file: string, label: string) => `https://img.shiel
 
 export async function runInitWorkflow(dir: string, opts: { clones?: boolean; fetch?: typeof fetch } = {}): Promise<number> {
   const fetchFn = opts.fetch ?? globalThis.fetch;
+  // An existing workflow is left as it is, and GitHub is asked only for one that will be written.
   const pinned = async (repo: string, file: string, template: string) => {
+    if (existsSync(join(dir, ".github", "workflows", file))) {
+      console.log(`exists: ${join(dir, ".github", "workflows", file)}`);
+      return;
+    }
     const sha = await mainSha(repo, fetchFn);
     put(dir, file, sha ? template.replace("<sha>", sha) : template);
-    if (!sha) console.log(`GitHub did not answer. Replace <sha> in ${file} with a commit of ${repo} before you push.`);
+    if (!sha) console.log(`GitHub could not be reached. Replace <sha> in ${file} with a commit of ${repo} before you push.`);
   };
   await pinned(READMERLIN, "readme-check.yml", __WORKFLOW_YML__);
   if (opts.clones) {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -211,5 +212,20 @@ describe("shape, prose and privacy", () => {
   it("lists maxFindingsPerRule in the schema", () => {
     const schema = JSON.parse(readFileSync(resolve(__dirname, "../readmerlin.schema.json"), "utf8"));
     expect(schema.properties.maxFindingsPerRule).toEqual(expect.objectContaining({ type: "integer", minimum: 1 }));
+  });
+});
+
+describe("a README below the repo root", () => {
+  it("is judged on its own folder's files and manifest", async () => {
+    const root = repo(HERO + "\n" + QUICK);
+    writeFileSync(join(root, "package.json"), '{"name":"mono","private":true}');
+    mkdirSync(join(root, "pkg"), { recursive: true });
+    writeFileSync(join(root, "pkg/package.json"), '{"name":"wandr","main":"index.js"}');
+    writeFileSync(join(root, "pkg/README.md"), HERO + "\n" + QUICK);
+    writeFileSync(join(root, "pkg/LICENSE"), "MIT");
+    execFileSync("git", ["init", "-q", root]);
+    const r = await check(join(root, "pkg/README.md"), { format: "text", links: false, exec: false });
+    expect(r.findings.filter((f) => f.id === "honesty/root-files")).toEqual([]);
+    expect(r.findings.some((f) => f.id === "badges/registry-present" && /wandr/.test(f.message))).toBe(true);
   });
 });
