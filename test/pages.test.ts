@@ -108,4 +108,43 @@ describe("the repo's own pages", () => {
     expect(results.length).toBeGreaterThanOrEqual(2);
     for (const r of results) expect(r.fails, `${r.file} has a fail`).toBe(0);
   });
+
+  it("--pages lists every docs page, README and CONTRIBUTING", () => {
+    const { files } = expandPages(REPO_ROOT);
+    const rel = files.map((f) => f.slice(REPO_ROOT.length + 1));
+    expect(rel).toContain("README.md");
+    expect(rel).toContain(join(".github", "CONTRIBUTING.md"));
+    const docsPages = [
+      "README.md",
+      "changelog.md",
+      "examples.md",
+      join("guides", "keep-it-true.md"),
+      join("guides", "write-a-readme.md"),
+      join("reference", "check.md"),
+      join("reference", "context.md"),
+      join("reference", "hero-spec.md"),
+      join("reference", "init-workflow.md"),
+      join("reference", "rule-ids.md"),
+      join("reference", "rules.md"),
+      join("reference", "settings.md"),
+    ];
+    for (const p of docsPages) expect(rel).toContain(join("docs", p));
+    expect(rel).toHaveLength(2 + docsPages.length);
+  });
+});
+
+describe("which README is the README", () => {
+  it("is the one at the repo root or beside a manifest; a docs index named README.md is a page", async () => {
+    const root = mkdtempSync(join(tmpdir(), "rm-kind-"));
+    mkdirSync(join(root, ".git"));
+    mkdirSync(join(root, "docs"));
+    mkdirSync(join(root, "pkg"));
+    writeFileSync(join(root, "docs/README.md"), "# Docs\n\nAn index.\n");
+    writeFileSync(join(root, "pkg/package.json"), '{"name":"p"}');
+    writeFileSync(join(root, "pkg/README.md"), "# p\n\nA package.\n");
+    const page = await check(join(root, "docs/README.md"), { format: "json", links: false, exec: false });
+    const readme = await check(join(root, "pkg/README.md"), { format: "json", links: false, exec: false });
+    expect(page.ran.some((id) => id.startsWith("hero/"))).toBe(false);
+    expect(readme.ran.some((id) => id.startsWith("hero/"))).toBe(true);
+  });
 });

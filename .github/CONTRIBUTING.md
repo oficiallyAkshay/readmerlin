@@ -15,40 +15,11 @@ Installs are clones of this repository, so clonometer keeps the count. The scrip
 
 ## Commands
 
-With `readmerlin` standing for `node skills/readmerlin/scripts/readmerlin.mjs`:
-
-```text
-readmerlin context [dir] --format md|json
-readmerlin rules
-readmerlin check [file...] --format text|github|json [--pages] [--no-links] [--no-exec]
-readmerlin init-workflow [dir] [--clones]
-```
-
-`check` takes one file or several, such as `check README.md .github/CONTRIBUTING.md docs/guide.md`, and reports each in turn. `--pages` checks README.md, CONTRIBUTING and every docs page instead, whichever of them exist.
-
-Exit codes: 0 clean or warnings only, 1 any fail, 2 a wrong command or a tool failure.
+With `readmerlin` standing for `node skills/readmerlin/scripts/readmerlin.mjs`, see [the docs index](../docs/README.md) for `context`, `rules`, `check` and `init-workflow`: their arguments, flags and defaults, their exit codes, and their output formats, each with one example command line.
 
 ## Settings
 
-All in `readmerlin.json`, described by `readmerlin.schema.json`.
-
-| Setting | Key | Default |
-|---|---|---|
-| Level per rule | `rules` | as shipped, printed by `readmerlin rules` |
-| Headings that fail | `killList` | Limits, Configuration, Quick start, Contributing, License, What you need, Roadmap and friends |
-| Section set and order | `sectionOrder` | Features, In action, Fit, How it compares, Security and limits, Badges. An empty list turns it off |
-| Names allowed to keep capitals | `headingAllowlist` | common hosts and formats |
-| True number behind a count badge | `counts` | none |
-| Hashed private words | `denylistFile` | `.readmerlin/denylist.sha256` |
-| Phrases that never appear | `disclaimers` | fully synthetic, for illustration and friends |
-| Limits | `maxSections`, `maxSectionLines`, `maxParagraphSentences`, `maxBadgesPerRow`, `maxImageHeight`, `maxFindingsPerRule` | 8, 40, 4, 6, 700, 10 |
-
-What leaves the machine, and the guard for each:
-
-| Concern | What happens | Guard |
-|---|---|---|
-| The check fetches links | External links are requested, and one that answered is not asked again for a day; badge logos and registry lookups run each time; this repo's version number once a day, in text format only | `--no-links` |
-| The action runs code on the runner | The committed script, from the commit the workflow pins. Count-source commands stay off | pin a commit sha; the `exec` input |
+All in `readmerlin.json`, described by `readmerlin.schema.json`. See [the settings reference](../docs/reference/settings.md) for every key and its default, and [Keep it true](../docs/guides/keep-it-true.md) for what the check sends over the network, what the action runs on the runner, and the guard for each.
 
 ## Workflows
 
@@ -117,6 +88,7 @@ Things learned the hard way:
 ## For agents
 
 - Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
+- Reference: `docs/` holds a guide per workflow and a reference page per command, read in full alongside this file.
 - Order of work: `context`, `rules`, scope the Fit lists, find the In action result, draw the hero with `hero-svg.mjs`, write the parts in order, compare truthfully, move the rest here, write the docs pages, `check` until clean, `init-workflow`.
 - Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carry-facts`, `prose/plain-punctuation`, `visuals/spec-beside`, `privacy/denylist-clear`, `links/external`. Every finding carries the id and a repair line.
 - The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
