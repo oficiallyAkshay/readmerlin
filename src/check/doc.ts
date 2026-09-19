@@ -34,13 +34,14 @@ export function parseDoc(file: string, repoRoot?: string): Doc {
   let current: Section | undefined;
   for (const node of tree.children) {
     if (node.type === "heading" && node.depth >= 2) {
-      current = { heading: node as Heading, title: toString(node).trim(), depth: node.depth, nodes: [], startLine: node.position?.start.line ?? 0, endLine: node.position?.end.line ?? 0 };
+      // remark-parse always attaches a position to every node it parses, so these are never undefined.
+      current = { heading: node as Heading, title: toString(node).trim(), depth: node.depth, nodes: [], startLine: node.position!.start.line, endLine: node.position!.end.line };
       sections.push(current);
       continue;
     }
     if (current) {
       current.nodes.push(node);
-      current.endLine = node.position?.end.line ?? current.endLine;
+      current.endLine = node.position!.end.line;
     } else {
       hero.push(node);
     }
@@ -50,10 +51,6 @@ export function parseDoc(file: string, repoRoot?: string): Doc {
   const ownsAProduct = resolve(dir) === root || ["package.json", "pyproject.toml", "Cargo.toml", "SKILL.md", "action.yml", "plugin.json"].some((n) => existsSync(join(dir, n)));
   const kind: Doc["kind"] = README_RE.test(basename(file)) && ownsAProduct ? "readme" : "page";
   return { file, text, lines, tree, hero, sections, dir, repoRoot: root, kind };
-}
-
-export function lineOf(node: { position?: { start: { line: number } } }): number | undefined {
-  return node.position?.start.line;
 }
 
 export function htmlOf(nodes: RootContent[]): string {

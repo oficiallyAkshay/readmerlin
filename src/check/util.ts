@@ -26,10 +26,8 @@ export function localPath(root: string, src: string, base: string = root): strin
 export function fencedLines(doc: Doc): Set<number> {
   const out = new Set<number>();
   visit(doc.tree as Root, "code", (node) => {
-    const s = node.position?.start.line;
-    const e = node.position?.end.line;
-    if (s === undefined || e === undefined) return;
-    for (let i = s; i <= e; i++) out.add(i);
+    // remark-parse always attaches a position to a code node it parses.
+    for (let i = node.position!.start.line; i <= node.position!.end.line; i++) out.add(i);
   });
   return out;
 }
@@ -142,7 +140,8 @@ export function collectImages(doc: Doc): ImageRef[] {
     if (node.type !== "image" && node.type !== "imageReference") return;
     const src = node.type === "image" ? node.url : defs.get(node.identifier.toLowerCase());
     if (src === undefined) return;
-    const line = node.position?.start.line ?? 0;
+    // remark-parse always attaches a position to an image node it parses.
+    const line = node.position!.start.line;
     out.push({ src, alt: node.alt ?? "", line, inHero: line < heroEnd, linked: wrapped(parent?.type), html: false, badge: isBadge(src) });
   });
   // HTML images. Link wrapping: an <a that opens before the img and has not closed, or a markdown link around it.
@@ -174,7 +173,8 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
     if (node.type !== "link" && node.type !== "linkReference") return;
     const href = node.type === "link" ? node.url : defs.get(node.identifier.toLowerCase());
     if (href === undefined) return;
-    const line = node.position?.start.line ?? 0;
+    // remark-parse always attaches a position to a link node it parses.
+    const line = node.position!.start.line;
     const imageOnly = node.children.length === 1 && (node.children[0].type === "image" || node.children[0].type === "imageReference");
     if (imageOnly && !all) return;
     out.push({ href, line, inHero: line < heroEnd, text: toString(node), bold: parent?.type === "strong", html: false, imageOnly });

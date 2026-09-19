@@ -156,8 +156,9 @@ export const rowLength: Rule = {
     const badges = collectImages(doc).filter((b) => b.badge);
     const seen = new Set<ImageRef>();
     for (const node of doc.hero) {
-      const s = node.position?.start.line ?? 0;
-      const e = node.position?.end.line ?? s;
+      // remark-parse always attaches a position to a node it parses.
+      const s = node.position!.start.line;
+      const e = node.position!.end.line;
       const rows: Array<[number, number]> = [];
       let from = s;
       if (node.type === "html") {

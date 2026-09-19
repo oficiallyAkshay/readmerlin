@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+Test coverage now runs through @vitest/coverage-v8, with a real repo of new tests for the rules, context readers and commands that had none, and `npm test` enforces a coverage floor so it fails if coverage drops. A few defensive fallbacks that could never run, guarded by guarantees the parser and the GFM table shape already gave, were deleted in favour of a plain assertion; a couple of genuine OS-race fallbacks are marked instead of tested.
+
 ## 0.8.1
 
 An ossemble pass over this repo closed its two open gaps: a pre-commit hook now runs gitleaks locally, matching the full-history scan CI already ran, and CI runs it too. Dependabot now groups its weekly GitHub Actions updates into one pull request, the way it already grouped npm. The comparison rules in privacy.ts now share one table walker instead of three, the section rules in shape.ts share one top-level-section reader, and visuals.ts reuses util.ts's own attribute reader instead of a second copy of the same regex. That reader also reads single-quoted and unquoted attributes, so visuals/svg-clipping and visuals/svg-text-overflow now catch a shape or a label written that way instead of missing it. CONTRIBUTING now points to RULES.md for the hero and spec-beside description instead of repeating it.
