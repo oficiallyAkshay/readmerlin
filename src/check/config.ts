@@ -6,7 +6,7 @@ export const DEFAULT_CONFIG: Config = {
   killList: ["Limits", "Configuration", "Configuration and security", "Quick start", "Quickstart", "Getting started", "How it works", "Common workflows", "For agents", "Where it runs", "Example", "Examples", "What you need", "Prerequisites", "Requirements", "Contributing", "Contributing and license", "License", "Acknowledgments", "Acknowledgements", "Roadmap", "Built with", "Table of contents"],
   disclaimers: ["fully synthetic", "for illustration", "or the HTML master", "illustrative purposes"],
   headingAllowlist: ["README", "CI", "MCP", "API", "CLI", "PDF", "SVG", "JSON", "YAML", "URL", "HTML", "Claude", "Claude Code", "Cursor", "Codex", "Gemini", "Copilot", "GitHub", "OpenAI", "Anthropic", "Archify", "Wi-Fi", "Node", "Python"],
-  sectionOrder: ["Features", "Badges", "Security", "How it compares", "Callouts"],
+  sectionOrder: ["Features", "In action", "Fit", "How it compares", "Security and limits", "Badges"],
   maxSections: 8,
   maxSectionLines: 40,
   maxParagraphSentences: 4,

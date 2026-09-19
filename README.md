@@ -1,49 +1,31 @@
 <h1 align="center">🧙 readmerlin</h1>
 
 <p align="center">
-  <b>A skill README gets ten seconds and then goes stale. readmerlin writes one people finish and checks it on every push.</b>
+  <b>Writes a README a person finishes in a minute, and keeps it true on every merge.</b>
 </p>
 
-<p align="center"><img alt="A long README that opens on code, carries a stale badge and a dead link, and loses the reader at the fold becomes a short page that leads with what they get, shows one picture, and is checked on every push" src="assets/readme/hero.svg" width="900"></p>
+<p align="center"><img alt="Your repo feeds three pages on every merge: the README a person reads, and the CONTRIBUTING and docs an agent reads, with every item on them checked" src="assets/readme/hero.svg" width="900"></p>
 
 <p align="center">
-  <a href="package.json"><img alt="Node 20 or newer" src="https://img.shields.io/badge/node-20%2B-339933?logo=nodedotjs&logoColor=white"></a>
-  <a href="src/check/rules"><img alt="rules" src="https://img.shields.io/badge/rules-57-6f42c1?logo=eslint&logoColor=white"></a>
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative&logoColor=white"></a>
-</p>
-
-<p align="center">
   <a href="https://github.com/oficiallyAkshay/clonometer"><img alt="clones of this repository, last seven days and all time" src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/oficiallyAkshay/readmerlin/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white"></a>
 </p>
 
-<p align="center">
-  <b><a href="examples/tidy-inbox/README.md">See a README it wrote</a></b>
-</p>
-
-readmerlin is a skill for Claude Code, Cursor, Codex, Gemini CLI and Copilot. Your agent writes the page, and a script inside the skill holds it to the rules: links that answer, badges that render, numbers that match. It writes a new README or reshapes the one you have.
-
-Add the oficiallyAkshay/readmerlin skill to your agent with the skills installer, then ask it for a README. It needs no secret.
-
 ## Features
 
-- 🎯 **Value comes first.** The page opens on what the reader gets, never on how it is built.
-- ✍️ **Your words stay.** It keeps your sentences and restructures around them.
-- 🏷️ **Badges stay true.** Every badge links somewhere, its logo renders, and a number is tied to a command that prints it.
-- 🔒 **Private stays private.** Emails, home paths, keys and your own hashed word list stop the run.
-- ✂️ **One shape holds.** Six parts in one order, said in plain sentences.
-- 📦 **Packages get badges.** A package on npm, PyPI, crates.io or RubyGems gets its version and downloads badges.
-- 🧳 **One folder, complete.** The skill carries its own script and needs only Node.
-- 🎛️ **Rules, your way.** Every rule is off, warn or fail in one small JSON file.
+readmerlin writes your repo's README, docs and CONTRIBUTING.
 
-## Security
+<p align="center">⏱️<br><b>Read in a minute</b><br>One screen tells a person what it does, whether it is for them, and what it never does.</p>
 
-readmerlin needs no credential; your agent does the writing with the login it already has.
+<p align="center">🤝<br><b>One repo, two readers</b><br>The person gets the page. The agent gets CONTRIBUTING and docs, with everything it needs to act.</p>
 
-- ❌ reads your code. It opens manifests, skill, command and agent files, workflows, the licence and the README, and lists the rest by name
-- ❌ sends your files anywhere, to a model or to anyone else
-- ❌ updates itself, it tells you a newer version is out and waits
-- ❌ names a word from your hashed denylist in its output
-- ❌ sends telemetry
+<p align="center">🟢<br><b>Never goes stale</b><br>Every link, badge and number on the pages is checked on every merge.</p>
+
+<p align="center">🗣️<br><b>Your words, not marketing</b><br>Your own sentences stay, and nothing is invented to fill a section.</p>
+
+<p align="center">🔒<br><b>Private stays private</b><br>Names, emails and paths on your list never reach the page.</p>
+
+<p align="center">📊<br><b>Numbers you can trust</b><br>Each number on the page is tied to the command that prints it.</p>
 
 ## How it compares
 
@@ -56,11 +38,14 @@ readmerlin needs no credential; your agent does the writing with the login it al
 | Installation | Skill | pip | npm | Binary |
 | Model | Your agent | Optional | None | None |
 
-## Callouts
+## Security and limits
 
-- It needs an agent, and Node 20 or newer on the machine.
-- The hero must be an SVG drawn from a committed spec, so plan to draw one.
-- Link checks need the network, and a link that answered is not asked again for a day.
-- New rules reach you when you update the skill, never on their own.
-- A count badge fails until you name the command that prints its number.
-- A private repository gets every check. Its clone badge works through a clonometer gist only.
+No credential. The writing runs on your agent's own login. The check calls no model.
+
+- ❌ reads your code. It opens manifests, skill, command and agent files, workflows, the licence and the README
+- ❌ sends a file anywhere
+- ❌ updates itself. It prints one line when a newer version exists
+- ❌ names a denylisted word in its output
+- ❌ sends telemetry
+
+By default the check fetches external links and badge logos, once a day per link; `--no-links` turns that off. By default it never runs the count commands in your config; the `exec` input turns them on. It needs Node 20 or newer. A private repository gets every check; its clone badge needs a clonometer gist.

@@ -163,24 +163,22 @@ describe("review regressions", () => {
   });
 });
 
-describe("the six-section shape", () => {
+describe("the shape", () => {
   const SHAPED = [
     HERO,
     QUICK,
-    '## Badges\n\nClick a badge for its recipe.\n\n<table width="100%">\n<tr><th></th><th>All time</th></tr>\n<tr><td>Claims</td><td><a href="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"><img alt="claims" src="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"></a></td></tr>\n</table>\n',
-    "## Security\n\nIt needs no credential of its own and reads mail through your agent.\n\n- ❌ sends a receipt anywhere\n- ❌ keeps a copy\n",
     "## How it compares\n\n| | [owner/tidy](https://github.com/owner/tidy) | [other/claims](https://github.com/other/claims) |\n|---|---|---|\n| Installation | Skill | Script |\n| Calendar | ✅ | ❌ |\n",
-    "## Callouts\n\n- It reads the inbox your agent can already read.\n",
+    "## Security and limits\n\nIt needs no credential of its own and reads mail through your agent.\n\n- ❌ sends a receipt anywhere\n- ❌ keeps a copy\n",
+    '## Badges\n\nClick a badge for its recipe.\n\n<table width="100%">\n<tr><th></th><th>All time</th></tr>\n<tr><td>Claims</td><td><a href="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"><img alt="claims" src="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"></a></td></tr>\n</table>\n',
   ].join("\n");
   it("passes clean, fails and warnings both", async () => {
     expect(await ids(repo(SHAPED))).toEqual([]);
   });
   it("fails a fence before Features, a shell snippet, a Yes cell, a Limits heading, a CI badge, a yml link and a raw badge URL", async () => {
-    const bad = SHAPED.replace("## Features", "```yaml\non: push\n```\n\n## Features")
+    const bad = (SHAPED.replace("## Features", "```yaml\non: push\n```\n\n## Features")
       .replace("| Calendar | ✅ | ❌ |", "| Calendar | Yes | No |")
-      .replace("## Callouts", "## Limits")
-      .replace('<a href="LICENSE">', '<a href="https://github.com/owner/tidy/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/owner/tidy/ci.yml?logo=githubactions"></a><a href="LICENSE">')
-      .replace("- It reads the inbox", "- See [the workflow](.github/workflows/ci.yml), run `curl -s https://example.com/x`, paste `https://img.shields.io/badge/a-b-c`.\n- It reads the inbox");
+      .replace("- ❌ keeps a copy", "- See [the workflow](.github/workflows/ci.yml), run `curl -s https://example.com/x`, paste `https://img.shields.io/badge/a-b-c`.\n- ❌ keeps a copy")
+      .replace('<a href="LICENSE">', '<a href="https://github.com/owner/tidy/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/owner/tidy/ci.yml?logo=githubactions"></a><a href="LICENSE">')) + "\n## Limits\n\n- x\n";
     const f = await ids(repo(bad, { ".github/workflows/ci.yml": "on: push\n" }), "fail");
     for (const id of ["shape/prose-before-features", "shape/install-in-words", "honesty/comparison-marks", "shape/earned-headings", "badges/carry-facts", "links/reader-can-act", "badges/shown-as-badges"]) expect(f).toContain(id);
   });

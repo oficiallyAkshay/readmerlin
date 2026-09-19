@@ -14,8 +14,5 @@
     "Copilot",
     "GitHub",
     "npm"
-  ],
-  "counts": {
-    "rules": "node skills/readmerlin/scripts/readmerlin.mjs check README.md --no-links --no-exec --format json | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).ran.length))\""
-  }
+  ]
 }
