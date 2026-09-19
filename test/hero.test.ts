@@ -5,16 +5,15 @@ import { resolve } from "node:path";
 
 // This repo carries no hero renderer of its own; figurehead (a peer skill,
 // private for now) does the drawing. Point FIGUREHEAD_DIR at a checkout to
-// run this test for real; otherwise it looks for one checked out beside this
-// repo, at ../figurehead, and skips when neither is found.
+// run this test for real; it does not guess at a sibling checkout, since a
+// figurehead checkout can sit anywhere, and guessing would make this test
+// fail on a machine that has one at a different path.
 const REPO_ROOT = resolve(__dirname, "..");
 const HEROES = ["assets/readme/hero"];
 
 function findFigurehead(): string | undefined {
   const fromEnv = process.env.FIGUREHEAD_DIR;
   if (fromEnv && existsSync(resolve(fromEnv, "scripts/figurehead.mjs"))) return resolve(fromEnv);
-  const sibling = resolve(REPO_ROOT, "..", "figurehead");
-  if (existsSync(resolve(sibling, "scripts/figurehead.mjs"))) return sibling;
   return undefined;
 }
 
@@ -22,7 +21,7 @@ const figureheadDir = findFigurehead();
 
 describe("every committed hero", () => {
   if (!figureheadDir) {
-    it.skip("set FIGUREHEAD_DIR to a figurehead checkout (or place one at ../figurehead) to run this test", () => {});
+    it.skip("set FIGUREHEAD_DIR to a figurehead checkout to run this test", () => {});
     return;
   }
 
