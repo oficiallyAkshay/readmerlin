@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { check } from "../src/check/index.js";
 
 const README = resolve(__dirname, "fixtures/skill-repo/README.md");
 
 describe("check", () => {
   it("finds the kill-list heading, the em dash and the meta sentence, and passes the hero", async () => {
-    const r = await check(README, { format: "json", links: false });
+    // Pinned to its own folder: the fixture has no .git, so without this it would inherit this project's real repo root.
+    const r = await check(README, { format: "json", links: false, repoRoot: dirname(README) });
     const ids = r.findings.map((f) => f.id);
     expect(ids).toContain("shape/earned-headings");
     expect(ids).toContain("prose/plain-punctuation");

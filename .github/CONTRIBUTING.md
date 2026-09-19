@@ -34,7 +34,7 @@ All in `readmerlin.json`, described by `readmerlin.schema.json`.
 |---|---|---|
 | Level per rule | `rules` | as shipped, printed by `readmerlin rules` |
 | Headings that fail | `killList` | Limits, Configuration, Quick start, Contributing, License, What you need, Roadmap and friends |
-| Section set and order | `sectionOrder` | Features, Badges, Security, How it compares, Callouts. An empty list turns it off |
+| Section set and order | `sectionOrder` | Features, In action, Fit, How it compares, Security and limits, Badges. An empty list turns it off |
 | Names allowed to keep capitals | `headingAllowlist` | common hosts and formats |
 | True number behind a count badge | `counts` | none |
 | Hashed private words | `denylistFile` | `.readmerlin/denylist.sha256` |
@@ -63,7 +63,7 @@ https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/
 https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/views.json&query=$.badge&label=views&logo=github&logoColor=white
 ```
 
-A count badge such as `rules-57` needs a source in `readmerlin.json` under `counts`, keyed by the badge label, holding a command that prints the number.
+A count badge such as `downloads-1.2k` needs a source in `readmerlin.json` under `counts`, keyed by the badge label, holding a command that prints the number.
 
 ## How it fits together
 
@@ -75,7 +75,7 @@ Code gathers and checks. The agent does the writing. The diagram is rebuilt with
 
 ## The hero
 
-`skills/readmerlin/scripts/hero-svg.mjs` draws a hero from its spec, with no dependencies, in light and dark theme, so an installed skill can draw one. It has one layout per verb: `fan` for a product that gathers many things into one, and `before-after` for a product that makes one thing better, which is this repo's own. `npm run hero` redraws both committed heroes, a test fails when an SVG has drifted from its spec, and `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in the script, never a borrowed one.
+`skills/readmerlin/scripts/hero-svg.mjs` draws a hero from its spec, with no dependencies, in light and dark theme, so an installed skill can draw one. It has one layout per verb: `fan` for a product that gathers many things into one, `before-after` for a product that makes one thing better, and `pages` for a repo that feeds several pages to different readers, which is this repo's own. `npm run hero` redraws every committed hero, a test fails when an SVG has drifted from its spec, and `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in the script, never a borrowed one.
 
 ## Specs beside an SVG
 
@@ -91,7 +91,7 @@ npm test
 npm run check
 ```
 
-Rules live in `src/check/rules`, a few groups per file; the id prefix names the group. A rule has an id of the form `group/name`, a default level, a one-line description and a `run` that returns findings with a repair line. Add a test beside the others in `test`, update the `rules` count badge, which the self check verifies, and commit the rebuilt script: `npm run build` writes it, and the tests fail while it is stale.
+Rules live in `src/check/rules`, a few groups per file; the id prefix names the group. A rule has an id of the form `group/name`, a default level, a one-line description and a `run` that returns findings with a repair line. Add a test beside the others in `test`, update the rule count in `test/skill-script.test.ts` and in RULES.md wherever it appears, and commit the rebuilt script: `npm run build` writes it, and the tests fail while it is stale.
 
 Things learned the hard way:
 
@@ -102,10 +102,18 @@ Things learned the hard way:
 - A composite action does not see a secret unless the step sets it. `npx -y pkg` never installs optional peers.
 - An adversarial review before each release has found defects that every test passed. Fan reviewers out by area and have judges confirm each finding before fixing it.
 
+## What the shape learned
+
+- A README is judged by a person in a minute and read in full by an agent. The person gets the README; the agent gets CONTRIBUTING and docs, kept true together on every merge.
+- Value stated as a mechanism is not value. "57 rules" says nothing until it says "read in a minute".
+- Scope, proof and limits are each worth their own section: Fit for who it is for, In action for a real result, Security and limits for the credential, the checklist and the defaults together.
+- A hero is designed before it is diagrammed: a headline that states the value earns more attention than a bigger picture.
+- Badges earn their place by adoption and licence. A language version or a rule count is not a fact a reader acts on.
+
 ## For agents
 
 - Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
-- Order of work: `context`, `rules`, draw the hero with `hero-svg.mjs`, write the six parts, move the rest here, `check` until clean, `init-workflow`.
+- Order of work: `context`, `rules`, scope the Fit lists, find the In action result, draw the hero with `hero-svg.mjs`, write the parts in order, compare truthfully, move the rest here, write the docs pages, `check` until clean, `init-workflow`.
 - Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carry-facts`, `prose/plain-punctuation`, `visuals/spec-beside`, `privacy/denylist-clear`, `links/external`. Every finding carries the id and a repair line.
 - The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
 - Peers, never dependencies: herofold, when installed, draws the hero from `<name>.hero.json`, and this skill's `hero-svg.mjs` draws it otherwise. Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.

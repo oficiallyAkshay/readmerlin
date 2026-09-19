@@ -221,6 +221,79 @@ describe("shape, prose and privacy", () => {
   });
 });
 
+describe("the 0.4 shape", () => {
+  const block = (emoji: string, heading: string, line: string) => `<p align="center">${emoji}<br><b>${heading}</b><br>${line}</p>`;
+  const BARE_HERO = '<h1 align="center">🧾 tidy</h1>\n\n<p align="center"><b>Receipts in, claim out.</b></p>\n\n<p align="center"><img alt="x" src="assets/readme/hero.svg" width="900"></p>\n';
+  const GOOD_FEATURES = "## Features\n\ntidy turns receipts into one claim.\n\n" + [block("🧾", "Every receipt found", "The inbox is searched for the trip window only."), block("📋", "Candidates shown first", "You see the list before anything is built.")].join("\n\n") + "\n";
+
+  it("accepts centred feature blocks with one opening sentence", async () => {
+    expect(await ids(repo(HERO + "\n" + GOOD_FEATURES + "\n" + AGENTS))).not.toContain("shape/feature-bullets");
+  });
+  it("flags a feature heading outside two to four words", async () => {
+    const bad = "## Features\n\n" + block("🧾", "Found", "The inbox is searched for the trip window only.") + "\n";
+    expect(await ids(repo(HERO + "\n" + bad + "\n" + AGENTS))).toContain("shape/feature-bullets");
+  });
+  it("flags more than one plain sentence before the feature blocks", async () => {
+    const bad = "## Features\n\nOne sentence.\n\nAnother sentence.\n\n" + block("🧾", "Every receipt found", "The inbox is searched for the trip window only.") + "\n";
+    expect(await ids(repo(HERO + "\n" + bad + "\n" + AGENTS))).toContain("shape/feature-bullets");
+  });
+
+  it("accepts Security and limits closing with one By default paragraph", async () => {
+    const sec = "## Security and limits\n\nIt needs no credential of its own.\n\n- ❌ sends a receipt anywhere\n- ❌ keeps a copy\n\nBy default it asks once for the trip dates; answering once covers the claim.\n";
+    expect(await ids(repo(HERO + "\n" + QUICK + "\n" + sec))).not.toContain("shape/security-checklist");
+  });
+  it("flags two paragraphs after the Security and limits checklist", async () => {
+    const sec = "## Security and limits\n\nIt needs no credential of its own.\n\n- ❌ sends a receipt anywhere\n\nBy default it asks once.\n\nAnd one more fact.\n";
+    expect(await ids(repo(HERO + "\n" + QUICK + "\n" + sec))).toContain("shape/security-checklist");
+  });
+  it("flags a closing paragraph that does not read as defaults", async () => {
+    const sec = "## Security and limits\n\nIt needs no credential of its own.\n\n- ❌ sends a receipt anywhere\n\nIt needs Node 20 or newer.\n";
+    expect(await ids(repo(HERO + "\n" + QUICK + "\n" + sec))).toContain("shape/security-checklist");
+  });
+
+  it("lets the hero drop its plain line when Features opens with one", async () => {
+    expect(await ids(repo(BARE_HERO + "\n" + GOOD_FEATURES + "\n" + AGENTS))).not.toContain("hero/exists");
+  });
+  it("still wants a plain line when Features opens straight with a block", async () => {
+    const feats = "## Features\n\n" + block("🧾", "Every receipt found", "The inbox is searched for the trip window only.") + "\n";
+    expect((await of(repo(BARE_HERO + "\n" + feats + "\n" + AGENTS), "hero/exists")).map((f) => f.message)).toEqual(["No plain one-liner before the first section."]);
+  });
+
+  it("finds the install step in CONTRIBUTING when the README names none", async () => {
+    const dir = repo(BARE + "\n" + QUICK, { ".github/CONTRIBUTING.md": "# Contributing\n\n## How it ships\n\n```text\nnpx skills add owner/tidy -g\n```\n" });
+    expect(await ids(dir)).not.toContain("shape/enable-step");
+  });
+  it("still fails when neither the README nor CONTRIBUTING names an install step", async () => {
+    const dir = repo(BARE + "\n" + QUICK, { ".github/CONTRIBUTING.md": "# Contributing\n\nNothing to see here.\n" });
+    expect(await ids(dir)).toContain("shape/enable-step");
+  });
+
+  it("puts Callouts outside the new default section order", async () => {
+    expect(await ids(repo(HERO + "\n" + QUICK + "\n" + AGENTS))).toContain("shape/section-order");
+  });
+  it("keeps the new order quiet: Features, In action, Fit, How it compares, Security and limits, Badges", async () => {
+    const parts = [
+      HERO,
+      QUICK,
+      '## In action\n\n"One claim, three receipts, one flight corrected." That is what tidy built last month.\n',
+      "## Fit\n\n- Use it when you travel for work.\n- Look elsewhere when you keep no receipts.\n",
+      "## How it compares\n\n| | [owner/tidy](https://github.com/owner/tidy) |\n|---|---|\n| Installation | Skill |\n",
+      "## Security and limits\n\nIt needs no credential of its own.\n\n- ❌ sends a receipt anywhere\n",
+      '## Badges\n\nClick a badge for its recipe.\n\n<table width="100%">\n<tr><th></th><th>All time</th></tr>\n<tr><td>Claims</td><td><a href="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"><img alt="claims" src="https://img.shields.io/badge/dynamic/json?url=https://example.com/c.json&query=$.n&label=claims&logo=github"></a></td></tr>\n</table>\n',
+    ].join("\n");
+    expect(await ids(repo(parts))).not.toContain("shape/section-order");
+  });
+
+  it("keeps a flag named in its own short clause quiet", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\nBy default the check runs each time; `--no-links` turns that off.\n\n" + AGENTS);
+    expect(await ids(dir)).not.toContain("prose/code-outside-sentences");
+  });
+  it("flags a flag buried in a long sentence", async () => {
+    const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\nThe check reads every manifest, skill, command and agent file it can find in the repo before it ever writes to `README.md` on your behalf.\n\n" + AGENTS);
+    expect(await ids(dir)).toContain("prose/code-outside-sentences");
+  });
+});
+
 describe("a README below the repo root", () => {
   it("is judged on its own folder's files and manifest", async () => {
     const root = repo(HERO + "\n" + QUICK);
@@ -233,5 +306,17 @@ describe("a README below the repo root", () => {
     const r = await check(join(root, "pkg/README.md"), { format: "text", links: false, exec: false });
     expect(r.findings.filter((f) => f.id === "honesty/root-files")).toEqual([]);
     expect(r.findings.some((f) => f.id === "badges/registry-present" && /wandr/.test(f.message))).toBe(true);
+  });
+});
+
+describe("a pages hero drifting from its spec", () => {
+  it("is caught by spec-agrees through every field the layout draws", async () => {
+    const dir = repo(HERO + "\n" + QUICK);
+    const spec = JSON.parse(readFileSync(resolve(__dirname, "../assets/readme/hero.hero.json"), "utf8"));
+    writeFileSync(join(dir, "assets/readme/hero.svg"), readFileSync(resolve(__dirname, "../assets/readme/hero.svg"), "utf8"));
+    writeFileSync(join(dir, "assets/readme/hero.hero.json"), JSON.stringify(spec));
+    expect(await ids(dir)).not.toContain("visuals/spec-agrees");
+    writeFileSync(join(dir, "assets/readme/hero.hero.json"), JSON.stringify({ ...spec, source: "nonsense source", edge: "NONSENSE EDGE" }));
+    expect((await of(dir, "visuals/spec-agrees")).map((x) => x.message).join(" ")).toMatch(/nonsense source/);
   });
 });

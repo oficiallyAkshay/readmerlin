@@ -20,7 +20,7 @@ const AGENT_TITLE = /^(?:#+\s*)?(?:(?:(?:notes?|instructions?|guidance|guide|con
 export const heroExists: Rule = {
   id: "hero/exists",
   level: "fail",
-  description: "Everything before the first section holds a title, one bold line and one plain line",
+  description: "Everything before the first section holds a title, one bold tagline and the picture; a plain one-liner joins them unless Features opens with one",
   run: ({ doc }) => {
     const html = htmlOf(doc.hero);
     const hasTitle = /<h1[\s>]/i.test(html) || doc.hero.some((n) => n.type === "heading" && n.depth === 1);
@@ -40,10 +40,13 @@ export const heroExists: Rule = {
       .map((s) => s.trim())
       .filter(Boolean);
     const hasPlain = plain.length > 0 || plainHtml.length > 0;
+    // A one-liner in the hero is optional once Features opens with its own plain sentence before the centred blocks.
+    const features = doc.sections.find((s) => FEATURES_TITLE.test(s.title));
+    const featuresOpensWithSentence = features ? features.nodes[0]?.type === "paragraph" : false;
     const out = [];
     if (!hasTitle) out.push({ message: "No title before the first section.", line: 1, repair: "Start with a centered h1: emoji plus name." });
     if (!hasBold) out.push({ message: "No bold tagline before the first section.", line: 1, repair: "Add one bold line under the title that names the outcome." });
-    if (!hasPlain) out.push({ message: "No plain one-liner before the first section.", line: 1, repair: "Add one plain sentence under the tagline." });
+    if (!hasPlain && !featuresOpensWithSentence) out.push({ message: "No plain one-liner before the first section.", line: 1, repair: "Add one plain sentence under the tagline, or open Features with one." });
     return out;
   },
 };
@@ -113,7 +116,7 @@ export const sectionLength: Rule = {
 export const enableStep: Rule = {
   id: "shape/enable-step",
   level: "fail",
-  description: "The install step sits in the hero or the first four sections",
+  description: "The install step sits in the hero, the first four sections, or CONTRIBUTING",
   run: ({ doc }) => {
     const early = doc.sections.slice(0, 4).flatMap((s) => s.nodes).concat(doc.hero);
     let found = false;
@@ -126,7 +129,27 @@ export const enableStep: Rule = {
       if (INSTALL_PROSE_RE.test(toString(n).replace(/<[^>]+>/g, " "))) found = true;
       if (found) break;
     }
-    return found ? [] : [{ message: "No install or enable step in the hero or the first four sections.", line: doc.sections[0]?.startLine ?? 1, repair: "Add one plain sentence under the opening paragraph that names the secret to store, if any, and the action, skill or package to add." }];
+    // The product's own README may carry no install sentence at all when CONTRIBUTING holds the step in a code block.
+    if (!found) {
+      for (const rel of [".github/CONTRIBUTING.md", "CONTRIBUTING.md", "docs/CONTRIBUTING.md"]) {
+        const file = join(doc.repoRoot, rel);
+        if (!existsSync(file)) continue;
+        let text: string;
+        try {
+          text = readFileSync(file, "utf8");
+        } catch {
+          continue;
+        }
+        for (const m of text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)) {
+          if (INSTALL_RE.test(m[1])) {
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+    }
+    return found ? [] : [{ message: "No install or enable step in the hero, the first four sections, or CONTRIBUTING.", line: doc.sections[0]?.startLine ?? 1, repair: "Add one plain sentence that names the secret to store, if any, and the action, skill or package to add, or a code block in CONTRIBUTING." }];
   },
 };
 
@@ -244,14 +267,42 @@ function topItems(s: Section) {
   return s.nodes.flatMap((n) => (n.type === "list" ? n.children : []));
 }
 
+// A centred feature block: an emoji, a bold heading of two to four words, one line, each a value the reader gets.
+const CENTER_BLOCK_RE = /^<p\s+align=["']center["']>\s*(.+?)<br\s*\/?>\s*<b>([^<]+)<\/b>\s*<br\s*\/?>\s*(.+?)\s*<\/p>$/i;
+
 export const featureBullets: Rule = {
   id: "shape/feature-bullets",
   level: "warn",
-  description: "Features is a bullet list; each bullet leads with an emoji and a bold phrase",
+  description: "Features is a bullet list or centred blocks; each leads with an emoji and states a value",
   run: ({ doc }) => {
     const out = [];
     for (const s of doc.sections.filter((x) => FEATURES_TITLE.test(x.title))) {
       const table = s.nodes.find((n) => n.type === "table" || (n.type === "html" && /<table\b/i.test(n.value)));
+      const isBlock = (n: (typeof s.nodes)[number]) => n.type === "html" && CENTER_BLOCK_RE.test(n.value.trim().replace(/\s+/g, " "));
+      const firstBlock = s.nodes.findIndex(isBlock);
+      if (firstBlock >= 0) {
+        if (table) out.push({ message: "Features is a table.", line: table.position?.start.line, repair: "Make it centred blocks: emoji, bold heading of two to four words, one line, each a value the reader gets." });
+        const before = s.nodes.slice(0, firstBlock).filter((n) => n !== table);
+        const proseBefore = before.filter((n) => n.type === "paragraph");
+        if (before.length > proseBefore.length || proseBefore.length > 1) out.push({ message: "Features opens with more than one plain sentence before the blocks.", line: s.startLine, repair: "Keep at most one plain sentence saying what it is, then the centred blocks." });
+        for (const n of s.nodes.slice(firstBlock)) {
+          if (n.type !== "html") {
+            out.push({ message: "Something other than a centred block among the feature blocks.", line: n.position?.start.line, repair: "Keep every block: emoji, bold heading of two to four words, one line." });
+            continue;
+          }
+          const m = CENTER_BLOCK_RE.exec(n.value.trim().replace(/\s+/g, " "));
+          if (!m) {
+            out.push({ message: "Feature block missing the emoji, bold heading and one line shape.", line: n.position?.start.line, repair: '<p align="center">EMOJI<br><b>Heading</b><br>One line.</p>' });
+            continue;
+          }
+          const [, lead, heading, line] = m;
+          if (!EMOJI_RE.test(lead)) out.push({ message: "Feature block does not lead with an emoji.", line: n.position?.start.line, repair: "Start the block with one emoji." });
+          const words = heading.trim().split(/\s+/).filter(Boolean).length;
+          if (words < 2 || words > 4) out.push({ message: `Feature heading "${heading.trim()}" is ${words} words, want two to four.`, line: n.position?.start.line, repair: "Make the bold heading two to four words." });
+          if (!line.trim()) out.push({ message: "Feature block has no line after the heading.", line: n.position?.start.line, repair: "Add one line: the value the reader gets." });
+        }
+        continue;
+      }
       if (table) out.push({ message: "Features is a table.", line: table.position?.start.line, repair: "Make it a bullet list: emoji, bold phrase of two to four words, one short clause." });
       for (const item of topItems(s)) {
         const para = item.children[0];
@@ -268,14 +319,20 @@ export const featureBullets: Rule = {
 export const securityChecklist: Rule = {
   id: "shape/security-checklist",
   level: "warn",
-  description: "Security is one sentence on the credential, then a checklist of what never happens",
+  description: "Security opens with the credential, holds a checklist of what never happens, and may close with defaults and their bypass",
   run: ({ doc }) => {
     const out = [];
     for (const s of doc.sections.filter((x) => SECURITY_TITLE.test(x.title))) {
       const table = s.nodes.find((n) => n.type === "table" || (n.type === "html" && /<table\b/i.test(n.value)));
       if (table) out.push({ message: "Security holds a table.", line: table.position?.start.line, repair: "One sentence on the credential, its scope and how it travels, then one list where every item starts with \u274c." });
+      const list = s.nodes.find((n) => n.type === "list");
+      const listIndex = list ? s.nodes.indexOf(list) : -1;
       const paras = s.nodes.filter((n) => n.type === "paragraph");
-      if (paras.length > 1) out.push({ message: `Security holds ${paras.length} paragraphs.`, line: paras[1].position?.start.line, repair: "Keep one sentence. The rest is the checklist." });
+      const before = listIndex < 0 ? paras : paras.filter((p) => s.nodes.indexOf(p) < listIndex);
+      const after = listIndex < 0 ? [] : paras.filter((p) => s.nodes.indexOf(p) > listIndex);
+      if (before.length > 1) out.push({ message: `Security opens with ${before.length} paragraphs.`, line: before[1].position?.start.line, repair: "Keep one sentence on the credential before the list." });
+      if (after.length > 1) out.push({ message: `Security closes with ${after.length} paragraphs after the list.`, line: after[1].position?.start.line, repair: 'Keep one paragraph of "By default" lines after the list.' });
+      if (after.length === 1 && !/\bby default\b/i.test(toString(after[0]))) out.push({ message: "The paragraph after the checklist does not read as defaults.", line: after[0].position?.start.line, repair: 'Start its lines with "By default ..." and name each bypass.' });
       const items = topItems(s);
       if (items.length === 0) out.push({ message: "Security has no checklist.", line: s.startLine, repair: "List what the software never does, every item starting with \u274c." });
       for (const item of items) if (!/^\s*\u274c/u.test(toString(item))) out.push({ message: "Security item does not start with \u274c.", line: item.position?.start.line, repair: "The list says what never happens. Move what it does into the opening sentence, or cut it." });

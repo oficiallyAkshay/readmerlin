@@ -118,16 +118,22 @@ export const paragraphLength: Rule = {
 export const inlineCode: Rule = {
   id: "prose/code-outside-sentences",
   level: "warn",
-  description: "Code sits in a table or a link, outside sentences",
+  description: "Code sits in a table, a link, or a short clause that names it on its own",
   run: ({ doc }) => {
     const out = [];
     for (const s of doc.sections) {
       for (const p of paragraphs(s.nodes)) {
-        const codes = p.children.filter((c) => c.type === "inlineCode");
-        if (codes.length === 0) continue;
-        const prose = p.children.filter((c) => c.type !== "inlineCode").map((c) => toString(c)).join(" ");
-        const words = prose.split(/\s+/).filter((w) => /\w/.test(w)).length;
-        if (words >= 4) out.push({ message: "Inline code inside a sentence.", line: p.position?.start.line, repair: "Move the path or flag into a fence, a link or a table." });
+        if (!p.children.some((c) => c.type === "inlineCode")) continue;
+        // Flatten to one string, marking each inline code's spot, then judge the clause around each mark on its own:
+        // a flag or a path named as the short clause's own subject, such as "`--no-links` turns that off", stays quiet.
+        let text = "";
+        for (const c of p.children) text += c.type === "inlineCode" ? "\u0000" : toString(c);
+        const buried = text.split(/(?<=[.;])\s+/).some((clause) => {
+          if (!clause.includes("\u0000")) return false;
+          const words = clause.replace(/\u0000/g, "").split(/\s+/).filter((w) => /\w/.test(w)).length;
+          return words >= 8;
+        });
+        if (buried) out.push({ message: "Inline code buried in a long sentence.", line: p.position?.start.line, repair: "Move the path or flag into a fence, a link or a table, or give it its own short clause." });
       }
     }
     return out;

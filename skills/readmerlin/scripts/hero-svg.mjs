@@ -2,6 +2,7 @@
 // Draws a hero SVG from its spec. A hero takes the shape of the product's own verb, so there is more than one layout:
 //   "fan"          many scattered things gathered into one: sources, what gets handled fanning out, the one deliverable
 //   "before-after" one thing made better: the page the reader has, the page they wanted, the differences called out
+//   "pages"        one repo feeding several pages, each for a different reader: a typographic headline beside tiles of tiers
 // Usage: node skills/readmerlin/scripts/hero-svg.mjs <name>.hero.json > <name>.svg
 // No dependencies, so the installed skill carries it. test/hero.test.ts rebuilds every committed hero and fails when one has drifted from its spec.
 import { readFileSync } from "node:fs";
@@ -173,6 +174,82 @@ function renderBeforeAfter(spec) {
   return o.join("\n") + "\n";
 }
 
+// One repo feeding several pages, each for a different reader: a typographic headline and legend beside the picture,
+// a "your repo" source flowing into every tier on every merge, each tier a tile of what that page carries.
+function renderPages(spec) {
+  if (spec.legend.length !== 2) throw new Error(`The pages layout needs exactly 2 legend entries, got ${spec.legend.length}.`);
+  if (spec.tiers.length !== 3) throw new Error(`The pages layout needs exactly 3 tiers, got ${spec.tiers.length}.`);
+  if (spec.title.length !== 2) throw new Error(`The pages layout needs exactly 2 title lines, got ${spec.title.length}.`);
+  if (spec.subtitle.length !== 3) throw new Error(`The pages layout needs exactly 3 subtitle lines, got ${spec.subtitle.length}.`);
+  const o = [];
+  o.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-labelledby="t">');
+  o.push(`<title id="t">${esc(spec.description ?? spec.title.join(" "))}</title>`);
+  o.push("<defs>");
+  o.push('<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1e1b4b"/></marker>');
+  o.push('<radialGradient id="wash" cx="0.85" cy="0.2" r="0.7"><stop offset="0" stop-color="#c7d2fe" stop-opacity="0.9"/><stop offset="0.5" stop-color="#99f6e4" stop-opacity="0.45"/><stop offset="1" stop-color="#fbfaf7" stop-opacity="0"/></radialGradient>');
+  o.push("<style>");
+  o.push(".paper{fill:#fbfaf7}");
+  o.push(`.eyebrow{font-family:${FONT};font-size:14px;font-weight:700;letter-spacing:3px;fill:#7c3aed}`);
+  o.push(`.big{font-family:${FONT};font-size:52px;font-weight:800;letter-spacing:-1.5px;fill:#1e1b4b}`);
+  o.push(`.sub{font-family:${FONT};font-size:17px;fill:#475569}`);
+  o.push(".card{fill:#ffffff;stroke:#e2e8f0;stroke-width:1}");
+  o.push(`.head{font-family:${FONT};font-size:18px;font-weight:800;letter-spacing:0.5px}`);
+  o.push(`.item{font-family:${FONT};font-size:16px;fill:#1e1b4b}`);
+  o.push(".tick{fill:none;stroke:#16a34a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}");
+  o.push(".flow{fill:none;stroke:#1e1b4b;stroke-width:1.6}");
+  o.push(`.merge{font-family:${FONT};font-size:13px;font-weight:700;letter-spacing:2px;fill:#1e1b4b}`);
+  o.push(".repo{fill:#1e1b4b}");
+  o.push(`.repotext{font-family:${FONT};font-size:17px;font-weight:700;fill:#ffffff}`);
+  o.push(".glyph{fill:none;stroke:#1e1b4b;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}");
+  o.push(`.who{font-family:${FONT};font-size:14px;font-weight:700;letter-spacing:1px;fill:#1e1b4b}`);
+  o.push(`.cap{font-family:${FONT};font-size:14px;fill:#64748b}`);
+  o.push("@media (prefers-color-scheme: dark){");
+  o.push(" .paper{fill:#0f1222}.big,.item,.flow,.merge,.who,.glyph{fill:#f8fafc;stroke:#f8fafc}.item,.big,.merge,.who{stroke:none}.flow,.glyph{fill:none}.card{fill:#171a2e;stroke:#2a2f4a}.sub{fill:#a5b4fc}.cap{fill:#94a3b8}.repo{fill:#f8fafc}.repotext{fill:#1e1b4b}.tick{stroke:#4ade80}");
+  o.push("}");
+  o.push("</style></defs>");
+  o.push('<rect class="paper" x="0" y="0" width="1200" height="500"/>');
+  o.push('<rect x="0" y="0" width="1200" height="500" fill="url(#wash)"/>');
+  o.push(`<text class="eyebrow" x="60" y="86">${esc(spec.eyebrow)}</text>`);
+  o.push(`<text class="big" x="58" y="150">${esc(spec.title[0])}</text>`);
+  o.push(`<text class="big" x="58" y="210">${esc(spec.title[1])}</text>`);
+  o.push(`<text class="sub" x="60" y="252">${esc(spec.subtitle[0])}</text>`);
+  o.push(`<text class="sub" x="60" y="276">${esc(spec.subtitle[1])}</text>`);
+  o.push(`<text class="sub" x="60" y="300">${esc(spec.subtitle[2])}</text>`);
+  o.push(`<g class="glyph" style="stroke-width:2"><circle cx="70" cy="365" r="6"/><path d="M59,385 a11,11 0 0 1 22,0"/></g><text class="who" x="92" y="376">${esc(spec.legend[0].who)}</text><text class="cap" x="218" y="376">${esc(spec.legend[0].reads)}</text>`);
+  o.push(`<g class="glyph" style="stroke-width:2"><rect x="61" y="406" width="18" height="15" rx="4"/><path d="M70,406 v-4"/><path d="M58,433 a12,12 0 0 1 24,0"/></g><circle cx="66.5" cy="413" r="1.5" fill="#1e1b4b"/><circle cx="73.5" cy="413" r="1.5" fill="#1e1b4b"/><text class="who" x="92" y="424">${esc(spec.legend[1].who)}</text><text class="cap" x="210" y="424">${esc(spec.legend[1].reads)}</text>`);
+  o.push('<rect class="repo" x="730" y="82" width="140" height="42" rx="21"/>');
+  o.push(`<text class="repotext" x="800" y="109" text-anchor="middle">${esc(spec.source)}</text>`);
+  o.push('<path class="flow" d="M770,124 C 770,154 546,152 546,182" marker-end="url(#a)"/>');
+  o.push('<path class="flow" d="M800,124 v14"/><path class="flow" d="M800,168 v14" marker-end="url(#a)"/>');
+  o.push('<path class="flow" d="M830,124 C 830,154 1054,152 1054,182" marker-end="url(#a)"/>');
+  o.push(`<text class="merge" x="800" y="158" text-anchor="middle">${esc(spec.edge)}</text>`);
+  spec.tiers.forEach((tier, i) => {
+    const x = 430 + i * 254;
+    const n = tier.items.length;
+    const height = 73 + n * 27;
+    o.push(`<rect class="card" x="${x}" y="190" width="232" height="${height}" rx="6"/>`);
+    o.push(`<rect x="${x}" y="190" width="6" height="${height}" fill="${tier.colour}"/>`);
+    o.push(`<text class="head" x="${x + 24}" y="224" style="fill:${tier.colour}">${esc(tier.label)}</text>`);
+    if (tier.reader === "person") {
+      const cx = x + 202;
+      o.push(`<g class="glyph" style="stroke-width:2"><circle cx="${cx}" cy="217" r="6"/><path d="M${cx - 11},237 a11,11 0 0 1 22,0"/></g>`);
+    } else if (tier.reader === "agent") {
+      const rx = x + 193;
+      o.push(`<g class="glyph" style="stroke-width:2"><rect x="${rx}" y="210" width="18" height="15" rx="4"/><path d="M${rx + 9},210 v-4"/><path d="M${rx - 3},237 a12,12 0 0 1 24,0"/></g><circle cx="${rx + 5.5}" cy="217" r="1.5" fill="#1e1b4b"/><circle cx="${rx + 12.5}" cy="217" r="1.5" fill="#1e1b4b"/>`);
+    } else {
+      throw new Error(`Unknown reader "${tier.reader}" on tier "${tier.label}". Known: person, agent.`);
+    }
+    tier.items.forEach((item, j) => {
+      const tickY = 255 + 27 * j;
+      const textY = 260 + 27 * j;
+      o.push(`<path class="tick" d="M${x + 26},${tickY} l4,4 l8,-9"/>`);
+      o.push(`<text class="item" x="${x + 46}" y="${textY}">${esc(item)}</text>`);
+    });
+  });
+  o.push("</svg>");
+  return o.join("\n") + "\n";
+}
+
 // A spec names every field its layout draws. A missing one is an error with the field's name, never a blank picture.
 function need(spec, fields) {
   for (const f of fields) {
@@ -185,6 +262,10 @@ export function render(spec) {
   if (spec.kind === "before-after") {
     need(spec, ["title", "before", "before.problems", "before.label", "by", "by.icon", "by.label", "after", "after.parts", "after.label"]);
     return renderBeforeAfter(spec);
+  }
+  if (spec.kind === "pages") {
+    need(spec, ["eyebrow", "title", "subtitle", "legend", "source", "edge", "tiers"]);
+    return renderPages(spec);
   }
   need(spec, ["title", "sources", "handled", "deliverable", "deliverable.label"]);
   const rows = [...spec.handled.map((h) => ({ ...h, more: false })), ...(spec.more ? [{ label: "and more", icon: "more", more: true }] : [])];
@@ -238,7 +319,7 @@ export function render(spec) {
 export function labels(spec) {
   const out = [];
   const walk = (v, key) => {
-    if (typeof v === "string") return void (["title", "label", "gives", "heading", "backing", "with"].includes(key) && v.trim() && out.push(v.trim()));
+    if (typeof v === "string") return void (["title", "label", "gives", "heading", "backing", "with", "items", "eyebrow", "subtitle", "who", "reads", "source", "edge"].includes(key) && v.trim() && out.push(v.trim()));
     if (Array.isArray(v)) return v.forEach((x) => walk(x, key));
     if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
   };
