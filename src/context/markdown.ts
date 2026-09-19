@@ -8,6 +8,18 @@ const line = (label: string, v: string | number | undefined) => (v === undefined
 const SECRET_RE = /(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[A-Z0-9]{12,}|xox[abpr]-[A-Za-z0-9-]{8,}|([?&](?:token|key|api_key|apikey|secret|password)=)[^&\s]+)/gi;
 export const mask = (v: string): string => v.replace(SECRET_RE, (m, _a, prefix) => (prefix ? `${prefix}<hidden>` : "<hidden>"));
 
+export const README_CAP = 60_000;
+
+// The fence is longer than any tilde run in the page, so a fence inside the README cannot close it.
+function readmeBlock(text: string): string {
+  const cut = text.length > README_CAP;
+  const body = mask(cut ? text.slice(0, README_CAP) : text);
+  const longest = Math.max(0, ...[...body.matchAll(/^ {0,3}(~+)/gm)].map((m) => m[1].length));
+  const fence = "~".repeat(Math.max(4, longest + 1));
+  const note = cut ? `\nThe page runs past ${README_CAP} characters. Read README.md for the rest.\n` : "";
+  return `\nThe full page, the draft a rewrite starts from:\n\n${fence}markdown\n${body}\n${fence}\n${note}`;
+}
+
 export function toMarkdown(c: RepoContext): string {
   let s = `# Repo context\n\n`;
   s += line("Repo", c.repo.owner && c.repo.name ? `${c.repo.owner}/${c.repo.name}` : c.repo.remote);
@@ -51,5 +63,7 @@ export function toMarkdown(c: RepoContext): string {
   s += `## Existing README\n\n`;
   if (!c.readme.exists) s += `- none\n`;
   else s += `${line("Title", c.readme.title)}${line("Tagline", c.readme.tagline)}${line("Words", c.readme.words)}${line("Badges", c.readme.badges)}${line("Images", c.readme.images.join(", ") || undefined)}${line("Headings", c.readme.headings.join(" | ") || undefined)}`;
+  // The page itself, so a rerun starts from the approved words rather than a blank page.
+  if (c.readme.exists && c.readme.text) s += readmeBlock(c.readme.text);
   return s;
 }

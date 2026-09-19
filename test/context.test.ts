@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "node:path";
 import { gather } from "../src/context/index.js";
-import { toMarkdown } from "../src/context/markdown.js";
+import { README_CAP, toMarkdown } from "../src/context/markdown.js";
 
 const FIX = resolve(__dirname, "fixtures/skill-repo");
 
@@ -29,6 +29,22 @@ describe("context", () => {
     expect(md).toContain("## Skills");
     expect(md).toContain("### tidy-inbox");
     expect(md).toContain("## MCP servers");
+  });
+
+  it("prints the existing README in full, so a rerun starts from it", async () => {
+    const md = toMarkdown(await gather(FIX));
+    expect(md).toContain("~~~~markdown\n");
+    expect(md).toContain("Receipts in, claim out.");
+  });
+
+  it("fences the README longer than any fence inside it, and caps a huge one", async () => {
+    const base = await gather(FIX);
+    const inner = toMarkdown({ ...base, readme: { ...base.readme, text: "a\n~~~~~~\ncode\n~~~~~~\nb" } });
+    expect(inner).toContain("~~~~~~~markdown\n");
+    expect(inner.trimEnd().endsWith("~~~~~~~")).toBe(true);
+    const huge = toMarkdown({ ...base, readme: { ...base.readme, text: "x".repeat(README_CAP + 10) } });
+    expect(huge).toContain("Read README.md for the rest.");
+    expect(huge).not.toContain("x".repeat(README_CAP + 1));
   });
 });
 

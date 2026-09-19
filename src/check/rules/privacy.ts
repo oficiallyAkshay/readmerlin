@@ -73,9 +73,16 @@ export const comparisonLinks: Rule = {
   description: "Comparison columns are the real alternatives, each header a link to its repo",
   run: ({ doc }) =>
     comparisonTables(doc).flatMap((t) =>
-      columns(t)
-        .filter((c) => !linkOf(c))
-        .map((c) => ({ message: `Comparison column "${toString(c).trim()}" is not a link.`, line: c.position?.start.line, repair: "Head every column with the full owner/repo name, linked, this project's included. Check every cell against that repo's README." })),
+      columns(t).flatMap((c) => {
+        const text = toString(c).trim();
+        const href = linkOf(c);
+        const repair = "Head every column with the full owner/repo name, linked, this project's included. Check every cell against that repo's README.";
+        if (!href) return [{ message: `Comparison column "${text}" is not a link.`, line: c.position?.start.line, repair }];
+        // A repo link names its owner and repo in the header, so the reader sees whose project each column is.
+        const repo = /^https?:\/\/(?:www\.)?(?:github\.com|gitlab\.com|codeberg\.org)\/([^/\s]+\/[^/\s#?]+)/i.exec(href)?.[1]?.replace(/\.git$/i, "");
+        if (repo && text.toLowerCase() !== repo.toLowerCase()) return [{ message: `Comparison column "${text}" does not name its repo as ${repo}.`, line: c.position?.start.line, repair }];
+        return [];
+      }),
     ),
 };
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+A rerun now keeps the approved page. The context command prints the existing README in full, and the skill treats it as the draft: its tagline, feature blocks, comparison rows and checklist items stay word for word, and a sentence changes only when a fact moved, a rule fails, or the user asks. A fresh agent rerun on this repo left its README byte for byte as approved. The comparison check now also warns when a column header does not name the owner/repo its link points to.
+
 ## 0.5.0
 
 The check command now takes several files at once and a `--pages` flag that expands to `README.md`, whichever CONTRIBUTING file exists, and every markdown page under `docs`, reporting each one in turn instead of the README alone. A parsed page now carries its own kind, so a rule can opt in to running on CONTRIBUTING and docs pages, rather than only on the README; twenty rules now do, covering links, badges, privacy and plain punctuation. The action and this repo's own CI check the pages by default. This docs folder arrived with it, written with the skill's own docs step, and CONTRIBUTING was trimmed of the settings table and the commands block, which live here in full. CI was hardened as well: pinned actions, a gate job, a secrets scan and dependabot. Merged as pull requests 9, 13 and 14.

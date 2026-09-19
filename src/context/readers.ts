@@ -203,7 +203,7 @@ export function readReadme(root: string): ReadmeInfo {
   const badges = images.filter((s) => /shields\.io|badge|\/actions\/workflows\/.*\.svg/.test(s)).length;
   const prose = body.replace(/<[^>]+>/g, " ").replace(/```[\s\S]*?```/g, " ").replace(/!\[[^\]]*\]\([^)]*\)/g, " ");
   const words = prose.split(/\s+/).filter((w) => /\w/.test(w)).length;
-  return { exists: true, title, tagline, headings: headingsOf(body), badges, images: images.filter((s) => !/shields\.io|badge/.test(s)), words };
+  return { exists: true, title, tagline, headings: headingsOf(body), badges, images: images.filter((s) => !/shields\.io|badge/.test(s)), words, text: body.trim() };
 }
 
 const HOST_HINTS: Array<[RegExp, string]> = [

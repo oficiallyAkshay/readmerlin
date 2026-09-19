@@ -9,7 +9,7 @@ Hand this to the agent before it drafts. Two readers, one repo, three pages. A p
 3. Every sentence is short and plain, in the voice of someone explaining to a friend. Each fact is said once. Let the numbers praise the project.
 4. Badges carry adoption and licence: the licence, downloads or clones, and the product's own live numbers. No language version, no dependency count, no rule count. Green CI is table stakes once merges require it, so CI status stays off the page. Every badge has a logo that renders and a link.
 5. One shape, in the order below. A part with nothing to say is dropped. The platform already surfaces the licence and the contributing guide, so the page leaves them to it.
-6. The author's own words stay verbatim. Restructure freely; rewrite only when asked, and say when a sentence changes.
+6. The author's own words stay verbatim. Restructure freely; rewrite only when asked, and say when a sentence changes. An existing README is the draft a rerun starts from: every sentence that still holds stays word for word.
 7. README for people. The install step is one sentence in Fit, for a repo that has one; for the product's own page, CONTRIBUTING carries it. Either way it makes a Quick start section redundant. The agent block lives only in CONTRIBUTING under the .github folder, under forty lines.
 8. The README is words, pictures, badges and tables. Workflow files, commands and badge recipes live in CONTRIBUTING and docs. A name that must appear as code sits in a table or a link.
 9. Link only to what a reader acts on: a page to read, a package to install, a repo to compare.
