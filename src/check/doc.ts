@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -8,8 +8,11 @@ import { toString } from "mdast-util-to-string";
 import type { Root, RootContent, Heading } from "mdast";
 import type { Doc, Section } from "./types.js";
 
+/** README.md, with an optional locale suffix such as README.fr.md. Every other file is a page: CONTRIBUTING, a docs page, anything else. */
+const README_RE = /^readme(\.[a-z]{2})?\.md$/i;
+
 /** The nearest folder at or above dir that holds .git, a folder or a file. */
-function gitRoot(dir: string): string | undefined {
+export function gitRoot(dir: string): string | undefined {
   let d = dir;
   for (;;) {
     if (existsSync(join(d, ".git"))) return d;
@@ -42,7 +45,8 @@ export function parseDoc(file: string, repoRoot?: string): Doc {
       hero.push(node);
     }
   }
-  return { file, text, lines, tree, hero, sections, dir, repoRoot: repoRoot ? resolve(repoRoot) : gitRoot(dir) ?? dir };
+  const kind: Doc["kind"] = README_RE.test(basename(file)) ? "readme" : "page";
+  return { file, text, lines, tree, hero, sections, dir, repoRoot: repoRoot ? resolve(repoRoot) : gitRoot(dir) ?? dir, kind };
 }
 
 export function lineOf(node: { position?: { start: { line: number } } }): number | undefined {

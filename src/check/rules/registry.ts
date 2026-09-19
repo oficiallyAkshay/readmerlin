@@ -33,6 +33,7 @@ async function published(fetchFn: typeof fetch, registry: string, name: string):
 export const registryBadges: Rule = {
   id: "badges/registry-present",
   level: "warn",
+  pages: true,
   description: "A published package carries its registry version and downloads badges",
   run: async ({ doc, links, fetch }) => {
     const out = [];
