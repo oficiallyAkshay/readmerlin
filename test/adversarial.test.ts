@@ -5,6 +5,16 @@ import { join } from "node:path";
 import { check } from "../src/check/index.js";
 import { gather } from "../src/context/index.js";
 
+// v8 coverage instrumentation slows the parser and every rule that walks the tree, and CI runners
+// are already slower than a dev machine, so a fixed budget flakes under `npm test` (which runs
+// with --coverage). Vitest sets no env var for this; the worker's own resolved config is the one
+// real signal available in-process for whether coverage is on. A missing/renamed internal is read
+// as "off", so this still degrades to the plain budget rather than throwing.
+const COVERAGE_ON = Boolean(
+  (globalThis as { __vitest_worker__?: { config?: { coverage?: { enabled?: boolean } } } }).__vitest_worker__?.config?.coverage?.enabled,
+);
+const HUGE_README_BUDGET_MS = COVERAGE_ON ? 15000 : 5000;
+
 const HERO = `<h1 align="center">🧾 tidy</h1>\n\n<p align="center"><b>Receipts in, claim out.</b><br>One week of receipts becomes one claim.</p>\n\n<p align="center"><a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative"></a></p>\n\n<p align="center"><img alt="Receipts flow into one claim" src="assets/readme/hero.svg" width="900"></p>\n\n<p align="center"><b><a href="examples/claim.pdf">See the example claim</a></b></p>\n\nAdd the tidy skill to your agent, then hand it the week.\n`;
 const QUICK = `## Features\n\n- 🧾 **Every receipt found.** The inbox is searched for the trip window only.\n`;
 const AGENTS = `## Callouts\n\n- It reads the inbox your agent can already read.\n`;
@@ -67,7 +77,7 @@ describe("shape tricks", () => {
     const dir = repo(HERO + "\n" + QUICK + "\n## Big\n\n" + body + "\n\n" + AGENTS);
     const t = Date.now();
     await ids(dir);
-    expect(Date.now() - t).toBeLessThan(5000);
+    expect(Date.now() - t).toBeLessThan(HUGE_README_BUDGET_MS);
   });
   it("leaves CJK and allowlisted headings alone", async () => {
     const dir = repo(HERO + "\n" + QUICK + "\n## 使い方\n\n- x\n\n## Runs on Claude Code\n\n- y\n\n" + AGENTS);
