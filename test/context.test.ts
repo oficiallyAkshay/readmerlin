@@ -157,9 +157,24 @@ describe("badge row, own page and compare spec", () => {
   it("draws a works-with badge for a known host and names an unknown one", async () => {
     const root = repo({ "readmerlin.json": JSON.stringify({ worksWith: ["Windsurf", "Hermes"] }) });
     const c = await gather(root);
-    expect(c.worksWith.map((b) => b.alt)).toEqual(["works with Windsurf"]);
+    expect(c.worksWith.map((b) => b.alt)).toEqual(["Windsurf"]);
     expect(c.unbadgedHosts).toEqual(["Hermes"]);
     expect(toMarkdown(c)).toContain("No works-with badge recipe for Hermes");
+  });
+  it("draws a message-only host badge with no repeated works-with label", async () => {
+    const { hostBadgeSrc, MARKLESS_HOST_BADGES } = await import("../src/context/readers.js");
+    expect(hostBadgeSrc("Claude Code")).toBe("https://img.shields.io/badge/Claude%20Code-1e1b4b?logo=claude&logoColor=white");
+    expect(hostBadgeSrc("Claude Code")).not.toContain("works");
+    const openClaw = hostBadgeSrc("OpenClaw");
+    expect(openClaw).toBe("https://img.shields.io/badge/OpenClaw-1e1b4b");
+    expect(MARKLESS_HOST_BADGES()).toContain(openClaw);
+  });
+  it("lists an existing AGENTS.md the way it lists a workflow", async () => {
+    const withFile = await gather(repo({ "AGENTS.md": "# AGENTS.md\n\nStart here.\n" }));
+    expect(withFile.agentsFile).toBe("AGENTS.md");
+    expect(toMarkdown(withFile)).toContain("AGENTS.md: AGENTS.md");
+    const without = await gather(repo({}));
+    expect(without.agentsFile).toBeUndefined();
   });
   it("marks readmerlin's own repo and reads its compare spec", async () => {
     const root = repo({ "skills/readmerlin/SKILL.md": "---\nname: readmerlin\ndescription: d\n---\n\nBody.\n", "readmerlin.json": JSON.stringify({ compare: { repos: ["a/b"], rows: ["Output"] } }) });

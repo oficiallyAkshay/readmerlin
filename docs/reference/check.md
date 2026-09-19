@@ -8,7 +8,7 @@ Reads one or more markdown pages and reports every rule finding against each one
 
 ## Flags
 
-`--format text|github|json`, default `text`. `--config <file>`, the path to a readmerlin.json, default `readmerlin.json` at the repo root. `--pages`, checks `README.md`, whichever of `.github/CONTRIBUTING.md` or `CONTRIBUTING.md` exists, and every markdown file under `docs`, in place of any given files. `--no-links`, skips every external link and badge logo request. `--no-exec`, never runs a count-source command from readmerlin.json.
+`--format text|github|json`, default `text`. `--config <file>`, the path to a readmerlin.json, default `readmerlin.json` at the repo root. `--pages`, checks `README.md`, `AGENTS.md` when the repo has one, whichever of `.github/CONTRIBUTING.md` or `CONTRIBUTING.md` exists, and every markdown file under `docs`, in place of any given files. `--no-links`, skips every external link and badge logo request. `--no-exec`, never runs a count-source command from readmerlin.json.
 
 ## Exit codes
 

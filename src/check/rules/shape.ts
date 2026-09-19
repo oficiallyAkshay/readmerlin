@@ -175,22 +175,19 @@ export const killList: Rule = {
   },
 };
 
-function blockLines(lines: string[], from: number): number {
-  let n = 0;
-  for (let i = from; i < lines.length && !/^#{1,2}\s/.test(lines[i]); i++) if (lines[i].trim()) n++;
-  return n;
-}
-
 const AGENT_BLOCK_LINES = 40;
+
+/** Non-blank lines in a whole file: AGENTS.md carries no other content, so the file itself is the agent block. */
+function nonBlankLines(text: string): number {
+  return text.split(/\r?\n/).filter((l) => l.trim()).length;
+}
 
 export const agentSection: Rule = {
   id: "shape/agents-in-contributing",
   level: "fail",
-  description: "The agent block lives in CONTRIBUTING, under forty lines; the README is for people",
+  description: "The agent block lives in AGENTS.md at the repo root, under forty lines; CONTRIBUTING no longer carries it",
   run: ({ doc }) => {
-    const out = doc.sections
-      .filter((s) => AGENT_TITLE.test(s.title))
-      .map((s) => ({ message: `Section "${s.title}" is written for agents.`, line: s.startLine, repair: "Move it to CONTRIBUTING under .github. The README is for people." }));
+    const out: Array<{ message: string; line?: number; repair: string }> = [];
     for (const rel of [".github/CONTRIBUTING.md", "CONTRIBUTING.md", "docs/CONTRIBUTING.md"]) {
       const file = join(doc.repoRoot, rel);
       if (!existsSync(file)) continue;
@@ -200,10 +197,18 @@ export const agentSection: Rule = {
       } catch {
         continue;
       }
-      const at = lines.findIndex((l) => /^##\s/.test(l) && AGENT_TITLE.test(l));
-      if (at < 0) continue;
-      const n = blockLines(lines, at + 1);
-      if (n > AGENT_BLOCK_LINES) out.push({ message: `The agent block in ${rel} is ${n} lines, limit ${AGENT_BLOCK_LINES}.`, line: 1, repair: "Cut it to what an agent needs to start, and link the rest." });
+      if (lines.some((l) => /^##\s/.test(l) && AGENT_TITLE.test(l))) out.push({ message: `${rel} still carries a section written for agents.`, line: 1, repair: "Move it to AGENTS.md at the repo root, under forty lines, and point to it from CONTRIBUTING." });
+    }
+    const agentsFile = join(doc.repoRoot, "AGENTS.md");
+    if (existsSync(agentsFile)) {
+      let text: string;
+      try {
+        text = readFileSync(agentsFile, "utf8");
+      } catch {
+        text = "";
+      }
+      const n = nonBlankLines(text);
+      if (n > AGENT_BLOCK_LINES) out.push({ message: `AGENTS.md is ${n} lines, limit ${AGENT_BLOCK_LINES}.`, line: 1, repair: "Cut it to what an agent needs to start, and point to CONTRIBUTING and docs for the rest." });
     }
     return out;
   },

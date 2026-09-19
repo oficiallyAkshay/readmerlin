@@ -99,6 +99,12 @@ describe("expandPages", () => {
     const { files } = expandPages(dir);
     expect(files).toEqual([join(dir, "README.md"), join(dir, ".github/CONTRIBUTING.md"), join(dir, "docs/guide.md"), join(dir, "docs/nested/reference.md")]);
   });
+
+  it("adds AGENTS.md right after README.md when the repo has one", () => {
+    const dir = repo({ "README.md": "# t\n", "AGENTS.md": "# AGENTS.md\n", "CONTRIBUTING.md": "## Commands\n" });
+    const { files } = expandPages(dir);
+    expect(files).toEqual([join(dir, "README.md"), join(dir, "AGENTS.md"), join(dir, "CONTRIBUTING.md")]);
+  });
 });
 
 describe("the repo's own pages", () => {
@@ -109,10 +115,11 @@ describe("the repo's own pages", () => {
     for (const r of results) expect(r.fails, `${r.file} has a fail`).toBe(0);
   });
 
-  it("--pages lists every docs page, README and CONTRIBUTING", () => {
+  it("--pages lists every docs page, README, AGENTS.md and CONTRIBUTING", () => {
     const { files } = expandPages(REPO_ROOT);
     const rel = files.map((f) => f.slice(REPO_ROOT.length + 1));
     expect(rel).toContain("README.md");
+    expect(rel).toContain("AGENTS.md");
     expect(rel).toContain(join(".github", "CONTRIBUTING.md"));
     const docsPages = [
       "README.md",
@@ -128,7 +135,7 @@ describe("the repo's own pages", () => {
       join("reference", "settings.md"),
     ];
     for (const p of docsPages) expect(rel).toContain(join("docs", p));
-    expect(rel).toHaveLength(2 + docsPages.length);
+    expect(rel).toHaveLength(3 + docsPages.length);
   });
 });
 

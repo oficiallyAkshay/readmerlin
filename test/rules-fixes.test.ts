@@ -201,10 +201,11 @@ describe("shape, prose and privacy", () => {
     expect(await ids(dir)).not.toContain("shape/install-in-words");
     expect(await ids(repo(HERO + "\n" + QUICK + "\n```\nexport TOKEN=abc\n```\n"))).toContain("shape/install-in-words");
   });
-  it("tells For Claude from For Claude Desktop, and puts How it works on the kill list", async () => {
-    expect(await ids(repo(HERO + "\n" + QUICK + "\n## For Claude Desktop\n\n- x\n"))).not.toContain("shape/agents-in-contributing");
-    expect(await ids(repo(HERO + "\n" + QUICK + "\n## For Claude\n\n- x\n"))).toContain("shape/agents-in-contributing");
+  it("puts How it works on the kill list, and tells For Claude from For Claude Desktop when the block sits in CONTRIBUTING", async () => {
     expect(await ids(repo(HERO + "\n" + QUICK + "\n## How it works\n\n- x\n"))).toContain("shape/earned-headings");
+    const titled = async (t: string) => (await ids(repo(HERO + "\n" + QUICK, { ".github/CONTRIBUTING.md": `# Contributing\n\n## ${t}\n\n- x\n` }))).includes("shape/agents-in-contributing");
+    expect(await titled("For Claude Desktop")).toBe(false);
+    expect(await titled("For Claude")).toBe(true);
   });
   it("ignores a dash inside an html comment, a four-backtick fence, a tilde fence and an indented block", async () => {
     const body = "\n<!-- TODO — tighten -->\n\n````md\n```\nfoo — bar\n```\n````\n\n~~~md\n```\nx — y\n```\n~~~\n\nExample:\n\n    total — 3\n\n";

@@ -370,14 +370,20 @@ export const BADGED_HOSTS = (): string[] => Object.keys(HOST_BADGES);
 /** Works-with badges for hosts shields has no mark for, which are label-only by design. */
 export const MARKLESS_HOST_BADGES = (): string[] => Object.keys(HOST_BADGES).filter((h) => !HOST_BADGES[h].logo).map(hostBadgeSrc);
 
+// Message-only: a logo and the host name, no repeated "works with" label. The row itself says "Works with" once, above the badges.
 export function hostBadgeSrc(host: string): string {
   const esc = (v: string) => encodeURIComponent(v.replace(/-/g, "--"));
   const logo = HOST_BADGES[host]?.logo;
-  return `https://img.shields.io/badge/${esc("works with")}-${esc(host)}-1e1b4b${logo ? `?logo=${logo}${logo.startsWith("data:") ? "" : "&logoColor=white"}` : ""}`;
+  return `https://img.shields.io/badge/${esc(host)}-1e1b4b${logo ? `?logo=${logo}${logo.startsWith("data:") ? "" : "&logoColor=white"}` : ""}`;
 }
 
 export function worksWithRow(hosts: string[]): BadgeSpec[] {
-  return hosts.filter((h) => HOST_BADGES[h]).map((h) => ({ alt: `works with ${h}`, src: hostBadgeSrc(h), href: HOST_BADGES[h].href }));
+  return hosts.filter((h) => HOST_BADGES[h]).map((h) => ({ alt: h, src: hostBadgeSrc(h), href: HOST_BADGES[h].href }));
+}
+
+/** "AGENTS.md" when the repo has one at its root, so context lists it the way it lists a workflow. */
+export function readAgentsFile(root: string): string | undefined {
+  return existsSync(join(root, "AGENTS.md")) ? "AGENTS.md" : undefined;
 }
 
 export function readWorksWith(root: string): string[] | undefined {
