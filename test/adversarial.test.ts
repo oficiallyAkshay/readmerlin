@@ -226,6 +226,8 @@ describe("the shape", () => {
     expect(await claims("https://img.shields.io/badge/privacy-local_only-blue?logo=github")).toBe(true);
     expect(await claims("https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python")).toBe(false);
     expect(await claims("https://img.shields.io/badge/Claude%20Code-3f3f46?logo=anthropic")).toBe(false);
+    // The old 0.7.x host badge shape, label "works with", still passes: a repo need not rewrite its README to stay clean.
+    expect(await claims("https://img.shields.io/badge/works%20with-Claude%20Code-1e1b4b?logo=claude&logoColor=white")).toBe(false);
   });
   it("fails a hero that does not show what its spec names", async () => {
     const spec = JSON.stringify({ title: "t", sources: [{ label: "Inbox" }], handled: [{ label: "Rides" }], deliverable: { label: "one claim" } });
