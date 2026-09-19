@@ -50,7 +50,7 @@ Code gathers and checks. The agent does the writing. The diagram is rebuilt with
 
 ## The hero and its specs
 
-How figurehead renders the hero, what `test/hero.test.ts` and `visuals/spec-agrees` hold it to, and what `visuals/spec-beside` accepts next to an SVG: see [The hero](../src/rules/RULES.md#the-hero) and [Specs the check accepts beside an SVG](../src/rules/RULES.md#specs-the-check-accepts-beside-an-svg) in RULES.md, the one place that description lives.
+How figurehead renders the hero, what `test/hero.test.ts` and `visuals/spec-agrees` hold it to, and what `visuals/spec-beside` accepts next to an SVG: see [Hero](../src/rules/RULES.md#hero) and [Specs the check accepts beside an SVG](../src/rules/RULES.md#specs-the-check-accepts-beside-an-svg) in RULES.md, the one place that description lives.
 
 ## Working on the code
 

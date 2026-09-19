@@ -144,6 +144,11 @@ describe("visuals", () => {
     const clipped = repo(HERO + "\n" + QUICK, { "assets/readme/hero.svg": svg('<rect x="-60" y="0" width="40" height="40"/>') });
     expect(await ids(clipped)).toContain("visuals/svg-clipping");
   });
+  it("reads single-quoted and unquoted SVG attributes, not only double-quoted ones", async () => {
+    const svg = (body: string, vb = "-50 -50 100 100") => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"><style>text{font-family:system-ui}</style>${body}</svg>`;
+    const clipped = repo(HERO + "\n" + QUICK, { "assets/readme/hero.svg": svg("<rect x='150' y=0 width='40' height='40'/>") });
+    expect(await ids(clipped)).toContain("visuals/svg-clipping");
+  });
 });
 
 describe("format", () => {

@@ -2,7 +2,7 @@
 
 ## 0.8.1
 
-An ossemble pass over this repo closed its two open gaps: a pre-commit hook now runs gitleaks locally, matching the full-history scan CI already ran, and CI runs it too. Dependabot now groups its weekly GitHub Actions updates into one pull request, the way it already grouped npm. The comparison rules in privacy.ts now share one table walker instead of three, the section rules in shape.ts share one top-level-section reader, and visuals.ts reuses util.ts's own attribute reader instead of a second copy of the same regex. CONTRIBUTING now points to RULES.md for the hero and spec-beside description instead of repeating it.
+An ossemble pass over this repo closed its two open gaps: a pre-commit hook now runs gitleaks locally, matching the full-history scan CI already ran, and CI runs it too. Dependabot now groups its weekly GitHub Actions updates into one pull request, the way it already grouped npm. The comparison rules in privacy.ts now share one table walker instead of three, the section rules in shape.ts share one top-level-section reader, and visuals.ts reuses util.ts's own attribute reader instead of a second copy of the same regex. That reader also reads single-quoted and unquoted attributes, so visuals/svg-clipping and visuals/svg-text-overflow now catch a shape or a label written that way instead of missing it. CONTRIBUTING now points to RULES.md for the hero and spec-beside description instead of repeating it.
 
 ## 0.8.0
 
