@@ -48,13 +48,9 @@ A count badge such as `downloads-1.2k` needs a source in `readmerlin.json` under
 
 Code gathers and checks. The agent does the writing. The diagram is rebuilt with `node scripts/archify-svg.mjs <archify checkout>` from `assets/diagram/architecture.archify.json`, using [Archify](https://github.com/tt-a1i/archify).
 
-## The hero
+## The hero and its specs
 
-This repo carries no renderer of its own. figurehead, a peer skill installed with `npx skills add oficiallyAkshay/figurehead`, draws a hero from its spec, with no dependencies, in light and dark theme. It renders two layouts today, `fan` for a product that gathers many things into one and `before-after` for a product that makes one thing better; this repo's own hero uses a third, `pages`, for a repo that feeds several pages to different readers, which figurehead does not render yet. That gap is tracked on figurehead's side, where the next renderer change makes layouts data-driven and adds `pages`; this repo's own hero gets re-rendered through figurehead once it does. `test/hero.test.ts` renders every committed hero through figurehead when `FIGUREHEAD_DIR` names a checkout, and fails when an SVG has drifted from its spec; it skips, naming the env var, when it is unset. `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in figurehead, never a borrowed one.
-
-## Specs beside an SVG
-
-`visuals/spec-beside` accepts `<name>.hero.json` for a hero, `<name>.archify.json`, `<name>.d2` or `<name>.mmd` for a diagram, and any other `<name>.json`. It checks the hero spec's labels and only looks for the rest.
+How figurehead renders the hero, what `test/hero.test.ts` and `visuals/spec-agrees` hold it to, and what `visuals/spec-beside` accepts next to an SVG: see [Hero](../src/rules/RULES.md#hero) and [Specs the check accepts beside an SVG](../src/rules/RULES.md#specs-the-check-accepts-beside-an-svg) in RULES.md, the one place that description lives.
 
 ## Working on the code
 

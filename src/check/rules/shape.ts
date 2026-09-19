@@ -91,12 +91,17 @@ export const ctaLink: Rule = {
   },
 };
 
+/** The document's own headings: depth-2 sections only, a subsection never counts as one of its own. Shared by every rule that walks the top level rather than one section's contents. */
+function topSections(doc: { sections: Section[] }): Section[] {
+  return doc.sections.filter((s) => s.depth === 2);
+}
+
 export const sectionCount: Rule = {
   id: "shape/section-count",
   level: "warn",
   description: "The section count stays within the limit",
   run: ({ doc, config }) => {
-    const top = doc.sections.filter((s) => s.depth === 2);
+    const top = topSections(doc);
     return top.length > config.maxSections ? [{ message: `${top.length} sections, limit ${config.maxSections}.`, line: top[config.maxSections].startLine, repair: "Merge or move sections into reference pages." }] : [];
   },
 };
@@ -106,8 +111,7 @@ export const sectionLength: Rule = {
   level: "warn",
   description: "Every section stays within the line limit",
   run: ({ doc, config }) =>
-    doc.sections
-      .filter((s) => s.depth === 2)
+    topSections(doc)
       .map((s, i, all) => ({ s, end: all[i + 1] ? all[i + 1].startLine - 1 : doc.lines.length }))
       .filter(({ s, end }) => end - s.startLine > config.maxSectionLines)
       .map(({ s, end }) => ({ message: `Section "${s.title}" is ${end - s.startLine} lines, limit ${config.maxSectionLines}.`, line: s.startLine, repair: "Cut prose or move detail to a reference page." })),
@@ -221,7 +225,7 @@ export const sectionOrder: Rule = {
   run: ({ doc, config }) => {
     const order = config.sectionOrder.map((o) => o.toLowerCase());
     if (order.length === 0) return [];
-    const top = doc.sections.filter((s) => s.depth === 2);
+    const top = topSections(doc);
     const out = top
       .filter((s) => !order.includes(s.title.toLowerCase()))
       .map((s) => ({ message: `Section "${s.title}" is outside the shape.`, line: s.startLine, repair: `Fold it into one of: ${config.sectionOrder.join(", ")}. Reference detail goes to CONTRIBUTING.` }));
