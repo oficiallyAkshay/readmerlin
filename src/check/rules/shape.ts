@@ -6,15 +6,15 @@ import { join } from "node:path";
 import { collectImages, collectLinks, EMOJI_RE, fencedLines } from "../util.js";
 import type { Rule, Section } from "../types.js";
 
-const INSTALL_RE = /(\bmcpServers\b|\bnpx\s+-y\s+|\bclaude\s+mcp\s+add|\bcode\s+--add-mcp|\bnpx\s+(-y\s+)?skills\s+add|\/plugin\s+(install|marketplace)|npm\s+i(nstall)?\b|pnpm\s+(add|i)\b|yarn\s+add|pip(x)?\s+install|uv(x)?\s+(tool\s+)?(install|run)?|brew\s+install|cargo\s+install|go\s+install|git\s+clone|curl\s+-[a-zA-Z]*s|docker\s+(run|pull)|claude\s+mcp\s+add|cp\s+-r)/i;
+const INSTALL_RE = /(\bmcpServers\b|\bnpx\s+-y\s+|\bclaude\s+mcp\s+add|\bcode\s+--add-mcp|\bnpx\s+(-y\s+)?skills\s+add|(?:\/|\bclaude\s+)plugin\s+(install|marketplace)|npm\s+i(nstall)?\b|pnpm\s+(add|i)\b|yarn\s+add|pip(x)?\s+install|uv(x)?\s+(tool\s+)?(install|run)?|brew\s+install|cargo\s+install|go\s+install|git\s+clone|curl\s+-[a-zA-Z]*s|docker\s+(run|pull)|claude\s+mcp\s+add|cp\s+-r)/i;
 
 /** An install step written as a plain sentence: what to add, and where. */
 const INSTALL_PROSE_RE = /\b(install|add|enable|copy)\b[^.\n]{0,80}\b(action|skill|plugin|package|server|extension|workflow|folder)\b/i;
 const BADGES_TITLE = /^badges?$/i;
 const FEATURES_TITLE = /^features$/i;
 const SECURITY_TITLE = /^security\b/i;
-// A section addressed to an agent ("For agents", "Agent instructions"), never one that is merely about agents ("Supported agents").
-const AGENT_TITLE = /^(?:#+\s*)?(?:(?:(?:notes?|instructions?|guidance|guide|context|reference)\s+)?for\s+(?:ai\s+|coding\s+)?(?:agents?|llms?|the model|claude|assistants?)\b|(?:ai\s+)?(?:agents?|llms?)\s+(?:instructions?|notes?|guide|reference|block)\b|agents\.md\s*$)/i;
+// A section addressed to an agent ("For agents", "Agent instructions"), never one that is merely about agents ("Supported agents") or a host ("For Claude Desktop").
+const AGENT_TITLE = /^(?:#+\s*)?(?:(?:(?:notes?|instructions?|guidance|guide|context|reference)\s+)?for\s+(?:ai\s+|coding\s+)?(?:agents?|llms?|the model|claude(?=\s*$)|assistants?)\b|(?:ai\s+)?(?:agents?|llms?)\s+(?:instructions?|notes?|guide|reference|block)\b|agents\.md\s*$)/i;
 
 export const heroExists: Rule = {
   id: "hero/exists",
@@ -27,11 +27,18 @@ export const heroExists: Rule = {
     const plain = doc.hero
       .filter((n) => n.type === "paragraph")
       .map((n) => n as { children: Array<{ type: string }> })
-      .filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link" || (c.type === "text" && !/\S/.test((c as { value?: string }).value ?? ""))))
+      .filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link" || c.type === "html" || (c.type === "text" && !/\S/.test((c as { value?: string }).value ?? ""))))
       .map((p) => toString(p as never).trim())
       .filter(Boolean);
-    const plainHtml = html.replace(/<[^>]+>/g, "\n").split("\n").map((s) => s.trim()).filter(Boolean);
-    const hasPlain = plain.length > 0 || plainHtml.length > 1;
+    // What is left of the html once the title and the bold lines are gone.
+    const plainHtml = html
+      .replace(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi, "")
+      .replace(/<(b|strong)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+      .replace(/<[^>]+>/g, "\n")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const hasPlain = plain.length > 0 || plainHtml.length > 0;
     const out = [];
     if (!hasTitle) out.push({ message: "No title before the first section.", line: 1, repair: "Start with a centered h1: emoji plus name." });
     if (!hasBold) out.push({ message: "No bold tagline before the first section.", line: 1, repair: "Add one bold line under the title that names the outcome." });
@@ -62,11 +69,11 @@ export const heroVisual: Rule = {
 export const heroOneVisual: Rule = {
   id: "shape/hero-one-visual",
   level: "warn",
-  description: "The hero holds one visual, real output pages excepted",
+  description: "The hero holds one visual",
   run: ({ doc }) => {
     const visuals = collectImages(doc).filter((i) => i.inHero && !i.badge);
     const lines = [...new Set(visuals.map((v) => v.line))];
-    return lines.length > 1 ? lines.slice(1).map((line) => ({ message: `More than one visual block in the hero (${lines.length}).`, line, repair: "One graphic above the fold. Real output pages may follow the artifact link; anything else moves into a section." })) : [];
+    return lines.length > 1 ? lines.slice(1).map((line) => ({ message: `More than one visual block in the hero (${lines.length}).`, line, repair: "One graphic above the fold. Anything else moves into a section." })) : [];
   },
 };
 
@@ -114,7 +121,8 @@ export const enableStep: Rule = {
         if ((node.type === "code" || node.type === "inlineCode") && INSTALL_RE.test(node.value ?? "")) found = true;
         if (node.type === "html" && /<code>[^<]*<\/code>/.test(node.value ?? "") && INSTALL_RE.test(node.value ?? "")) found = true;
       });
-      if (n.type === "paragraph" && INSTALL_PROSE_RE.test(toString(n))) found = true;
+      // The sentence may sit in a paragraph, a list item or an html block.
+      if (INSTALL_PROSE_RE.test(toString(n).replace(/<[^>]+>/g, " "))) found = true;
       if (found) break;
     }
     return found ? [] : [{ message: "No install or enable step in the hero or the first four sections.", line: doc.sections[0]?.startLine ?? 1, repair: "Add one plain sentence under the opening paragraph that names the secret to store, if any, and the action, skill or package to add." }];
@@ -209,7 +217,8 @@ export const noCodeBeforeFeatures: Rule = {
 };
 
 const SHELL_LANG = /^(bash|sh|shell|zsh|fish|console|shellsession|terminal|powershell|pwsh|ps1|bat|cmd)$/i;
-const SHELL_LINE = /^\s*(\$\s+|(sudo\s+)?(npx|npm|pnpm|yarn|bunx?|pipx?|uvx?|brew|cargo|go|git|curl|wget|mkdir|sed|cd|cp|mv|rm|export|docker|chmod|make|gh|claude)\s+\S)/;
+// export counts only as a shell variable, so export default and export const stay code.
+const SHELL_LINE = /^\s*(\$\s+|(sudo\s+)?(npx|npm|pnpm|yarn|bunx?|pipx?|uvx?|brew|cargo|go|git|curl|wget|mkdir|sed|cd|cp|mv|rm|docker|chmod|make|gh|claude)\s+\S|export\s+[A-Za-z_]\w*=)/;
 
 export const noShellSnippets: Rule = {
   id: "shape/install-in-words",

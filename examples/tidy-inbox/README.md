@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="SKILL.md"><img alt="agent skill" src="https://img.shields.io/badge/agent-skill-7C3AED?logo=anthropic&logoColor=white"></a>
-  <a href="../../LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative&logoColor=white"></a>
+  <a href="https://github.com/oficiallyAkshay/readmerlin/blob/main/LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative&logoColor=white"></a>
 </p>
 
 <p align="center">

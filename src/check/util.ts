@@ -13,28 +13,35 @@ export function safeDecode(s: string): string {
   }
 }
 
-/** Resolve a README-relative path inside the repo. Root-relative paths start at the repo root. Returns undefined when the path escapes the repo. */
-export function localPath(root: string, src: string): string | undefined {
-  const clean = safeDecode(src.split(/[?#]/)[0]).replace(/^\/+/, "");
-  const p = resolve(root, clean);
+/** Resolve a path inside the repo. Relative paths start at base, the README's folder; root-relative paths start at the repo root. Returns undefined when the path escapes the repo. */
+export function localPath(root: string, src: string, base: string = root): string | undefined {
+  const clean = safeDecode(src.split(/[?#]/)[0]);
+  const p = clean.startsWith("/") ? resolve(root, clean.replace(/^\/+/, "")) : resolve(base, clean);
   const rel = relative(root, p);
   if (rel.startsWith("..") || isAbsolute(rel)) return undefined;
   return p;
 }
 
-/** Line numbers (1-based) that sit inside fenced code. */
+/** Line numbers (1-based) that sit inside code blocks: fenced with any marker, or indented. */
 export function fencedLines(doc: Doc): Set<number> {
   const out = new Set<number>();
-  let inFence = false;
-  doc.lines.forEach((l, i) => {
-    if (/^\s*(```|~~~)/.test(l)) {
-      inFence = !inFence;
-      out.add(i + 1);
-      return;
-    }
-    if (inFence) out.add(i + 1);
+  visit(doc.tree as Root, "code", (node) => {
+    const s = node.position?.start.line;
+    const e = node.position?.end.line;
+    if (s === undefined || e === undefined) return;
+    for (let i = s; i <= e; i++) out.add(i);
   });
   return out;
+}
+
+/** Decode the html entities that appear in attribute values and SVG text. */
+export function decodeEntities(s: string): string {
+  const named: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  return s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (m, dec, hex, name) => {
+    const code = dec ? Number(dec) : hex ? parseInt(hex, 16) : -1;
+    if (code >= 0) return code <= 0x10ffff ? String.fromCodePoint(code) : m;
+    return named[name.toLowerCase()] ?? m;
+  });
 }
 
 /** The document text with fenced code, inline code and html comments blanked out, offsets preserved. */
@@ -48,7 +55,7 @@ export function maskedText(doc: Doc): string {
   return text;
 }
 
-export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|api\.scorecard\.dev\/|api\.securityscorecards\.dev\/|\/workflows\/[^"'\s)]*\.svg/i;
+export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|https?:\/\/[^"'\s)]*\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|api\.scorecard\.dev\/|api\.securityscorecards\.dev\/|\/workflows\/[^"'\s)]*\.svg/i;
 export const isBadge = (src: string): boolean => BADGE_RE.test(src);
 
 export interface ImageRef {
@@ -70,24 +77,46 @@ export interface LinkRef {
   text: string;
   bold: boolean;
   html: boolean;
+  /** The link holds nothing but an image, such as a badge. */
+  imageOnly: boolean;
 }
 
-/** Yields [lineIndex, lineText] for lines outside fenced code. */
+/** Yields [lineIndex, lineText] for lines outside code blocks. */
 export function* proseLines(doc: Doc): Generator<[number, string]> {
-  let inFence = false;
-  for (let i = 0; i < doc.lines.length; i++) {
-    const line = doc.lines[i];
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence;
-      continue;
-    }
-    if (!inFence) yield [i, line];
-  }
+  const fences = fencedLines(doc);
+  for (let i = 0; i < doc.lines.length; i++) if (!fences.has(i + 1)) yield [i, doc.lines[i]];
 }
 
 function attr(tag: string, name: string): string | undefined {
   const m = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(tag);
-  return m ? (m[1] ?? m[2] ?? m[3]) : undefined;
+  return m ? decodeEntities(m[1] ?? m[2] ?? m[3]) : undefined;
+}
+
+/** A pixel size from an html attribute. A percentage is taken against a 900px column. */
+function px(v: string | undefined, pctOf?: number): number | undefined {
+  if (!v) return undefined;
+  const n = parseFloat(v);
+  if (Number.isNaN(n)) return undefined;
+  if (/%\s*$/.test(v)) return pctOf === undefined ? undefined : Math.round((pctOf * n) / 100);
+  return n;
+}
+
+/** Reference-style targets: [id]: url, keyed by the lower-cased label. */
+function definitions(doc: Doc): Map<string, string> {
+  const out = new Map<string, string>();
+  visit(doc.tree as Root, "definition", (node) => {
+    out.set(node.identifier.toLowerCase(), node.url);
+  });
+  return out;
+}
+
+/** Offset ranges of every markdown link, so inline html inside one counts as linked. */
+function linkRanges(doc: Doc): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  visit(doc.tree as Root, (node) => {
+    if ((node.type === "link" || node.type === "linkReference") && node.position?.start.offset !== undefined && node.position.end.offset !== undefined) out.push([node.position.start.offset, node.position.end.offset]);
+  });
+  return out;
 }
 
 function lineAt(doc: Doc, offset: number): number {
@@ -103,57 +132,71 @@ function heroEndLine(doc: Doc): number {
 export function collectImages(doc: Doc): ImageRef[] {
   const out: ImageRef[] = [];
   const heroEnd = heroEndLine(doc);
-  // Markdown images, with link-wrapping detected by parent.
-  visit(doc.tree as Root, "image", (node, _index, parent) => {
+  const defs = definitions(doc);
+  const wrapped = (t: string | undefined) => t === "link" || t === "linkReference";
+  // Markdown images, inline or reference-style, with link-wrapping detected by parent.
+  visit(doc.tree as Root, (node, _index, parent) => {
+    if (node.type !== "image" && node.type !== "imageReference") return;
+    const src = node.type === "image" ? node.url : defs.get(node.identifier.toLowerCase());
+    if (src === undefined) return;
     const line = node.position?.start.line ?? 0;
-    out.push({ src: node.url, alt: node.alt ?? "", line, inHero: line < heroEnd, linked: parent?.type === "link", html: false, badge: isBadge(node.url) });
+    out.push({ src, alt: node.alt ?? "", line, inHero: line < heroEnd, linked: wrapped(parent?.type), html: false, badge: isBadge(src) });
   });
-  // HTML images. Link wrapping: an <a that opens before the img and has not closed.
+  // HTML images. Link wrapping: an <a that opens before the img and has not closed, or a markdown link around it.
   const re = /<img\b[^>]*>/gi;
   let m: RegExpExecArray | null;
   const text = maskedText(doc);
+  const ranges = linkRanges(doc);
   while ((m = re.exec(text))) {
-    const line = lineAt(doc, m.index);
-    const before = text.slice(Math.max(0, m.index - 400), m.index);
+    const at = m.index;
+    const line = lineAt(doc, at);
+    const before = text.slice(0, at);
     const lastOpen = before.lastIndexOf("<a");
     const lastClose = before.lastIndexOf("</a>");
+    const inLink = ranges.some(([s, e]) => at >= s && at < e);
     const src = attr(m[0], "src") ?? "";
-    const w = attr(m[0], "width");
-    const h = attr(m[0], "height");
-    out.push({ src, alt: attr(m[0], "alt") ?? "", line, inHero: line < heroEnd, linked: lastOpen > lastClose, html: true, width: w ? Number(w) : undefined, height: h ? Number(h) : undefined, badge: isBadge(src) });
+    const w = px(attr(m[0], "width"), 900);
+    out.push({ src, alt: attr(m[0], "alt") ?? "", line, inHero: line < heroEnd, linked: lastOpen > lastClose || inLink, html: true, width: w, height: px(attr(m[0], "height")), badge: isBadge(src) });
   }
   return out.sort((a, b) => a.line - b.line);
 }
 
-export function collectLinks(doc: Doc): LinkRef[] {
+/** Every link. Image-only links, such as wrapped badges, come only when all is true. */
+export function collectLinks(doc: Doc, all = false): LinkRef[] {
   const out: LinkRef[] = [];
   const heroEnd = heroEndLine(doc);
   const text = maskedText(doc);
-  visit(doc.tree as Root, "link", (node, _i, parent) => {
+  const defs = definitions(doc);
+  visit(doc.tree as Root, (node, _i, parent) => {
+    if (node.type !== "link" && node.type !== "linkReference") return;
+    const href = node.type === "link" ? node.url : defs.get(node.identifier.toLowerCase());
+    if (href === undefined) return;
     const line = node.position?.start.line ?? 0;
-    const onlyImage = node.children.length === 1 && node.children[0].type === "image";
-    if (onlyImage) return;
-    out.push({ href: node.url, line, inHero: line < heroEnd, text: toString(node), bold: parent?.type === "strong", html: false });
+    const imageOnly = node.children.length === 1 && (node.children[0].type === "image" || node.children[0].type === "imageReference");
+    if (imageOnly && !all) return;
+    out.push({ href, line, inHero: line < heroEnd, text: toString(node), bold: parent?.type === "strong", html: false, imageOnly });
   });
   const re = /<a\b[^>]*href\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const inner = m[3];
-    if (/<img\b/i.test(inner) && !inner.replace(/<[^>]+>/g, "").trim()) continue;
+    const imageOnly = /<img\b/i.test(inner) && !inner.replace(/<[^>]+>/g, "").trim();
+    if (imageOnly && !all) continue;
     const line = lineAt(doc, m.index);
     const before = text.slice(Math.max(0, m.index - 12), m.index);
-    out.push({ href: m[1] ?? m[2], line, inHero: line < heroEnd, text: inner.replace(/<[^>]+>/g, "").trim(), bold: /<b>\s*$|<strong>\s*$/i.test(before), html: true });
+    out.push({ href: decodeEntities(m[1] ?? m[2]), line, inHero: line < heroEnd, text: inner.replace(/<[^>]+>/g, "").trim(), bold: /<b>\s*$|<strong>\s*$/i.test(before), html: true, imageOnly });
   }
   return out.sort((a, b) => a.line - b.line);
 }
 
+/** The anchor GitHub gives a heading: lower-cased, punctuation dropped, spaces to hyphens. A leading emoji leaves a leading hyphen. */
+// GitHub's anchor: lower case, every character that is not a letter, a number, a mark, a space, a hyphen or an underscore dropped, and each space turned into a hyphen. Two spaces give two hyphens.
 export function slug(heading: string): string {
   return heading
     .toLowerCase()
     .replace(/<[^>]+>/g, "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .trim()
-    .replace(/\s+/g, "-");
+    .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, "")
+    .replace(/\s/g, "-");
 }
 
 export function paragraphs(nodes: RootContent[]): Paragraph[] {

@@ -2,8 +2,8 @@
 // Draws a hero SVG from its spec. A hero takes the shape of the product's own verb, so there is more than one layout:
 //   "fan"          many scattered things gathered into one: sources, what gets handled fanning out, the one deliverable
 //   "before-after" one thing made better: the page the reader has, the page they wanted, the differences called out
-// Usage: node scripts/hero-svg.mjs <name>.hero.json > <name>.svg
-// No dependencies. test/hero.test.ts rebuilds every committed hero and fails when one has drifted from its spec.
+// Usage: node skills/readmerlin/scripts/hero-svg.mjs <name>.hero.json > <name>.svg
+// No dependencies, so the installed skill carries it. test/hero.test.ts rebuilds every committed hero and fails when one has drifted from its spec.
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
@@ -127,9 +127,12 @@ function renderBeforeAfter(spec) {
   o.push("  </g>");
   const anchors = { fold: by + 96, code: by + 133, badge: by + 231, link: by + 272 };
   o.push(`  <path class="fold" d="M${bx - 10},${anchors.fold} h280"/>`);
+  const usedBefore = new Set();
   for (const p of spec.before.problems) {
     const y = anchors[p.at];
     if (y === undefined) throw new Error(`Unknown place "${p.at}" on the before page. Known: ${Object.keys(anchors).join(", ")}.`);
+    if (usedBefore.has(p.at)) throw new Error(`Two problems at "${p.at}" on the before page. Each place holds one label.`);
+    usedBefore.add(p.at);
     o.push(`  <circle class="mark" cx="${bx - 10}" cy="${y}" r="4"/><path class="lead" d="M${bx - 10},${y} h-12"/>`);
     o.push(`  <text class="wrong" x="${bx - 28}" y="${y + 5}" font-size="15" text-anchor="end">${esc(p.label)}</text>`);
   }
@@ -152,9 +155,12 @@ function renderBeforeAfter(spec) {
   o.push(`  ${[0, 1, 2, 3].map((i) => `<rect class="pill" x="${ax + 34 + i * 50}" y="${ay + 162}" width="42" height="10" rx="5"/>`).join("")}`);
   o.push(`  ${[150, 170, 132, 160].map((w, i) => `<circle class="dot" cx="${ax + 40}" cy="${ay + 196 + i * 22}" r="4"/><rect class="bar" x="${ax + 54}" y="${ay + 192 + i * 22}" width="${w}" height="8" rx="4"/>`).join("")}`);
   const parts = { tagline: ay + 56, picture: ay + 111, badges: ay + 167, features: ay + 229 };
+  const usedAfter = new Set();
   for (const p of spec.after.parts) {
     const y = parts[p.at];
     if (y === undefined) throw new Error(`Unknown part "${p.at}" on the after page. Known: ${Object.keys(parts).join(", ")}.`);
+    if (usedAfter.has(p.at)) throw new Error(`Two parts at "${p.at}" on the after page. Each place holds one label.`);
+    usedAfter.add(p.at);
     o.push(`  <circle class="good" cx="${ax + 270}" cy="${y}" r="4"/><path class="goodlead" d="M${ax + 270},${y} h12"/>`);
     o.push(`  <text class="title" x="${ax + 288}" y="${y + 5}" font-size="15">${esc(p.label)}</text>`);
   }
@@ -167,14 +173,27 @@ function renderBeforeAfter(spec) {
   return o.join("\n") + "\n";
 }
 
+// A spec names every field its layout draws. A missing one is an error with the field's name, never a blank picture.
+function need(spec, fields) {
+  for (const f of fields) {
+    const v = f.split(".").reduce((o, k) => (o && typeof o === "object" ? o[k] : undefined), spec);
+    if (v === undefined || v === null) throw new Error(`The spec is missing "${f}".`);
+  }
+}
+
 export function render(spec) {
-  if (spec.kind === "before-after") return renderBeforeAfter(spec);
+  if (spec.kind === "before-after") {
+    need(spec, ["title", "before", "before.problems", "before.label", "by", "by.icon", "by.label", "after", "after.parts", "after.label"]);
+    return renderBeforeAfter(spec);
+  }
+  need(spec, ["title", "sources", "handled", "deliverable", "deliverable.label"]);
   const rows = [...spec.handled.map((h) => ({ ...h, more: false })), ...(spec.more ? [{ label: "and more", icon: "more", more: true }] : [])];
   const n = rows.length;
-  const height = 22 + 54 * n + 16;
-  const mid = Math.round(height / 2);
   const k = spec.sources.length;
   const gap = k <= 2 ? 200 : 140;
+  // Tall enough for the rows, for the deliverable page (158 above its middle, 188 below) and for the fan of source cards.
+  const height = Math.max(22 + 54 * n + 16, 380, 40 + (k - 1) * gap + 118 + 40);
+  const mid = Math.round(height / 2);
   const o = [];
   head(o, spec, height);
 
@@ -230,7 +249,7 @@ export function labels(spec) {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const file = process.argv[2];
   if (!file) {
-    console.error("usage: hero-svg.mjs <name>.hero.json > <name>.svg");
+    console.error("usage: node hero-svg.mjs <name>.hero.json > <name>.svg");
     process.exit(2);
   }
   process.stdout.write(render(JSON.parse(readFileSync(file, "utf8"))));

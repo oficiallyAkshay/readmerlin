@@ -1,6 +1,6 @@
 {
   "name": "readmerlin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "hero": "node scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg && node scripts/hero-svg.mjs examples/tidy-inbox/assets/readme/hero.hero.json > examples/tidy-inbox/assets/readme/hero.svg",
+    "hero": "node skills/readmerlin/scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg && node skills/readmerlin/scripts/hero-svg.mjs examples/tidy-inbox/assets/readme/hero.hero.json > examples/tidy-inbox/assets/readme/hero.svg",
     "test": "vitest run",
     "check": "node skills/readmerlin/scripts/readmerlin.mjs check README.md",
     "typecheck": "tsc --noEmit -p tsconfig.json"

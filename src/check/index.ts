@@ -10,7 +10,7 @@ export interface CheckOptions {
   links: boolean;
   /** Run count-source commands from readmerlin.json. Default true. */
   exec?: boolean;
-  /** Repo root for relative paths, git remote and config. Defaults to the README's folder. */
+  /** Repo root for root-relative paths and config. Defaults to the nearest folder with .git above the README, else its folder. */
   repoRoot?: string;
 }
 

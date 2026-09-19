@@ -1,6 +1,12 @@
 import type { RepoContext } from "./types.js";
 
-const line = (label: string, v: string | number | undefined) => (v === undefined || v === "" ? "" : `- ${label}: ${v}\n`);
+// A value stays on its line: a multi-line description cannot open a heading or a list item of its own.
+const one = (v: string | number | undefined) => String(v ?? "").replace(/\s+/g, " ").trim();
+const line = (label: string, v: string | number | undefined) => (v === undefined || v === "" ? "" : `- ${label}: ${one(v)}\n`);
+
+// A value that looks like a credential is shown masked. The agent has the file if it needs the value.
+const SECRET_RE = /(sk-[A-Za-z0-9_-]{8,}|ghp_[A-Za-z0-9]{8,}|github_pat_[A-Za-z0-9_]{8,}|AKIA[A-Z0-9]{12,}|xox[abpr]-[A-Za-z0-9-]{8,}|([?&](?:token|key|api_key|apikey|secret|password)=)[^&\s]+)/gi;
+export const mask = (v: string): string => v.replace(SECRET_RE, (m, _a, prefix) => (prefix ? `${prefix}<hidden>` : "<hidden>"));
 
 export function toMarkdown(c: RepoContext): string {
   let s = `# Repo context\n\n`;
@@ -27,17 +33,17 @@ export function toMarkdown(c: RepoContext): string {
   }
   if (c.mcp.length) {
     s += `## MCP servers\n\n`;
-    for (const f of c.mcp) for (const sv of f.servers) s += `- ${sv.name} (${f.path}): ${sv.url ?? [sv.command, ...(sv.args ?? [])].filter(Boolean).join(" ")}\n`;
+    for (const f of c.mcp) for (const sv of f.servers) s += `- ${sv.name} (${f.path}): ${mask(one(sv.url ?? [sv.command, ...(sv.args ?? [])].filter(Boolean).join(" ")))}\n`;
     s += "\n";
   }
   if (c.commands.length) {
     s += `## Commands\n\n`;
-    for (const d of c.commands) s += `- ${d.name}: ${d.description ?? ""}\n`;
+    for (const d of c.commands) s += `- ${one(d.name)}: ${one(d.description ?? "")}\n`;
     s += "\n";
   }
   if (c.agents.length) {
     s += `## Agents\n\n`;
-    for (const d of c.agents) s += `- ${d.name}: ${d.description ?? ""}\n`;
+    for (const d of c.agents) s += `- ${one(d.name)}: ${one(d.description ?? "")}\n`;
     s += "\n";
   }
   if (c.hooks.length) s += `## Hooks\n\n${c.hooks.map((h) => `- ${h}`).join("\n")}\n\n`;

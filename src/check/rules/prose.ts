@@ -1,5 +1,5 @@
 import { toString } from "mdast-util-to-string";
-import { EMOJI_RE, paragraphs, proseLines, sentences } from "../util.js";
+import { EMOJI_RE, maskedText, paragraphs, proseLines, sentences } from "../util.js";
 import type { Rule } from "../types.js";
 
 export const noDashes: Rule = {
@@ -8,7 +8,8 @@ export const noDashes: Rule = {
   description: "Sentences are joined with commas, colons and full stops",
   run: ({ doc }) => {
     const out = [];
-    for (const [i, line] of proseLines(doc)) {
+    // Masked text has code and html comments blanked already.
+    for (const [i, line] of maskedText(doc).split("\n").entries()) {
       const stripped = line.replace(/<img[^>]*>/g, "").replace(/!\[[^\]]*\]/g, "").replace(/\((https?:)?[^)\s]*\)/g, "").replace(/src="[^"]*"|href="[^"]*"/g, "").replace(/`[^`]*`/g, "");
       if (/[—–]/.test(stripped)) out.push({ message: "Em or en dash in prose.", line: i + 1, repair: "Split into two sentences, or use a comma or colon." });
     }
@@ -87,7 +88,8 @@ export const taglineRepeat: Rule = {
     const out = [];
     const body = [...paragraphs(doc.hero).filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link")), ...(doc.sections[0] ? paragraphs(doc.sections[0].nodes) : [])];
     for (const p of body) {
-      for (const sentence of sentences(toString(p))) {
+      // The bold part is the tagline itself, so only the plain part is compared.
+      for (const sentence of sentences(p.children.filter((c) => c.type !== "strong").map((c) => toString(c)).join(" "))) {
         const w = new Set(words(sentence));
         const repeat = tagline.some((t) => t.filter((x) => w.has(x)).length / t.length >= 0.75);
         if (repeat) out.push({ message: "A sentence restates the tagline.", line: p.position?.start.line, repair: "Say it once. Let the body add what the tagline does not." });

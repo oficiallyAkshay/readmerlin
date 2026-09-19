@@ -196,7 +196,7 @@ describe("the six-section shape", () => {
   it("fails a Quick start section and an agent section in the README", async () => {
     const f = await check(join(repo(SHAPED + "\n## Quick start\n\n- Ask it.\n\n## For agents\n\n- Read SKILL.md first.\n"), "README.md"), { format: "json", links: false });
     const fails = f.findings.filter((x) => x.level === "fail").map((x) => `${x.id}: ${x.message}`);
-    expect(fails).toEqual(['shape/earned-headings: Heading "Quick start" is on the kill list.', 'shape/agents-in-contributing: Section "For agents" is written for agents.']);
+    expect(fails).toEqual(['shape/earned-headings: Heading "Quick start" is on the kill list.', 'shape/earned-headings: Heading "For agents" is on the kill list.', 'shape/agents-in-contributing: Section "For agents" is written for agents.']);
   });
   it("tells a section for agents from a section about agents", async () => {
     const titled = async (t: string) => (await ids(repo(SHAPED + `\n## ${t}\n\n- x\n`), "fail")).includes("shape/agents-in-contributing");

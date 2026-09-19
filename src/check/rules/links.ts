@@ -1,11 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { collectImages, collectLinks, localPath, maskedText, safeDecode, slug } from "../util.js";
+import { collectImages, collectLinks, localPath, maskedText, proseLines, safeDecode, slug } from "../util.js";
 import type { Rule } from "../types.js";
 
 const isExternal = (h: string) => /^(https?:)?\/\//i.test(h);
-const isSkippable = (h: string) => /^(mailto:|tel:|javascript:|data:)/i.test(h);
+// Any other scheme, such as mailto: or vscode:, is neither a file in the repo nor a page to probe.
+const isSkippable = (h: string) => /^[a-z][a-z0-9+.-]+:/i.test(h) && !isExternal(h);
 
 export const relativeLinks: Rule = {
   id: "links/relative",
@@ -14,19 +15,28 @@ export const relativeLinks: Rule = {
   run: ({ doc }) => {
     const out = [];
     const slugs = new Set<string>();
-    for (const s of doc.sections) slugs.add(slug(s.title));
-    for (const line of doc.lines) {
-      const m = /^#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
-      if (m) slugs.add(slug(m[1]));
+    // A repeated heading gets a numbered anchor on GitHub: the second "Setup" is #setup-1.
+    const seen = new Map<string, number>();
+    const addHeading = (title: string) => {
+      const s = slug(title);
+      const n = seen.get(s) ?? 0;
+      seen.set(s, n + 1);
+      slugs.add(n === 0 ? s : `${s}-${n}`);
+    };
+    for (const [, line] of proseLines(doc)) {
+      const m = /^#{1,6}\s+(.+?)(?:\s+#+)?\s*$/.exec(line);
+      if (m) addHeading(m[1]);
     }
-    for (const m of doc.text.matchAll(/<(?:h[1-6]|a|p|div|section)\b[^>]*\b(?:id|name)="([^"]+)"/gi)) slugs.add(m[1].toLowerCase());
-    const refs = [...collectLinks(doc).map((l) => ({ href: l.href, line: l.line })), ...collectImages(doc).map((i) => ({ href: i.src, line: i.line }))];
+    for (const s of doc.sections) slugs.add(slug(s.title));
+    // Any HTML element with an id or a name is an anchor, a <b id> inside a <summary> included.
+    for (const m of maskedText(doc).matchAll(/<[a-z][a-z0-9]*\b[^>]*\s(?:id|name)\s*=\s*(?:"([^"]+)"|'([^']+)')/gi)) slugs.add((m[1] ?? m[2]).toLowerCase());
+    const refs = [...collectLinks(doc, true).map((l) => ({ href: l.href, line: l.line })), ...collectImages(doc).map((i) => ({ href: i.src, line: i.line }))];
     for (const r of refs) {
       const href = r.href.trim();
       if (!href || isExternal(href) || isSkippable(href)) continue;
       const [pathPart, anchor] = href.split("#");
       if (pathPart) {
-        const p = localPath(doc.repoRoot, pathPart);
+        const p = localPath(doc.repoRoot, pathPart, doc.dir);
         if (!p) {
           out.push({ message: `Link points outside the repo: ${pathPart}`, line: r.line, repair: "Link to a file in the repo or to a URL." });
           continue;
@@ -38,6 +48,8 @@ export const relativeLinks: Rule = {
       }
       if (anchor !== undefined && !pathPart) {
         const a = anchor.toLowerCase();
+        // GitHub resolves an empty anchor, #top and #readme on every page.
+        if (a === "" || a === "top" || a === "readme") continue;
         if (!slugs.has(a) && !slugs.has(slug(safeDecode(a)))) out.push({ message: `Anchor not found: #${anchor}`, line: r.line, repair: "Match the heading text, lower-cased with hyphens." });
       }
     }
@@ -128,7 +140,7 @@ export const externalLinks: Rule = {
   description: "Every external link answers",
   run: async ({ doc, links, fetch }) => {
     if (!links) return [];
-    const refs = collectLinks(doc).filter((l) => isExternal(l.href));
+    const refs = collectLinks(doc, true).filter((l) => isExternal(l.href));
     if (refs.length === 0) return [];
     const cache = loadCache();
     const fresh = (u: string) => cache[u] && Date.now() - cache[u].at < DAY && cache[u].ok;
