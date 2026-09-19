@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+The agent block now lives in AGENTS.md at the repo root, under forty lines, instead of a "For agents" section in CONTRIBUTING: the shape/agents-in-contributing rule checks AGENTS.md's length and fails a CONTRIBUTING that still carries the section, `check --pages` reads AGENTS.md when the repo has one, and context lists it the way it lists a workflow. This repo's own agent block moved there from `.github/CONTRIBUTING.md`. The works-with row now says "Works with" once per row instead of on every badge: each host badge is message-only, a logo and the host name, so `hostBadgeSrc` drops the repeated label.
+
 ## 0.7.1
 
 The works-with row knows Claude Agent SDK, OpenClaw and Hermes Agent, and Codex wears the OpenAI mark inline, since shields has none built in. A row of more than six hosts splits evenly. A host folder such as .claude names a host only when the repo ships a skill, a plugin or an MCP server, so a GitHub Action repo no longer claims to work with Claude Code.

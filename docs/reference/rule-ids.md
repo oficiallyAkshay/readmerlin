@@ -14,7 +14,7 @@ The table below is the same one the rules command prints: every rule readmerlin 
 | shape/enable-step | fail | The install step sits in the hero, the first four sections, or CONTRIBUTING |
 | shape/structured-sections | warn | A long section holds a list, a table or a picture |
 | shape/earned-headings | fail | Every heading earns its place; the kill list names the ones that never do |
-| shape/agents-in-contributing | fail | The agent block lives in CONTRIBUTING, under forty lines; the README is for people |
+| shape/agents-in-contributing | fail | The agent block lives in AGENTS.md at the repo root, under forty lines; CONTRIBUTING no longer carries it |
 | shape/section-order | warn | Sections come from the configured set, in its order |
 | shape/prose-before-features | fail | Everything above Features is words, the hero graphic and badges |
 | shape/install-in-words | fail | Install and usage are said in plain sentences; commands live in CONTRIBUTING |

@@ -1,6 +1,6 @@
 # context
 
-Gathers what a repo offers before an agent drafts anything: its git remote, its licence, every skill, plugin manifest, marketplace entry, MCP server, command, agent, hook and workflow file it can find, the names of its tracked root files, and, when one already exists, the current README's title, tagline, word count, badge count, image list and headings.
+Gathers what a repo offers before an agent drafts anything: its git remote, its licence, every skill, plugin manifest, marketplace entry, MCP server, command, agent, hook and workflow file it can find, the names of its tracked root files, whether it already has an AGENTS.md, and, when one already exists, the current README's title, tagline, word count, badge count, image list and headings.
 
 ## Arguments
 

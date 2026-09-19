@@ -4,7 +4,7 @@ This is the order an agent works in once it has the skill, and what happens in t
 
 ## Gather what the repo offers
 
-The agent runs the context command against the repo root and reads what comes back: the git remote, the licence, every skill, plugin, MCP server, command, agent, hook and workflow file it found, the names of the tracked root files, and, when one already exists, the current README's title, tagline, word count, badges, images and headings. Nothing is read by walking the source tree by hand.
+The agent runs the context command against the repo root and reads what comes back: the git remote, the licence, every skill, plugin, MCP server, command, agent, hook and workflow file it found, the names of the tracked root files, whether an AGENTS.md already exists, and, when one already exists, the current README's title, tagline, word count, badges, images and headings. Nothing is read by walking the source tree by hand.
 
 ## Read the rules
 
@@ -32,7 +32,7 @@ For every row in How it compares, the agent reads the other project's own README
 
 ## Move the rest
 
-Commands, settings, workflow files, badge recipe templates, the architecture diagram and the agent block move to `.github/CONTRIBUTING.md`. None of it stays on the README.
+Commands, settings, workflow files, badge recipe templates and the architecture diagram move to `.github/CONTRIBUTING.md`. The agent block moves to `AGENTS.md` at the repo root, under forty lines, pointing to CONTRIBUTING and docs for the rest. None of it stays on the README.
 
 ## Write the docs pages
 
@@ -40,7 +40,7 @@ The agent writes this docs folder: an index, a guide for each workflow the conte
 
 ## Check until clean
 
-The agent runs the check command with the pages flag, which checks the README, CONTRIBUTING and every docs page in one pass, reads every finding, fixes the page the finding names, and runs it again until every page shows zero fails. A clean run is the floor, so the agent still reads the README once more as the reader would.
+The agent runs the check command with the pages flag, which checks the README, AGENTS.md when the repo has one, CONTRIBUTING and every docs page in one pass, reads every finding, fixes the page the finding names, and runs it again until every page shows zero fails. A clean run is the floor, so the agent still reads the README once more as the reader would.
 
 ## Offer the clone count
 

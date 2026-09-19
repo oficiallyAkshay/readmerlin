@@ -83,6 +83,8 @@ export interface RepoContext {
   workflows: WorkflowInfo[];
   readme: ReadmeInfo;
   rootFiles: string[];
+  /** "AGENTS.md" when the repo has one at its root, holding the agent block. */
+  agentsFile?: string;
   /** The badges the hero row carries, decided by the repo's shape: licence, then registry badges or a clone count. */
   badgeRow: BadgeSpec[];
   /** The second badge row: one works-with badge per host the skill runs in. */
