@@ -15,19 +15,32 @@
   <b><a href="SKILL.md">See the skill it documents</a></b>
 </p>
 
-You spent your own money on someone else's behalf. An interview, a client trip, a contract gig. It works in Claude Code, Cursor and Codex, from your calendar or from dates you give it.
-
-Add the owner/tidy-inbox skill to your agent, then say "Build my claim for the trip on June 11." It needs no secret.
-
 ## Features
 
-- 📅 **Trip dates found.** It reads them from your calendar, or asks once.
-- 🔎 **One window searched.** The inbox is searched for those days only.
-- 📋 **Candidates shown first.** You see the list before anything is built.
-- 🧾 **Every receipt attached.** One summary, then each receipt behind it.
-- 🗣️ **Corrections, your way.** Say "the flight was on the corporate card" and the total follows.
+tidy-inbox turns a work trip into one claim, one receipt at a time.
 
-## Security
+<p align="center">📅<br><b>Trip dates found</b><br>It reads them from your calendar, or asks once.</p>
+
+<p align="center">🔎<br><b>One window searched</b><br>The inbox is searched for those days only.</p>
+
+<p align="center">📋<br><b>Candidates shown first</b><br>You see the list before anything is built.</p>
+
+<p align="center">🧾<br><b>Every receipt attached</b><br>One summary, then each receipt behind it.</p>
+
+<p align="center">🗣️<br><b>Corrections, your way</b><br>Say "the flight was on the corporate card" and the total follows.</p>
+
+## In action
+
+"Total: $290.50 across three receipts, one flight moved to the corporate card." That is [the claim it built](examples/claim.md) for a June client trip.
+
+## Fit
+
+- Use it when you paid your own money for a work trip and need one claim to send.
+- Look elsewhere when your company already runs expense software with receipt capture built in.
+- It reads mail through the mail tool your agent already has, so it needs no separate inbox login.
+- Add the owner/tidy-inbox skill to your agent, then say "Build my claim for the trip on June 11." It needs no secret.
+
+## Security and limits
 
 It needs no credential of its own; it reads mail through the mail tool your agent already has.
 
@@ -36,7 +49,4 @@ It needs no credential of its own; it reads mail through the mail tool your agen
 - ❌ reads outside the trip window
 - ❌ writes anywhere but the folder you name
 
-## Callouts
-
-- It finds only receipts that reached the inbox your agent can read.
-- You send the claim. The skill stops once it hands it back.
+By default it asks once for the trip dates when your calendar has none; answering once covers the whole claim.
