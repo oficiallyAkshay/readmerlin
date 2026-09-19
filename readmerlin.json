@@ -5,7 +5,10 @@
     "Codex",
     "Cursor",
     "Gemini CLI",
-    "Copilot"
+    "Copilot",
+    "Claude Agent SDK",
+    "OpenClaw",
+    "Hermes Agent"
   ],
   "headingAllowlist": [
     "readmerlin",

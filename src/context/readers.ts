@@ -216,7 +216,7 @@ const HOST_HINTS: Array<[RegExp, string]> = [
   [/\bopencode\b/i, "OpenCode"],
   [/\bwindsurf\b/i, "Windsurf"],
   [/\bopenclaw\b/i, "OpenClaw"],
-  [/\bhermes\b/i, "Hermes"],
+  [/\bhermes\b/i, "Hermes Agent"],
 ];
 
 export function detectHosts(root: string, plugin: PluginInfo | undefined, skills: SkillInfo[]): string[] {
@@ -235,7 +235,8 @@ export function detectHosts(root: string, plugin: PluginInfo | undefined, skills
     }
   }
   for (const t of texts) for (const [re, host] of HOST_HINTS) if (re.test(t)) found.add(host);
-  if (found.size === 0) {
+  // A host folder says where the developer works, so it only names a host when the repo ships something an agent loads: a plugin, a skill or an MCP server.
+  if (found.size === 0 && (plugin || skills.length > 0 || readMcp(root).length > 0)) {
     if (plugin || existsSync(join(root, ".claude"))) found.add("Claude Code");
     if (existsSync(join(root, ".cursor"))) found.add("Cursor");
     if (existsSync(join(root, ".codex")) || existsSync(join(root, "AGENTS.md"))) found.add("Codex");
@@ -346,16 +347,22 @@ export function readCompare(root: string): { repos: string[]; rows: string[] } |
   }
 }
 
+// shields has no OpenAI mark, so Codex carries the simple-icons one inline (CC0), drawn white.
+const OPENAI_MARK = "data:image/svg%2bxml;base64,PHN2ZyBmaWxsPSJ3aGl0ZSIgcm9sZT0iaW1nIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRpdGxlPk9wZW5BSTwvdGl0bGU+PHBhdGggZD0iTTIyLjI4MTkgOS44MjExYTUuOTg0NyA1Ljk4NDcgMCAwIDAtLjUxNTctNC45MTA4IDYuMDQ2MiA2LjA0NjIgMCAwIDAtNi41MDk4LTIuOUE2LjA2NTEgNi4wNjUxIDAgMCAwIDQuOTgwNyA0LjE4MThhNS45ODQ3IDUuOTg0NyAwIDAgMC0zLjk5NzcgMi45IDYuMDQ2MiA2LjA0NjIgMCAwIDAgLjc0MjcgNy4wOTY2IDUuOTggNS45OCAwIDAgMCAuNTExIDQuOTEwNyA2LjA1MSA2LjA1MSAwIDAgMCA2LjUxNDYgMi45MDAxQTUuOTg0NyA1Ljk4NDcgMCAwIDAgMTMuMjU5OSAyNGE2LjA1NTcgNi4wNTU3IDAgMCAwIDUuNzcxOC00LjIwNTggNS45ODk0IDUuOTg5NCAwIDAgMCAzLjk5NzctMi45MDAxIDYuMDU1NyA2LjA1NTcgMCAwIDAtLjc0NzUtNy4wNzI5em0tOS4wMjIgMTIuNjA4MWE0LjQ3NTUgNC40NzU1IDAgMCAxLTIuODc2NC0xLjA0MDhsLjE0MTktLjA4MDQgNC43NzgzLTIuNzU4MmEuNzk0OC43OTQ4IDAgMCAwIC4zOTI3LS42ODEzdi02LjczNjlsMi4wMiAxLjE2ODZhLjA3MS4wNzEgMCAwIDEgLjAzOC4wNTJ2NS41ODI2YTQuNTA0IDQuNTA0IDAgMCAxLTQuNDk0NSA0LjQ5NDR6bS05LjY2MDctNC4xMjU0YTQuNDcwOCA0LjQ3MDggMCAwIDEtLjUzNDYtMy4wMTM3bC4xNDIuMDg1MiA0Ljc4MyAyLjc1ODJhLjc3MTIuNzcxMiAwIDAgMCAuNzgwNiAwbDUuODQyOC0zLjM2ODV2Mi4zMzI0YS4wODA0LjA4MDQgMCAwIDEtLjAzMzIuMDYxNUw5Ljc0IDE5Ljk1MDJhNC40OTkyIDQuNDk5MiAwIDAgMS02LjE0MDgtMS42NDY0ek0yLjM0MDggNy44OTU2YTQuNDg1IDQuNDg1IDAgMCAxIDIuMzY1NS0xLjk3MjhWMTEuNmEuNzY2NC43NjY0IDAgMCAwIC4zODc5LjY3NjVsNS44MTQ0IDMuMzU0My0yLjAyMDEgMS4xNjg1YS4wNzU3LjA3NTcgMCAwIDEtLjA3MSAwbC00LjgzMDMtMi43ODY1QTQuNTA0IDQuNTA0IDAgMCAxIDIuMzQwOCA3Ljg3MnptMTYuNTk2MyAzLjg1NThMMTMuMTAzOCA4LjM2NCAxNS4xMTkyIDcuMmEuMDc1Ny4wNzU3IDAgMCAxIC4wNzEgMGw0LjgzMDMgMi43OTEzYTQuNDk0NCA0LjQ5NDQgMCAwIDEtLjY3NjUgOC4xMDQydi01LjY3NzJhLjc5Ljc5IDAgMCAwLS40MDctLjY2N3ptMi4wMTA3LTMuMDIzMWwtLjE0Mi0uMDg1Mi00Ljc3MzUtMi43ODE4YS43NzU5Ljc3NTkgMCAwIDAtLjc4NTQgMEw5LjQwOSA5LjIyOTdWNi44OTc0YS4wNjYyLjA2NjIgMCAwIDEgLjAyODQtLjA2MTVsNC44MzAzLTIuNzg2NmE0LjQ5OTIgNC40OTkyIDAgMCAxIDYuNjgwMiA0LjY2ek04LjMwNjUgMTIuODYzbC0yLjAyLTEuMTYzOGEuMDgwNC4wODA0IDAgMCAxLS4wMzgtLjA1NjdWNi4wNzQyYTQuNDk5MiA0LjQ5OTIgMCAwIDEgNy4zNzU3LTMuNDUzN2wtLjE0Mi4wODA1TDguNzA0IDUuNDU5YS43OTQ4Ljc5NDggMCAwIDAtLjM5MjcuNjgxM3ptMS4wOTc2LTIuMzY1NGwyLjYwMi0xLjQ5OTggMi42MDY5IDEuNDk5OHYyLjk5OTRsLTIuNTk3NCAxLjQ5OTctMi42MDY3LTEuNDk5N1oiLz48L3N2Zz4=";
+
 // Hosts a skill runs in, with the page a reader acts on and a shields logo where one renders.
 const HOST_BADGES: Record<string, { href: string; logo?: string }> = {
   "Claude Code": { href: "https://github.com/anthropics/claude-code", logo: "claude" },
-  Codex: { href: "https://github.com/openai/codex" },
+  Codex: { href: "https://github.com/openai/codex", logo: OPENAI_MARK },
   Cursor: { href: "https://cursor.com", logo: "cursor" },
   "Gemini CLI": { href: "https://github.com/google-gemini/gemini-cli", logo: "googlegemini" },
   Copilot: { href: "https://github.com/features/copilot", logo: "githubcopilot" },
   "Claude.ai": { href: "https://claude.ai", logo: "claude" },
   OpenCode: { href: "https://opencode.ai" },
   Windsurf: { href: "https://windsurf.com" },
+  "Hermes Agent": { href: "https://github.com/NousResearch/hermes-agent" },
+  OpenClaw: { href: "https://github.com/openclaw/openclaw" },
+  "Claude Agent SDK": { href: "https://github.com/anthropics/claude-agent-sdk-typescript", logo: "claude" },
 };
 
 export const BADGED_HOSTS = (): string[] => Object.keys(HOST_BADGES);
@@ -366,7 +373,7 @@ export const MARKLESS_HOST_BADGES = (): string[] => Object.keys(HOST_BADGES).fil
 export function hostBadgeSrc(host: string): string {
   const esc = (v: string) => encodeURIComponent(v.replace(/-/g, "--"));
   const logo = HOST_BADGES[host]?.logo;
-  return `https://img.shields.io/badge/${esc("works with")}-${esc(host)}-1e1b4b${logo ? `?logo=${logo}&logoColor=white` : ""}`;
+  return `https://img.shields.io/badge/${esc("works with")}-${esc(host)}-1e1b4b${logo ? `?logo=${logo}${logo.startsWith("data:") ? "" : "&logoColor=white"}` : ""}`;
 }
 
 export function worksWithRow(hosts: string[]): BadgeSpec[] {

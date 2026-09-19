@@ -67,9 +67,15 @@ export function toMarkdown(c: RepoContext): string {
   }
   if (c.unbadgedHosts.length) s += `No works-with badge recipe for ${c.unbadgedHosts.join(", ")}. Add each by hand, linked to that host's own page.\n\n`;
   if (c.worksWith.length) {
-    s += `## Works with\n\nA second badge row, right under the first: one badge per host the skill runs in, in this order:\n\n`;
-    for (const b of c.worksWith) s += `- <a href="${b.href}"><img alt="${b.alt}" src="${b.src}"></a>\n`;
-    s += "\n";
+    // Six to a row at most, split evenly, so the check's row limit holds.
+    const rows = Math.ceil(c.worksWith.length / 6);
+    const per = Math.ceil(c.worksWith.length / rows);
+    s += `## Works with\n\nBadge rows right under the first, one badge per host the skill runs in, in this order${rows > 1 ? `, ${rows} rows of up to ${per}` : ""}:\n\n`;
+    for (let r = 0; r < rows; r++) {
+      if (rows > 1) s += `Row ${r + 1}:\n\n`;
+      for (const b of c.worksWith.slice(r * per, (r + 1) * per)) s += `- <a href="${b.href}"><img alt="${b.alt}" src="${b.src}"></a>\n`;
+      s += "\n";
+    }
   }
   if (c.self) s += `## This page\n\nThis repo ships readmerlin itself, so its README is the product's own page. The page is the artifact and the proof: it drops In action and Fit, and CONTRIBUTING carries the install step.\n\n`;
   if (c.compare && c.compare.repos.length) {

@@ -141,6 +141,19 @@ describe("badge row, own page and compare spec", () => {
     expect(row[1].src).toContain("raw.githubusercontent.com/o/r/badges/clones.json");
     expect(c.self).toBe(false);
   });
+  it("names no host for a repo that ships nothing an agent loads, even with a .claude folder", async () => {
+    const c = await gather(repo({ ".claude/settings.json": "{}", "tool.py": "x = 1\n" }));
+    expect(c.hosts).toEqual([]);
+    expect(c.worksWith).toEqual([]);
+  });
+  it("keeps the host of an MCP-server-only repo", async () => {
+    const c = await gather(repo({ ".cursor/mcp.json": JSON.stringify({ mcpServers: { s: { command: "node", args: ["s.js"] } } }) }));
+    expect(c.hosts).toContain("Cursor");
+  });
+  it("gives Codex its OpenAI mark inline", async () => {
+    const { worksWithRow } = await import("../src/context/readers.js");
+    expect(worksWithRow(["Codex"])[0].src).toMatch(/logo=data:image\/svg%2bxml;base64,/);
+  });
   it("draws a works-with badge for a known host and names an unknown one", async () => {
     const root = repo({ "readmerlin.json": JSON.stringify({ worksWith: ["Windsurf", "Hermes"] }) });
     const c = await gather(root);

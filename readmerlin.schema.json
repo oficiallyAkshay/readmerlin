@@ -18,7 +18,7 @@
     "maxImageHeight": { "type": "integer", "minimum": 1 },
     "maxFindingsPerRule": { "type": "integer", "minimum": 1, "description": "Findings shown per rule before the rest are folded into one line. Default 10" },
     "denylistFile": { "type": "string", "description": "File of sha256 hashes, one per line. Default .readmerlin/denylist.sha256" },
-    "worksWith": { "type": "array", "items": { "type": "string" }, "description": "The hosts the skill runs in, in order, drawn as the works-with badge row. Claude Code, Codex, Cursor, Gemini CLI, Copilot, Claude.ai, OpenCode and Windsurf get a badge; context names any other host for a badge by hand." },
+    "worksWith": { "type": "array", "items": { "type": "string" }, "description": "The hosts the skill runs in, in order, drawn as the works-with badge row. Claude Code, Codex, Cursor, Gemini CLI, Copilot, Claude Agent SDK, OpenClaw, Hermes Agent, Claude.ai, OpenCode and Windsurf get a badge; context names any other host for a badge by hand." },
     "compare": {
       "type": "object",
       "additionalProperties": false,
