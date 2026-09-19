@@ -95,13 +95,13 @@ export const specBeside: Rule = {
       }
       const want = i.inHero ? [`${base}.hero.json`] : [`${base}.archify.json`, `${base}.json`, `${base}.d2`, `${base}.mmd`];
       const has = siblings.some((s) => want.includes(s) || (s.startsWith(base + ".") && s.endsWith(".json")));
-      if (!has) out.push({ message: `No source spec beside ${i.src}.`, line: i.line, repair: i.inHero ? `Commit ${base}.hero.json next to it and render with hero-svg.mjs in the readmerlin skill, or with herofold.` : `Commit ${base}.archify.json next to it and render with Archify.` });
+      if (!has) out.push({ message: `No source spec beside ${i.src}.`, line: i.line, repair: i.inHero ? `Commit ${base}.hero.json next to it and render it with figurehead.` : `Commit ${base}.archify.json next to it and render with Archify.` });
     }
     return out;
   },
 };
 
-/** Every label a hero spec puts on the picture, whatever its layout: the string under any title, label, gives, heading, backing, with, eyebrow, subtitle, who, reads, items, source or edge key. Kept in step with labels() in hero-svg.mjs. */
+/** Every label a hero spec puts on the picture, whatever its layout: the string under any title, label, gives, heading, backing, with, eyebrow, subtitle, who, reads, items, source or edge key. figurehead's own labels() in scripts/figurehead.mjs covers its fan and before-after layouts only; this one also covers the pages layout this repo's own hero uses, which figurehead does not yet render. */
 function specLabels(spec: unknown): string[] {
   const out: string[] = [];
   const walk = (v: unknown, key: string): void => {

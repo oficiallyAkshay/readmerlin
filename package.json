@@ -11,7 +11,6 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "hero": "node skills/readmerlin/scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg",
     "test": "vitest run",
     "check": "node skills/readmerlin/scripts/readmerlin.mjs check README.md",
     "typecheck": "tsc --noEmit -p tsconfig.json"
