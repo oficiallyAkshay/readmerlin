@@ -37,3 +37,18 @@ describe("prose/about-the-product", () => {
     expect(await run("This README was written by hand.")).toBe(1);
   });
 });
+
+describe("honesty/comparison-links", () => {
+  const run = async (header: string) => {
+    const dir = mkdtempSync(join(tmpdir(), "rm-"));
+    const f = join(dir, "README.md");
+    writeFileSync(f, `# t\n\n**b**\n\nc\n\n## How it compares\n\n| | ${header} |\n| --- | --- |\n| Output | Pages |\n`);
+    return (await check(f, { format: "json", links: false, repoRoot: dir })).findings.filter((x) => x.id === "honesty/comparison-links");
+  };
+  it("passes a header that names its owner/repo", async () => {
+    expect(await run("[acme/tool](https://github.com/acme/tool)")).toEqual([]);
+  });
+  it("warns on a header that drops the owner", async () => {
+    expect((await run("[tool](https://github.com/acme/tool)"))[0]?.message).toMatch(/does not name its repo as acme\/tool/);
+  });
+});

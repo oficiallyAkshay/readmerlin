@@ -55,6 +55,7 @@ export interface ReadmeInfo {
   badges: number;
   images: string[];
   words: number;
+  text?: string;
 }
 
 export interface PackageInfo {
