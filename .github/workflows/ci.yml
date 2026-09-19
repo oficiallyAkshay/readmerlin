@@ -19,4 +19,4 @@ jobs:
       - run: npm run build
       - run: npm test
       - name: self check
-        run: node skills/readmerlin/scripts/readmerlin.mjs check README.md --format github
+        run: node skills/readmerlin/scripts/readmerlin.mjs check --pages --format github
