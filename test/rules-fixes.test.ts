@@ -184,6 +184,12 @@ describe("shape, prose and privacy", () => {
     expect((await of(inline, "hero/exists")).map((f) => f.message)).toEqual(["No plain one-liner before the first section."]);
     expect(await ids(repo(HERO + "\n" + QUICK))).not.toContain("hero/exists");
   });
+  it("takes a clone and build, or a download, for the install step", async () => {
+    for (const line of ["Clone the repo, build it with Swift, and start the launcher.", "Download the app from the releases page and open it."]) {
+      const dir = repo(HERO.replace("Add the tidy skill to your agent, then hand it the week.", line) + "\n" + QUICK);
+      expect(await ids(dir)).not.toContain("shape/enable-step");
+    }
+  });
   it("finds the install sentence in an html block, a list item and a claude plugin command", async () => {
     expect(await ids(repo(BARE + '\n<p align="center">Add the tidy skill to your agent.</p>\n\n' + QUICK))).not.toContain("shape/enable-step");
     expect(await ids(repo(BARE + "\n## Features\n\n- 🧾 **Start.** Add the tidy skill to your agent.\n"))).not.toContain("shape/enable-step");
