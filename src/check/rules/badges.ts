@@ -211,7 +211,7 @@ export const noRawUrls: Rule = {
   },
 };
 
-const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|deno|bun|typescript|platform|os|agent|version|v|release|api|schema|since|made with|built with|runs on|style|code style)$/i;
+const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|ruby|java|rust|php|dotnet|swift|kotlin|deno|bun|typescript|platform|os|agent|version|v|release|api|schema|since|made with|built with|runs on|works with|style|code style)$/i;
 
 export const claimsBacked: Rule = {
   id: "badges/claims-backed",
