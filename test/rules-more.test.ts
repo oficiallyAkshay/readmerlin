@@ -137,6 +137,14 @@ describe("probe", () => {
     const fetchFn = (async () => { throw new Error("offline"); }) as unknown as typeof fetch;
     expect(await probe(fetchFn, "https://example.com", 100)).toBe(0);
   });
+  it("keeps HEAD's definitive 404 when the GET retry comes back refused", async () => {
+    const fetchFn = (async (_u: string, init?: { method?: string }) => (init?.method === "HEAD" ? new Response(null, { status: 404 }) : new Response(null, { status: 403 }))) as unknown as typeof fetch;
+    expect(await probe(fetchFn, "https://example.com")).toBe(404);
+  });
+  it("lets the GET retry's definitive 404 win when HEAD itself was only a refusal", async () => {
+    const fetchFn = (async (_u: string, init?: { method?: string }) => (init?.method === "HEAD" ? new Response(null, { status: 403 }) : new Response(null, { status: 404 }))) as unknown as typeof fetch;
+    expect(await probe(fetchFn, "https://example.com")).toBe(404);
+  });
 });
 
 describe("links/external", () => {
