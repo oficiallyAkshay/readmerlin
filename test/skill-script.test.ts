@@ -17,7 +17,9 @@ describe("the script the skill carries", () => {
   }, 30000);
   it("runs with Node alone, from a folder with no node_modules", () => {
     const rules = execFileSync("node", [SCRIPT, "rules"], { cwd: tmpdir(), encoding: "utf8" });
-    expect(rules).toBe(readFileSync(resolve(__dirname, "../src/rules/RULES.md"), "utf8"));
+    expect(rules.startsWith(readFileSync(resolve(__dirname, "../src/rules/RULES.md"), "utf8"))).toBe(true);
+    expect(rules).toContain("| shape/earned-headings | fail |");
+    expect(rules.split("\n").filter((l) => /^\| [a-z]+\/[a-z-]+ \| (off|warn|fail) \|/.test(l)).length).toBe(57);
   });
 });
 

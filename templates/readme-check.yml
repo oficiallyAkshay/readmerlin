@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oficiallyAkshay/readmerlin@v1   # or pin a commit sha
+      - uses: oficiallyAkshay/readmerlin@<sha>   # a commit of main; init-workflow fills it in

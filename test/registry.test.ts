@@ -50,7 +50,7 @@ describe("published packages", () => {
     const d = dir({});
     const sha = "a".repeat(40);
     await runInitWorkflow(d, { clones: true, fetch: (async () => new Response(sha)) as typeof fetch });
-    expect(existsSync(join(d, ".github/workflows/readme-check.yml"))).toBe(true);
+    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain(`oficiallyAkshay/readmerlin@${sha}`);
     const yml = readFileSync(join(d, ".github/workflows/clonometer.yml"), "utf8");
     expect(yml).toContain(`oficiallyAkshay/clonometer@${sha}`);
     expect(yml).toContain("secrets.TRAFFIC_TOKEN");
@@ -59,5 +59,6 @@ describe("published packages", () => {
     const d = dir({});
     await runInitWorkflow(d, { clones: true, fetch: (async () => { throw new Error("offline"); }) as typeof fetch });
     expect(readFileSync(join(d, ".github/workflows/clonometer.yml"), "utf8")).toContain("clonometer@<sha>");
+    expect(readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8")).toContain("readmerlin@<sha>");
   });
 });
