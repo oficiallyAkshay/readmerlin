@@ -52,8 +52,8 @@ This repo carries no renderer. figurehead, a peer skill (`npx skills add oficial
 node <figurehead>/scripts/figurehead.mjs render assets/readme/hero.hero.json > assets/readme/hero.svg
 ```
 
-This repo's own hero uses `pages`, which figurehead does not render yet; that spec has no working render command until figurehead adds the layout.
+This repo's own hero uses `pages`, which figurehead does not render yet; that spec has no working render command until figurehead adds the layout. That is tracked on figurehead's side, where the next renderer change makes layouts data-driven and adds `pages`, and this repo's own hero gets re-rendered through figurehead once it does.
 
 ## How the drift test works
 
-`test/hero.test.ts` looks for figurehead at `FIGUREHEAD_DIR`, or a sibling `../figurehead` checkout, and skips, naming the env var, when neither exists. When found, it renders every hero this repo commits straight from its `.hero.json` file with figurehead's CLI and compares the result, byte for byte, against the SVG already committed beside it. Separately, the check command's own visuals/spec-agrees rule reads every label a spec names and fails a hero SVG that does not show all of them, so the picture and its spec can never quietly say different things.
+`test/hero.test.ts` looks for figurehead at `FIGUREHEAD_DIR` and skips, naming the env var, when it is unset. When found, it renders every hero this repo commits straight from its `.hero.json` file with figurehead's CLI and compares the result, byte for byte, against the SVG already committed beside it. Separately, the check command's own visuals/spec-agrees rule reads every label a spec names and fails a hero SVG that does not show all of them, so the picture and its spec can never quietly say different things.
