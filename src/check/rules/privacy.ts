@@ -13,7 +13,7 @@ const CONVENTIONAL = [
   /^readme(\.[a-z]{2})?\.md$/i, /^licen[cs]e(\..*)?$/i, /^changelog(\..*)?$/i, /^contributing(\..*)?$/i, /^security(\..*)?$/i, /^code_of_conduct(\..*)?$/i, /^codeowners$/i,
   /^skill\.md$/i, /^agents\.md$/i, /^claude\.md$/i, /^gemini\.md$/i, /^\.cursorrules$/i,
   /^package(-lock)?\.json$/, /^pnpm-lock\.yaml$/, /^yarn\.lock$/, /^bun\.lockb?$/, /^pyproject\.toml$/, /^requirements.*\.txt$/, /^setup\.(py|cfg)$/, /^uv\.lock$/, /^poetry\.lock$/, /^cargo\.(toml|lock)$/i, /^go\.(mod|sum)$/, /^makefile$/i, /^dockerfile$/i, /^docker-compose.*\.ya?ml$/, /^tsconfig.*\.json$/, /^.*\.config\.(js|ts|mjs|cjs)$/, /^action\.ya?ml$/, /^readmerlin(\.schema)?\.json$/, /^codecov\.ya?ml$/, /^\.pre-commit-config\.yaml$/, /^\.editorconfig$/, /^\.prettierrc.*$/, /^\.eslintrc.*$/, /^\.npmrc$/, /^\.nvmrc$/, /^\.python-version$/, /^\.env\.example$/, /^\.gitignore$/, /^\.gitattributes$/, /^\.gitmodules$/, /^vitest\.config\.ts$/, /\.gemspec$/,
-  /^\.github$/, /^\.readmerlin$/, /^\.claude$/, /^\.claude-plugin$/, /^\.mcp\.json$/, /^\.cursor$/, /^\.codex$/, /^\.agents$/, /^\.vscode$/,
+  /^\.github$/, /^\.readmerlin$/, /^\.ossemble$/, /^\.claude$/, /^\.claude-plugin$/, /^\.mcp\.json$/, /^\.cursor$/, /^\.codex$/, /^\.agents$/, /^\.vscode$/,
   /^(src|lib|bin|dist|docs|examples?|tests?|scripts?|assets|references?|skills?|commands?|agents?|hooks?|templates?|schemas?|renderers?|tools?|integrations?|benchmarks?|public|static)$/i,
 ];
 
