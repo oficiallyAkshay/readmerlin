@@ -42,16 +42,18 @@ For a repo that feeds several pages to different readers. This is the layout thi
 
 ## Icons
 
-Every `icon` field names one of a fixed set built into the render script: folder, sparkles, mail, calendar, target, badge-check, image, terminal, shield, link, scissors, car, utensils, plane, bed, train, wifi and more. A name outside this set is an error naming the icons it does know, read in full in `skills/readmerlin/scripts/hero-svg.mjs`.
+Every `icon` field names one of a fixed set built into the renderer: folder, sparkles, mail, calendar, target, badge-check, image, terminal, shield, link, scissors, car, utensils, plane, bed, train, wifi and more. A name outside this set is an error naming the icons it does know, read in full in figurehead's `references/icons.md`.
 
 ## Rendering
 
-A single spec renders with the hero script directly, or `npm run hero` redraws the hero this repo commits, `assets/readme/hero.svg`.
+This repo carries no renderer. figurehead, a peer skill (`npx skills add oficiallyAkshay/figurehead`), draws a `fan` or `before-after` spec:
 
 ```
-node skills/readmerlin/scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg
+node <figurehead>/scripts/figurehead.mjs render assets/readme/hero.hero.json > assets/readme/hero.svg
 ```
+
+This repo's own hero uses `pages`, which figurehead does not render yet; that spec has no working render command until figurehead adds the layout.
 
 ## How the drift test works
 
-`test/hero.test.ts` renders every spec it lists straight from its `.hero.json` file and compares the result, character for character, against the SVG already committed beside it; a mismatch names the exact render command that would refresh it. The same file also checks that a spec missing a required field, an unknown icon name, or two callouts placed at the same spot each throw a clear error instead of drawing something wrong, and that the fan layout grows tall enough to hold more source cards without crowding them. Separately, the check command's own visuals/spec-agrees rule reads every label a spec names and fails a hero SVG that does not show all of them, so the picture and its spec can never quietly say different things.
+`test/hero.test.ts` looks for figurehead at `FIGUREHEAD_DIR`, or a sibling `../figurehead` checkout, and skips, naming the env var, when neither exists. When found, it renders every hero this repo commits straight from its `.hero.json` file with figurehead's CLI and compares the result, byte for byte, against the SVG already committed beside it. Separately, the check command's own visuals/spec-agrees rule reads every label a spec names and fails a hero SVG that does not show all of them, so the picture and its spec can never quietly say different things.

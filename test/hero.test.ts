@@ -1,34 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-// @ts-expect-error a plain script, no types
-import { render } from "../skills/readmerlin/scripts/hero-svg.mjs";
 
+// This repo carries no hero renderer of its own; figurehead (a peer skill,
+// private for now) does the drawing. Point FIGUREHEAD_DIR at a checkout to
+// run this test for real; otherwise it looks for one checked out beside this
+// repo, at ../figurehead, and skips when neither is found.
+const REPO_ROOT = resolve(__dirname, "..");
 const HEROES = ["assets/readme/hero"];
 
+function findFigurehead(): string | undefined {
+  const fromEnv = process.env.FIGUREHEAD_DIR;
+  if (fromEnv && existsSync(resolve(fromEnv, "scripts/figurehead.mjs"))) return resolve(fromEnv);
+  const sibling = resolve(REPO_ROOT, "..", "figurehead");
+  if (existsSync(resolve(sibling, "scripts/figurehead.mjs"))) return sibling;
+  return undefined;
+}
+
+const figureheadDir = findFigurehead();
+
 describe("every committed hero", () => {
+  if (!figureheadDir) {
+    it.skip("set FIGUREHEAD_DIR to a figurehead checkout (or place one at ../figurehead) to run this test", () => {});
+    return;
+  }
+
   for (const h of HEROES) {
-    it(`${h}.svg is what its spec draws`, () => {
-      const spec = JSON.parse(readFileSync(resolve(__dirname, "..", `${h}.hero.json`), "utf8"));
-      expect(render(spec) === readFileSync(resolve(__dirname, "..", `${h}.svg`), "utf8"), `${h}.svg has drifted. Run: node skills/readmerlin/scripts/hero-svg.mjs ${h}.hero.json > ${h}.svg`).toBe(true);
+    it(`${h}.svg is what figurehead draws from its spec`, () => {
+      const specPath = resolve(REPO_ROOT, `${h}.hero.json`);
+      const svgPath = resolve(REPO_ROOT, `${h}.svg`);
+      const want = readFileSync(svgPath, "utf8");
+      let got: string;
+      try {
+        got = execFileSync("node", [resolve(figureheadDir, "scripts/figurehead.mjs"), "render", specPath], { encoding: "utf8" });
+      } catch (err) {
+        const stderr = (err as { stderr?: Buffer | string }).stderr;
+        throw new Error(
+          `figurehead could not render ${h}.hero.json: ${stderr ? stderr.toString() : String(err)}\n` +
+            `Run: node ${resolve(figureheadDir, "scripts/figurehead.mjs")} render ${specPath}`,
+        );
+      }
+      expect(got, `${h}.svg has drifted from figurehead's render, or figurehead's renderer no longer agrees with it`).toBe(want);
     });
   }
-  it("names the field a spec is missing", () => {
-    expect(() => render({ sources: [], handled: [], deliverable: { label: "x" } })).toThrow(/missing "title"/);
-    expect(() => render({ title: "t", sources: [], handled: [] })).toThrow(/missing "deliverable"/);
-    expect(() => render({ kind: "before-after", title: "t", before: { problems: [], label: "b" }, after: { parts: [], label: "a" } })).toThrow(/missing "by"/);
-  });
-  it("stays tall enough for the page and the fan whatever the row count", () => {
-    const one = render({ title: "t", sources: [{ label: "a", icon: "mail" }], handled: [{ label: "x", icon: "target" }], deliverable: { label: "d" } });
-    expect(one).toContain('viewBox="0 0 1200 380"');
-    const four = render({ title: "t", sources: [1, 2, 3, 4].map((i) => ({ label: `s${i}`, icon: "mail" })), handled: [{ label: "x", icon: "target" }], deliverable: { label: "d" } });
-    expect(four).toContain('viewBox="0 0 1200 618"');
-  });
-  it("refuses two labels at one place", () => {
-    const spec = { kind: "before-after", title: "t", before: { problems: [{ at: "fold", label: "a" }, { at: "fold", label: "b" }], label: "b" }, by: { icon: "sparkles", label: "x" }, after: { parts: [], label: "a" } };
-    expect(() => render(spec)).toThrow(/Two problems at "fold"/);
-  });
-  it("refuses an icon it does not know", () => {
-    expect(() => render({ title: "t", sources: [{ label: "a", icon: "nope" }], handled: [], deliverable: { label: "x" } })).toThrow(/Unknown icon/);
-  });
 });

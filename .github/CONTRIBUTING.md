@@ -4,7 +4,7 @@ Everything the README leaves out lives here: commands, settings, workflows, badg
 
 ## How it ships
 
-readmerlin is an agent skill, not a package. The writing needs the user's agent, and an agent finds a skill in its skills folder, so the skill folder is the whole product. The rules that thinking cannot settle, such as whether a link answers, run from one script inside that folder: `skills/readmerlin/scripts/readmerlin.mjs`, built from `src`, committed, and held to the source by a rebuild test. The folder also carries `scripts/hero-svg.mjs`, which draws a hero from its spec. A release is a merge to main with the version bumped in `package.json` and in SKILL.md together. The update notice reads the version from `package.json` on main, and a test holds the two files and the script to the same number. Nothing is published to npm.
+readmerlin is an agent skill, not a package. The writing needs the user's agent, and an agent finds a skill in its skills folder, so the skill folder is the whole product. The rules that thinking cannot settle, such as whether a link answers, run from one script inside that folder: `skills/readmerlin/scripts/readmerlin.mjs`, built from `src`, committed, and held to the source by a rebuild test. The hero graphic is figurehead's job, not this repo's: figurehead draws a hero from its spec, as a peer skill installed beside this one. A release is a merge to main with the version bumped in `package.json` and in SKILL.md together. The update notice reads the version from `package.json` on main, and a test holds the two files and the script to the same number. Nothing is published to npm.
 
 ```text
 npx skills add oficiallyAkshay/readmerlin -g
@@ -50,7 +50,7 @@ Code gathers and checks. The agent does the writing. The diagram is rebuilt with
 
 ## The hero
 
-`skills/readmerlin/scripts/hero-svg.mjs` draws a hero from its spec, with no dependencies, in light and dark theme, so an installed skill can draw one. It has one layout per verb: `fan` for a product that gathers many things into one, `before-after` for a product that makes one thing better, and `pages` for a repo that feeds several pages to different readers, which is this repo's own. `npm run hero` redraws every committed hero, a test fails when an SVG has drifted from its spec, and `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in the script, never a borrowed one.
+This repo carries no renderer of its own. figurehead, a peer skill installed with `npx skills add oficiallyAkshay/figurehead`, draws a hero from its spec, with no dependencies, in light and dark theme. It renders two layouts: `fan` for a product that gathers many things into one, and `before-after` for a product that makes one thing better. This repo's own hero uses a third layout, `pages`, for a repo that feeds several pages to different readers; figurehead does not render that layout yet, so this repo's hero has no working renderer until it does. `test/hero.test.ts` renders every committed hero through figurehead when `FIGUREHEAD_DIR` names a checkout, or a sibling `../figurehead` one, and fails when an SVG has drifted from its spec; it skips, naming the env var, when neither is found. `visuals/spec-agrees` fails a hero that does not show every label its spec names. A new verb gets a new layout in figurehead, never a borrowed one.
 
 ## Specs beside an SVG
 
@@ -89,7 +89,7 @@ Things learned the hard way:
 
 - Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
 - Reference: `docs/` holds a guide per workflow and a reference page per command, read in full alongside this file.
-- Order of work: `context`, `rules`, scope the Fit lists, find the In action result, draw the hero with `hero-svg.mjs`, write the parts in order, compare truthfully, move the rest here, write the docs pages, `check` until clean, `init-workflow`.
+- Order of work: `context`, `rules`, scope the Fit lists, find the In action result, draw the hero with figurehead, write the parts in order, compare truthfully, move the rest here, write the docs pages, `check` until clean, `init-workflow`.
 - Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carry-facts`, `prose/plain-punctuation`, `visuals/spec-beside`, `privacy/denylist-clear`, `links/external`. Every finding carries the id and a repair line.
 - The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
-- Peers, never dependencies: herofold, when installed, draws the hero from `<name>.hero.json`, and this skill's `hero-svg.mjs` draws it otherwise. Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.
+- Peers, never dependencies: figurehead draws the hero from `<name>.hero.json`; this skill carries no renderer of its own. Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.
