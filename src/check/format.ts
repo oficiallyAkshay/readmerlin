@@ -20,3 +20,10 @@ export function format(r: CheckResult, fmt: "text" | "github" | "json"): string 
   out += fmt === "github" ? `::notice::readmerlin ${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} rules\n` : `\n${r.file}: ${r.fails} fails, ${r.warns} warnings, ${r.ran.length} rules\n`;
   return out;
 }
+
+/** One file keeps format()'s own shape. Several files format each in turn; json becomes an array. */
+export function formatResults(results: CheckResult[], fmt: "text" | "github" | "json"): string {
+  if (results.length === 1) return format(results[0], fmt);
+  if (fmt === "json") return JSON.stringify(results, null, 2) + "\n";
+  return results.map((r) => format(r, fmt)).join("");
+}

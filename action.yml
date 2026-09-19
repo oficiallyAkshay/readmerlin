@@ -5,8 +5,11 @@ branding:
   color: purple
 inputs:
   path:
-    description: README to check
+    description: README to check, when pages is false
     default: README.md
+  pages:
+    description: Also check CONTRIBUTING and every docs page, not only the README
+    default: "true"
   links:
     description: Check external links and badge logos
     default: "true"
@@ -19,6 +22,7 @@ runs:
     - shell: bash
       env:
         RM_PATH: ${{ inputs.path }}
+        RM_PAGES: ${{ inputs.pages }}
         RM_LINKS: ${{ inputs.links }}
         RM_EXEC: ${{ inputs.exec }}
       run: |
@@ -27,4 +31,8 @@ runs:
         [ "$RM_LINKS" = "true" ] || FLAGS+=(--no-links)
         [ "$RM_EXEC" = "true" ] || FLAGS+=(--no-exec)
         # The script the skill carries, from this action's own checkout: the commit you pin is the code that runs.
-        node "$GITHUB_ACTION_PATH/skills/readmerlin/scripts/readmerlin.mjs" check "$RM_PATH" --format github "${FLAGS[@]}"
+        if [ "$RM_PAGES" = "true" ]; then
+          node "$GITHUB_ACTION_PATH/skills/readmerlin/scripts/readmerlin.mjs" check --pages --format github "${FLAGS[@]}"
+        else
+          node "$GITHUB_ACTION_PATH/skills/readmerlin/scripts/readmerlin.mjs" check "$RM_PATH" --format github "${FLAGS[@]}"
+        fi

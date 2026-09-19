@@ -21,6 +21,8 @@ export async function check(file: string, opts: CheckOptions): Promise<CheckResu
   const findings: Finding[] = [];
   const ran: string[] = [];
   for (const rule of RULES) {
+    // A page other than the README is judged on honesty only: links, badges, privacy, and the rules a page opts into.
+    if (doc.kind !== "readme" && !rule.pages) continue;
     const level = config.rules[rule.id] ?? rule.level;
     if (level === "off") continue;
     ran.push(rule.id);

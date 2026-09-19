@@ -125,6 +125,7 @@ export const comparisonYesNo: Rule = {
 export const denylist: Rule = {
   id: "privacy/denylist-clear",
   level: "fail",
+  pages: true,
   description: "Every word is clear of the committed hashed denylist",
   run: ({ doc, config }) => {
     const file = config.denylistFile ? resolve(doc.repoRoot, config.denylistFile) : join(doc.repoRoot, ".readmerlin", "denylist.sha256");
@@ -163,6 +164,7 @@ const KEY_RE = /\b(sk-(ant-)?[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_
 export const pii: Rule = {
   id: "privacy/personal-data-clear",
   level: "fail",
+  pages: true,
   description: "Contact goes through the platform, paths are relative, keys stay out",
   run: ({ doc }) => {
     const out = [];
@@ -180,6 +182,7 @@ export const pii: Rule = {
 export const hostPathPointers: Rule = {
   id: "privacy/hosts-through-badges",
   level: "fail",
+  pages: true,
   description: "Host install notes are reached through the host badges",
   run: ({ doc }) => {
     const out = [];

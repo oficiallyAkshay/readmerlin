@@ -5,6 +5,7 @@ import type { Rule } from "../types.js";
 export const noDashes: Rule = {
   id: "prose/plain-punctuation",
   level: "fail",
+  pages: true,
   description: "Sentences are joined with commas, colons and full stops",
   run: ({ doc }) => {
     const out = [];

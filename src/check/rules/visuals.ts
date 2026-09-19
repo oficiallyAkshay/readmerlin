@@ -10,6 +10,7 @@ const localPath = (doc: Doc, src: string): string => repoPath(doc.repoRoot, src,
 export const imagesExist: Rule = {
   id: "visuals/images-exist",
   level: "fail",
+  pages: true,
   description: "Every image exists and has alt text",
   run: ({ doc }) => {
     const out = [];
@@ -25,6 +26,7 @@ export const imagesExist: Rule = {
 export const svgLocal: Rule = {
   id: "visuals/svg-local",
   level: "fail",
+  pages: true,
   description: "SVG diagrams are committed in the repo",
   run: ({ doc }) =>
     collectImages(doc)
@@ -73,6 +75,7 @@ export const imageHeight: Rule = {
 export const specBeside: Rule = {
   id: "visuals/spec-beside",
   level: "fail",
+  pages: true,
   // Accepted specs: <name>.hero.json for a hero, <name>.archify.json, <name>.d2 or <name>.mmd for a diagram,
   // and any <name>.json or <name>.<kind>.json, which stands for a spec with its own generator script and rebuild test.
   description: "Every diagram SVG has its source spec beside it",

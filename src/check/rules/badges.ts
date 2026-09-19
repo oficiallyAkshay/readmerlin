@@ -29,6 +29,7 @@ async function fetchText(fetchFn: typeof fetch, url: string): Promise<string | n
 export const badgesLinked: Rule = {
   id: "badges/linked",
   level: "fail",
+  pages: true,
   description: "Every badge is wrapped in a link",
   run: ({ doc }) =>
     collectImages(doc)
@@ -39,6 +40,7 @@ export const badgesLinked: Rule = {
 export const badgesLogoPresent: Rule = {
   id: "badges/logo-present",
   level: "warn",
+  pages: true,
   description: "Shields badges carry a logo where one exists",
   run: ({ doc }) =>
     collectImages(doc)
@@ -49,6 +51,7 @@ export const badgesLogoPresent: Rule = {
 export const badgesLogo: Rule = {
   id: "badges/logo-renders",
   level: "fail",
+  pages: true,
   description: "Every shields badge logo actually renders",
   run: async ({ doc, links, fetch }) => {
     const out = [];
@@ -65,6 +68,7 @@ export const badgesLogo: Rule = {
 export const ciMatchesRemote: Rule = {
   id: "badges/ci-matches-remote",
   level: "fail",
+  pages: true,
   description: "The CI badge points at this repo's own workflow",
   run: ({ doc }) => {
     const remote = remoteOf(doc.repoRoot);
@@ -84,6 +88,7 @@ export const ciMatchesRemote: Rule = {
 export const staticStatus: Rule = {
   id: "badges/live-status",
   level: "fail",
+  pages: true,
   description: "A status badge reads from the live service",
   run: ({ doc }) =>
     collectImages(doc)
@@ -100,8 +105,11 @@ function short(n: number): string {
 export const countSource: Rule = {
   id: "badges/count-source",
   level: "fail",
+  pages: true,
   description: "Every numeric badge has a source command whose output matches",
   run: ({ doc, config, exec }) => {
+    // A page other than the README carries no counts of its own; the numbers it checks against readmerlin.json belong to the README.
+    if (doc.kind !== "readme") return [];
     const out = [];
     const counts = new Map<string, string>();
     for (const [k, v] of Object.entries(config.counts)) counts.set(k.replace(/_/g, " ").toLowerCase(), v);
@@ -139,6 +147,7 @@ export const countSource: Rule = {
 export const rowLength: Rule = {
   id: "badges/row-length",
   level: "warn",
+  pages: true,
   description: "A badge row stays within the limit",
   run: ({ doc, config }) => {
     const out = [];
@@ -173,6 +182,7 @@ const CI_BADGE_RE = /actions\/workflow\/status\/|\/actions\/workflows\/[^"'\s)]*
 export const noCiBadge: Rule = {
   id: "badges/carry-facts",
   level: "fail",
+  pages: true,
   description: "Every badge carries a number or a fact; CI status is table stakes and stays out",
   run: ({ doc }) =>
     collectImages(doc)
@@ -185,6 +195,7 @@ const RAW_BADGE_RE = /https?:\/\/(img\.shields\.io|badgen\.net)\/\S+/i;
 export const noRawUrls: Rule = {
   id: "badges/shown-as-badges",
   level: "fail",
+  // README only: a recipe template on CONTRIBUTING or a docs page is exactly where a raw badge URL belongs.
   description: "A badge URL appears only as the badge itself, linked",
   run: ({ doc }) => {
     const out: Array<{ message: string; line?: number; repair: string }> = [];
@@ -204,6 +215,7 @@ const FACT_LABELS = /^(license|licence|node|nodejs|node\.js|python|go|golang|rub
 export const claimsBacked: Rule = {
   id: "badges/claims-backed",
   level: "warn",
+  pages: true,
   description: "A badge that states a claim reads it from a file a tested job writes",
   run: ({ doc }) => {
     const out = [];

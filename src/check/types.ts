@@ -26,10 +26,12 @@ export interface Doc {
   tree: Root;
   hero: RootContent[];
   sections: Section[];
-  /** The README's own folder. Relative links start here. */
+  /** The page's own folder. Relative links start here. */
   dir: string;
   /** The nearest folder above holding .git, else dir. Root-relative links, the config and the denylist start here. */
   repoRoot: string;
+  /** "readme" for README.md, "page" for every other file, such as CONTRIBUTING or a docs page. */
+  kind: "readme" | "page";
 }
 
 export interface RuleContext {
@@ -47,6 +49,8 @@ export interface Rule {
   id: string;
   level: Level;
   description: string;
+  /** True for a rule that also runs on a page other than the README, such as CONTRIBUTING or a docs page. Off by default: most rules judge the README's shape. */
+  pages?: boolean;
   /** A finding may lower itself to a warning, for what could not be verified rather than what is wrong. */
   run: (ctx: RuleContext) => Promise<RuleFinding[]> | RuleFinding[];
 }

@@ -52,7 +52,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - name: self check
-        run: node skills/readmerlin/scripts/readmerlin.mjs check README.md --format github
+        run: node skills/readmerlin/scripts/readmerlin.mjs check --pages --format github
 
   # The one context a required-checks rule needs to know. It exists on
   # every run, whatever happens to checks or test, and fails unless every

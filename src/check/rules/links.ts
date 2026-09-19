@@ -11,6 +11,7 @@ const isSkippable = (h: string) => /^[a-z][a-z0-9+.-]+:/i.test(h) && !isExternal
 export const relativeLinks: Rule = {
   id: "links/relative",
   level: "fail",
+  pages: true,
   description: "Every relative link resolves to a file and every anchor to a heading",
   run: ({ doc }) => {
     const out = [];
@@ -60,6 +61,7 @@ export const relativeLinks: Rule = {
 export const noWorkflowFiles: Rule = {
   id: "links/reader-can-act",
   level: "fail",
+  pages: true,
   description: "Every link goes to something the reader acts on; YAML files are described in CONTRIBUTING",
   run: ({ doc }) => {
     const out = [];
@@ -137,6 +139,7 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R
 export const externalLinks: Rule = {
   id: "links/external",
   level: "fail",
+  pages: true,
   description: "Every external link answers",
   run: async ({ doc, links, fetch }) => {
     if (!links) return [];
