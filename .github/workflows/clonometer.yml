@@ -11,6 +11,8 @@ concurrency: {group: clonometer}
 jobs:
   count:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
     steps:
       - uses: oficiallyAkshay/clonometer@2c82a8779a68d2babb1e5e856d2ae69253dcd611   # pinned commit
         with:
