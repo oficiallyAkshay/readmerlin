@@ -98,12 +98,12 @@ export const specBeside: Rule = {
   },
 };
 
-/** Every label a hero spec puts on the picture, whatever its layout: the string under any title, label, gives, heading, backing or with key. */
+/** Every label a hero spec puts on the picture, whatever its layout: the string under any title, label, gives, heading, backing, with, eyebrow, subtitle, who, reads, items, source or edge key. Kept in step with labels() in hero-svg.mjs. */
 function specLabels(spec: unknown): string[] {
   const out: string[] = [];
   const walk = (v: unknown, key: string): void => {
     if (typeof v === "string") {
-      if (["title", "label", "gives", "heading", "backing", "with"].includes(key) && v.trim()) out.push(v.trim());
+      if (["title", "label", "gives", "heading", "backing", "with", "eyebrow", "subtitle", "who", "reads", "items", "source", "edge"].includes(key) && v.trim()) out.push(v.trim());
     } else if (Array.isArray(v)) v.forEach((x) => walk(x, key));
     else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
   };

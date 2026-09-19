@@ -308,3 +308,15 @@ describe("a README below the repo root", () => {
     expect(r.findings.some((f) => f.id === "badges/registry-present" && /wandr/.test(f.message))).toBe(true);
   });
 });
+
+describe("a pages hero drifting from its spec", () => {
+  it("is caught by spec-agrees through every field the layout draws", async () => {
+    const dir = repo(HERO + "\n" + QUICK);
+    const spec = JSON.parse(readFileSync(resolve(__dirname, "../assets/readme/hero.hero.json"), "utf8"));
+    writeFileSync(join(dir, "assets/readme/hero.svg"), readFileSync(resolve(__dirname, "../assets/readme/hero.svg"), "utf8"));
+    writeFileSync(join(dir, "assets/readme/hero.hero.json"), JSON.stringify(spec));
+    expect(await ids(dir)).not.toContain("visuals/spec-agrees");
+    writeFileSync(join(dir, "assets/readme/hero.hero.json"), JSON.stringify({ ...spec, source: "nonsense source", edge: "NONSENSE EDGE" }));
+    expect((await of(dir, "visuals/spec-agrees")).map((x) => x.message).join(" ")).toMatch(/nonsense source/);
+  });
+});

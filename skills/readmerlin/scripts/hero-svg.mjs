@@ -319,7 +319,7 @@ export function render(spec) {
 export function labels(spec) {
   const out = [];
   const walk = (v, key) => {
-    if (typeof v === "string") return void (["title", "label", "gives", "heading", "backing", "with", "items", "eyebrow", "subtitle", "who", "reads"].includes(key) && v.trim() && out.push(v.trim()));
+    if (typeof v === "string") return void (["title", "label", "gives", "heading", "backing", "with", "items", "eyebrow", "subtitle", "who", "reads", "source", "edge"].includes(key) && v.trim() && out.push(v.trim()));
     if (Array.isArray(v)) return v.forEach((x) => walk(x, key));
     if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
   };

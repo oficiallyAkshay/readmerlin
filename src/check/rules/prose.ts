@@ -118,7 +118,7 @@ export const paragraphLength: Rule = {
 export const inlineCode: Rule = {
   id: "prose/code-outside-sentences",
   level: "warn",
-  description: "Code sits in a table, a link, or a short clause that names it, never buried in a long sentence",
+  description: "Code sits in a table, a link, or a short clause that names it on its own",
   run: ({ doc }) => {
     const out = [];
     for (const s of doc.sections) {
