@@ -59,7 +59,7 @@ The table below is the same one the rules command prints: every rule readmerlin 
 | privacy/hosts-through-badges | fail | Host install notes are reached through the host badges |
 | links/relative | fail | Every relative link resolves to a file and every anchor to a heading |
 | links/reader-can-act | fail | Every link goes to something the reader acts on; YAML files are described in CONTRIBUTING |
-| links/external | fail | Every external link answers |
+| links/external | fail | Every external link answers; a host that refuses an automated request (401, 403, 405, 429, 999) warns instead of failing |
 | badges/registry-present | warn | A published package carries its registry version and downloads badges; a repo with no package carries its clone count; each host in worksWith has its badge |
 
 A level is set per rule id under the `rules` key of readmerlin.json, for example setting `prose/sentence-case` to `off`, and any id left out keeps the level shown above.

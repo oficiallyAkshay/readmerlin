@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.3
+
+links/external no longer hard-fails a link whose host refuses an automated request: a blind validation run on exa-labs/exa-mcp-server turned up two npmjs.com links failing CI only because npmjs.com answers a bot's HEAD or GET with 403. A status of 401, 403, 405, 429 or 999 now warns instead, naming the status and saying the link was not verified; a genuine 404, a 410 or a network error still fails, and a refused result is never cached as verified.
+
 ## 0.8.2
 
 Test coverage now runs through @vitest/coverage-v8, with a real repo of new tests for the rules, context readers and commands that had none, and `npm test` enforces a coverage floor so it fails if coverage drops. A few defensive fallbacks that could never run, guarded by guarantees the parser and the GFM table shape already gave, were deleted in favour of a plain assertion; a couple of genuine OS-race fallbacks are marked instead of tested.

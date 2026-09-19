@@ -136,11 +136,15 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R
   return out;
 }
 
+// A host that returns one of these to an automated request is refusing the bot, not saying the link is dead.
+// The link exists but was not verified, so this stays a warning rather than a hard fail.
+const REFUSED_STATUSES = new Set([401, 403, 405, 429, 999]);
+
 export const externalLinks: Rule = {
   id: "links/external",
   level: "fail",
   pages: true,
-  description: "Every external link answers",
+  description: "Every external link answers, or the host's refusal to an automated request is a warning",
   run: async ({ doc, links, fetch }) => {
     if (!links) return [];
     const refs = collectLinks(doc, true).filter((l) => isExternal(l.href));
@@ -149,17 +153,25 @@ export const externalLinks: Rule = {
     const fresh = (u: string) => cache[u] && Date.now() - cache[u].at < DAY && cache[u].ok;
     const urls = [...new Set(refs.map((r) => (r.href.startsWith("//") ? "https:" + r.href : r.href)).filter((u) => !fresh(u)))];
     const statuses = await mapLimit(urls, 12, async (u) => [u, await probe(fetch, u)] as const);
-    const broken = new Map<string, number>();
+    const failed = new Map<string, number>();
+    const refused = new Map<string, number>();
     for (const [u, status] of statuses) {
       const ok = status >= 200 && status < 400;
-      if (!ok) broken.set(u, status);
+      if (!ok) {
+        if (REFUSED_STATUSES.has(status)) refused.set(u, status);
+        else failed.set(u, status);
+      }
+      // A refusal did not verify the link, so it is never cached as ok.
       cache[u] = { ok, at: Date.now() };
     }
     saveCache(cache);
     return refs
       .map((r) => ({ r, u: r.href.startsWith("//") ? "https:" + r.href : r.href }))
-      .filter(({ u }) => broken.has(u))
-      .map(({ r, u }) => ({ message: `Link answers ${broken.get(u) || "with a network error"}: ${u}`, line: r.line, repair: "Fix or remove the link." }));
+      .filter(({ u }) => failed.has(u) || refused.has(u))
+      .map(({ r, u }) => {
+        if (refused.has(u)) return { level: "warn" as const, message: `Host refused an automated request, status ${refused.get(u)}, link not verified: ${u}`, line: r.line, repair: "Verify by hand; the host blocks automated HEAD/GET requests." };
+        return { message: `Link answers ${failed.get(u) || "with a network error"}: ${u}`, line: r.line, repair: "Fix or remove the link." };
+      });
   },
 };
 
