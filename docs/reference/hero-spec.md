@@ -46,7 +46,7 @@ Every `icon` field names one of a fixed set built into the render script: folder
 
 ## Rendering
 
-A single spec renders with the hero script directly, or `npm run hero` redraws both heroes this repo already commits, `assets/readme/hero.svg` and `examples/tidy-inbox/assets/readme/hero.svg`.
+A single spec renders with the hero script directly, or `npm run hero` redraws the hero this repo commits, `assets/readme/hero.svg`.
 
 ```
 node skills/readmerlin/scripts/hero-svg.mjs assets/readme/hero.hero.json > assets/readme/hero.svg

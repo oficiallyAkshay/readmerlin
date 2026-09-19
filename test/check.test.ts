@@ -52,3 +52,27 @@ describe("honesty/comparison-links", () => {
     expect((await run("[tool](https://github.com/acme/tool)"))[0]?.message).toMatch(/does not name its repo as acme\/tool/);
   });
 });
+
+describe("compare spec", () => {
+  it("warns when the table's columns or rows differ from readmerlin.json", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rm-"));
+    writeFileSync(join(dir, "readmerlin.json"), JSON.stringify({ compare: { repos: ["acme/tool"], rows: ["Output", "Model"] } }));
+    const f = join(dir, "README.md");
+    writeFileSync(f, `# t\n\n**b**\n\nc\n\n## How it compares\n\n| | [me/t](https://github.com/me/t) | [acme/other](https://github.com/acme/other) |\n| --- | --- | --- |\n| Output | Pages | Pages |\n`);
+    const msgs = (await check(f, { format: "json", links: false, repoRoot: dir })).findings.filter((x) => x.id === "honesty/comparison-links").map((x) => x.message);
+    expect(msgs.some((m) => /columns are acme\/other, the spec says acme\/tool/.test(m))).toBe(true);
+    expect(msgs.some((m) => /rows are output, the spec says output, model/.test(m))).toBe(true);
+  });
+});
+
+describe("works-with row", () => {
+  it("warns on a missing host badge and on a ❌ item that says never twice", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rm-"));
+    writeFileSync(join(dir, "readmerlin.json"), JSON.stringify({ worksWith: ["Claude Code"] }));
+    const f = join(dir, "README.md");
+    writeFileSync(f, `# t\n\n**b**\n\nc\n\n## Security and limits\n\nNo credential.\n\n- ❌ Never sends telemetry\n`);
+    const r = await check(f, { format: "json", links: false, repoRoot: dir });
+    expect(r.findings.some((x) => x.id === "badges/registry-present" && /Claude Code/.test(x.message))).toBe(true);
+    expect(r.findings.some((x) => x.id === "shape/security-checklist" && /repeats the never/.test(x.message))).toBe(true);
+  });
+});

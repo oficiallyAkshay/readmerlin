@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+A fresh write now lands close to the approved page. Context prints the badge row the repo's shape asks for, so a repo with no package carries its clone badge before any count exists, and a second works-with row with one badge per host, set by `worksWith` in readmerlin.json. It says when the repo is readmerlin's own page, which drops Fit and In action, and it prints the compare spec from readmerlin.json, whose repos and rows the table follows. The rules now say where the title emoji comes from, how the tagline opens, which six questions the feature blocks answer, what a comparison cell holds, and what the security checklist covers. The check warns on a missing clone or host badge, a table that differs from its spec, and a ❌ item that says never twice. The tidy-inbox example is gone. Five isolated eval runs, each writing this README with the old one and its history removed, moved from a different page to one matching the approved emoji, tagline, badges, sections and table.
+
 ## 0.6.0
 
 A rerun now keeps the approved page. The context command prints the existing README in full, and the skill treats it as the draft: its tagline, feature blocks, comparison rows and checklist items stay word for word, and a sentence changes only when a fact moved, a rule fails, or the user asks. A fresh agent rerun on this repo left its README byte for byte as approved. The comparison check now also warns when a column header does not name the owner/repo its link points to.

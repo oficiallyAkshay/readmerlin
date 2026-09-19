@@ -60,6 +60,23 @@ export function toMarkdown(c: RepoContext): string {
   }
   if (c.hooks.length) s += `## Hooks\n\n${c.hooks.map((h) => `- ${h}`).join("\n")}\n\n`;
   if (c.workflows.length) s += `## Workflows\n\n${c.workflows.map((w) => `- ${w.file}${w.name ? `: ${w.name}` : ""}`).join("\n")}\n\n`;
+  if (c.badgeRow.length) {
+    s += `## Badge row\n\nThe hero's badge row, decided by the repo's shape. Carry these and only these, in this order, whether or not a count exists yet:\n\n`;
+    for (const b of c.badgeRow) s += `- <a href="${b.href}"><img alt="${b.alt}" src="${b.src}"></a>\n`;
+    s += "\n";
+  }
+  if (c.unbadgedHosts.length) s += `No works-with badge recipe for ${c.unbadgedHosts.join(", ")}. Add each by hand, linked to that host's own page.\n\n`;
+  if (c.worksWith.length) {
+    s += `## Works with\n\nA second badge row, right under the first: one badge per host the skill runs in, in this order:\n\n`;
+    for (const b of c.worksWith) s += `- <a href="${b.href}"><img alt="${b.alt}" src="${b.src}"></a>\n`;
+    s += "\n";
+  }
+  if (c.self) s += `## This page\n\nThis repo ships readmerlin itself, so its README is the product's own page. The page is the artifact and the proof: it drops In action and Fit, and CONTRIBUTING carries the install step.\n\n`;
+  if (c.compare && c.compare.repos.length) {
+    s += `## How it compares\n\n${line("Columns, in order", [c.repo.owner && c.repo.name ? `${c.repo.owner}/${c.repo.name}` : "this repo", ...c.compare.repos].join(", "))}`;
+    s += line("Rows, in order", c.compare.rows.join(", ") || undefined);
+    s += `- Fill every cell from each repo's own README, read online, before the table ships.\n\n`;
+  }
   s += `## Existing README\n\n`;
   if (!c.readme.exists) s += `- none\n`;
   else s += `${line("Title", c.readme.title)}${line("Tagline", c.readme.tagline)}${line("Words", c.readme.words)}${line("Badges", c.readme.badges)}${line("Images", c.readme.images.join(", ") || undefined)}${line("Headings", c.readme.headings.join(" | ") || undefined)}`;

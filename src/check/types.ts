@@ -57,6 +57,8 @@ export interface Rule {
 
 export interface Config {
   rules: Record<string, Level>;
+  compare?: { repos?: string[]; rows?: string[] };
+  worksWith?: string[];
   killList: string[];
   disclaimers: string[];
   headingAllowlist: string[];

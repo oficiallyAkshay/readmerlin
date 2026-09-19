@@ -117,7 +117,6 @@ describe("the repo's own pages", () => {
     const docsPages = [
       "README.md",
       "changelog.md",
-      "examples.md",
       join("guides", "keep-it-true.md"),
       join("guides", "write-a-readme.md"),
       join("reference", "check.md"),

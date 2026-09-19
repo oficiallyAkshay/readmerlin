@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "n
 import { join, relative, sep } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { firstParagraph, headingsOf, splitFrontmatter } from "./frontmatter.js";
-import type { McpFileInfo, NamedDoc, PackageInfo, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
+import type { BadgeSpec, McpFileInfo, NamedDoc, PackageInfo, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
 
 // Never entered, at any depth.
 const SKIP_ALWAYS = new Set(["node_modules", ".git", ".readmerlin"]);
@@ -314,4 +314,72 @@ export function readPackages(root: string): PackageInfo[] {
 
 export function rootFiles(root: string): string[] {
   return readdirSync(root).filter((n) => !SKIP_DIRS.has(n) && !n.startsWith(".") || n === ".github" || n === ".claude-plugin" || n === ".mcp.json").sort();
+}
+
+export const CLONOMETER_URL = "https://github.com/oficiallyAkshay/clonometer";
+
+// The badge row follows the repo's shape, never the data on hand: a clone badge belongs on a repo with no package before its first count exists.
+export function badgeRow(repo: { host?: string; owner?: string; name?: string }, license: { file: string; spdx?: string } | undefined, packages: PackageInfo[]): BadgeSpec[] {
+  const row: BadgeSpec[] = [];
+  if (license?.spdx) row.push({ alt: `${license.spdx} licence`, src: `https://img.shields.io/badge/license-${license.spdx.replace(/-/g, "--")}-2f6f4e?logo=opensourceinitiative&logoColor=white`, href: license.file });
+  for (const p of packages) for (const b of p.badges) row.push({ alt: b.label, src: b.src, href: b.href });
+  if (packages.length === 0 && repo.host === "github.com" && repo.owner && repo.name) {
+    row.push({ alt: "clones of this repository, last seven days and all time", src: `https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/${repo.owner}/${repo.name}/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white`, href: CLONOMETER_URL });
+  }
+  return row;
+}
+
+export function isSelf(skills: SkillInfo[]): boolean {
+  return skills.some((k) => k.name === "readmerlin" && k.path === "skills/readmerlin/SKILL.md");
+}
+
+export function readCompare(root: string): { repos: string[]; rows: string[] } | undefined {
+  const file = join(root, "readmerlin.json");
+  if (!existsSync(file)) return undefined;
+  try {
+    const c = (JSON.parse(readFileSync(file, "utf8")) as { compare?: { repos?: unknown; rows?: unknown } }).compare;
+    if (!c) return undefined;
+    const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+    return { repos: list(c.repos), rows: list(c.rows) };
+  } catch {
+    return undefined;
+  }
+}
+
+// Hosts a skill runs in, with the page a reader acts on and a shields logo where one renders.
+const HOST_BADGES: Record<string, { href: string; logo?: string }> = {
+  "Claude Code": { href: "https://github.com/anthropics/claude-code", logo: "claude" },
+  Codex: { href: "https://github.com/openai/codex" },
+  Cursor: { href: "https://cursor.com", logo: "cursor" },
+  "Gemini CLI": { href: "https://github.com/google-gemini/gemini-cli", logo: "googlegemini" },
+  Copilot: { href: "https://github.com/features/copilot", logo: "githubcopilot" },
+  "Claude.ai": { href: "https://claude.ai", logo: "claude" },
+  OpenCode: { href: "https://opencode.ai" },
+  Windsurf: { href: "https://windsurf.com" },
+};
+
+export const BADGED_HOSTS = (): string[] => Object.keys(HOST_BADGES);
+
+/** Works-with badges for hosts shields has no mark for, which are label-only by design. */
+export const MARKLESS_HOST_BADGES = (): string[] => Object.keys(HOST_BADGES).filter((h) => !HOST_BADGES[h].logo).map(hostBadgeSrc);
+
+export function hostBadgeSrc(host: string): string {
+  const esc = (v: string) => encodeURIComponent(v.replace(/-/g, "--"));
+  const logo = HOST_BADGES[host]?.logo;
+  return `https://img.shields.io/badge/${esc("works with")}-${esc(host)}-1e1b4b${logo ? `?logo=${logo}&logoColor=white` : ""}`;
+}
+
+export function worksWithRow(hosts: string[]): BadgeSpec[] {
+  return hosts.filter((h) => HOST_BADGES[h]).map((h) => ({ alt: `works with ${h}`, src: hostBadgeSrc(h), href: HOST_BADGES[h].href }));
+}
+
+export function readWorksWith(root: string): string[] | undefined {
+  const file = join(root, "readmerlin.json");
+  if (!existsSync(file)) return undefined;
+  try {
+    const w = (JSON.parse(readFileSync(file, "utf8")) as { worksWith?: unknown }).worksWith;
+    return Array.isArray(w) ? w.filter((x): x is string => typeof x === "string") : undefined;
+  } catch {
+    return undefined;
+  }
 }

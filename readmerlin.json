@@ -1,5 +1,12 @@
 {
   "$schema": "./readmerlin.schema.json",
+  "worksWith": [
+    "Claude Code",
+    "Codex",
+    "Cursor",
+    "Gemini CLI",
+    "Copilot"
+  ],
   "headingAllowlist": [
     "readmerlin",
     "Archify",
@@ -14,5 +21,20 @@
     "Copilot",
     "GitHub",
     "npm"
-  ]
+  ],
+  "compare": {
+    "repos": [
+      "eli64s/readme-ai",
+      "DavidAnson/markdownlint",
+      "lycheeverse/lychee"
+    ],
+    "rows": [
+      "README writer",
+      "Badge checks",
+      "Link checks",
+      "Privacy checks",
+      "Installation",
+      "Model"
+    ]
+  }
 }

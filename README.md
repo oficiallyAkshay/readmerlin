@@ -11,6 +11,14 @@
   <a href="https://github.com/oficiallyAkshay/clonometer"><img alt="clones of this repository, last seven days and all time" src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/oficiallyAkshay/readmerlin/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white"></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/anthropics/claude-code"><img alt="works with Claude Code" src="https://img.shields.io/badge/works%20with-Claude%20Code-1e1b4b?logo=claude&logoColor=white"></a>
+  <a href="https://github.com/openai/codex"><img alt="works with Codex" src="https://img.shields.io/badge/works%20with-Codex-1e1b4b"></a>
+  <a href="https://cursor.com"><img alt="works with Cursor" src="https://img.shields.io/badge/works%20with-Cursor-1e1b4b?logo=cursor&logoColor=white"></a>
+  <a href="https://github.com/google-gemini/gemini-cli"><img alt="works with Gemini CLI" src="https://img.shields.io/badge/works%20with-Gemini%20CLI-1e1b4b?logo=googlegemini&logoColor=white"></a>
+  <a href="https://github.com/features/copilot"><img alt="works with Copilot" src="https://img.shields.io/badge/works%20with-Copilot-1e1b4b?logo=githubcopilot&logoColor=white"></a>
+</p>
+
 ## Features
 
 readmerlin writes your repo's README, docs and CONTRIBUTING.

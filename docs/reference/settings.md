@@ -17,4 +17,6 @@ Every key readmerlin.json accepts, described by readmerlin.schema.json and appli
 | `maxImageHeight` | 700 | The tallest an image's declared height may be under visuals/height. |
 | `maxFindingsPerRule` | 10 | Findings beyond this many, per rule per file, fold into one summary line instead of listing each one. |
 | `denylistFile` | `.readmerlin/denylist.sha256` | The file of sha256 hashes privacy/denylist-clear reads, one hash per line, so a private word never has to be typed into the config itself. |
+| `worksWith` | the hosts context detects | The hosts the skill runs in, in order. Context prints a works-with badge for each host it has a page for, names any other host for a badge by hand, and badges/registry-present warns when a badge it can draw is missing. |
+| `compare` | none | The approved comparison. `repos` lists the alternatives as owner/repo, and `rows` lists the row labels, both in order. Context prints them, and honesty/comparison-links warns when the table's columns or rows differ. |
 | `counts` | `{}` | Maps a badge label to a shell command whose printed output must match the number shown in a numeric badge, checked by badges/count-source unless `--no-exec` is given. |
