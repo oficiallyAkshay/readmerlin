@@ -191,21 +191,33 @@ describe("the shape", () => {
     const w = await ids(repo(bad), "warn");
     for (const id of ["prose/says-it-once", "shape/feature-bullets", "honesty/comparison-product-first", "honesty/comparison-links", "shape/badges-table", "shape/security-checklist"]) expect(w).toContain(id);
   });
-  it("fails a Quick start section and an agent section in the README", async () => {
+  it("fails a Quick start section and an agent section in the README, but not on the agent-block rule: that heading is only on the kill list now", async () => {
     const f = await check(join(repo(SHAPED + "\n## Quick start\n\n- Ask it.\n\n## For agents\n\n- Read SKILL.md first.\n"), "README.md"), { format: "json", links: false });
     const fails = f.findings.filter((x) => x.level === "fail").map((x) => `${x.id}: ${x.message}`);
-    expect(fails).toEqual(['shape/earned-headings: Heading "Quick start" is on the kill list.', 'shape/earned-headings: Heading "For agents" is on the kill list.', 'shape/agents-in-contributing: Section "For agents" is written for agents.']);
+    expect(fails).toEqual(['shape/earned-headings: Heading "Quick start" is on the kill list.', 'shape/earned-headings: Heading "For agents" is on the kill list.']);
   });
-  it("tells a section for agents from a section about agents", async () => {
-    const titled = async (t: string) => (await ids(repo(SHAPED + `\n## ${t}\n\n- x\n`), "fail")).includes("shape/agents-in-contributing");
+  it("tells a section written for agents from one merely about agents, when it sits in CONTRIBUTING", async () => {
+    const titled = async (t: string) => (await ids(repo(SHAPED, { ".github/CONTRIBUTING.md": `# Contributing\n\n## ${t}\n\n- x\n` }), "fail")).includes("shape/agents-in-contributing");
     for (const t of ["For agents", "For AI agents", "Notes for LLMs", "Agent instructions", "AGENTS.md"]) expect(await titled(t), t).toBe(true);
     for (const t of ["Supported agents", "Agent skills", "What are agent skills?", "Skill not loading in agent", "Hermes Agent"]) expect(await titled(t), t).toBe(false);
   });
-  it("lets emoji lead a bullet and keeps a long agent block out of CONTRIBUTING", async () => {
-    const dir = repo(SHAPED, { ".github/CONTRIBUTING.md": "# Contributing\n\n## For agents\n\n" + Array.from({ length: 45 }, (_, i) => `- step ${i}`).join("\n") + "\n" });
+  it("no longer flags a README section merely titled for agents; that block now lives in AGENTS.md", async () => {
+    expect(await ids(repo(SHAPED + "\n## For agents\n\n- x\n"), "fail")).not.toContain("shape/agents-in-contributing");
+  });
+  it("fails CONTRIBUTING that still carries a for-agents section, whatever its length", async () => {
+    const dir = repo(SHAPED, { ".github/CONTRIBUTING.md": "# Contributing\n\n## For agents\n\n- one line\n" });
     const r = await check(join(dir, "README.md"), { format: "json", links: false });
     expect(r.findings.map((f) => f.id)).toEqual(["shape/agents-in-contributing"]);
-    expect(r.findings[0].message).toContain("45 lines");
+    expect(r.findings[0].message).toMatch(/still carries a section written for agents/);
+  });
+  it("fails an AGENTS.md over forty lines, and passes CONTRIBUTING once the section moved out", async () => {
+    const dir = repo(SHAPED, {
+      ".github/CONTRIBUTING.md": "# Contributing\n\nSee AGENTS.md.\n",
+      "AGENTS.md": "# AGENTS.md\n\n" + Array.from({ length: 45 }, (_, i) => `- step ${i}`).join("\n") + "\n",
+    });
+    const r = await check(join(dir, "README.md"), { format: "json", links: false });
+    expect(r.findings.map((f) => f.id)).toEqual(["shape/agents-in-contributing"]);
+    expect(r.findings[0].message).toContain("46 lines");
   });
   it("warns on a hand-written claim badge, and leaves facts, counts and hosts alone", async () => {
     const badge = (src: string) => HERO.replace('<a href="LICENSE">', `<a href="LICENSE"><img alt="x" src="${src}"></a><a href="LICENSE">`);
@@ -214,6 +226,8 @@ describe("the shape", () => {
     expect(await claims("https://img.shields.io/badge/privacy-local_only-blue?logo=github")).toBe(true);
     expect(await claims("https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python")).toBe(false);
     expect(await claims("https://img.shields.io/badge/Claude%20Code-3f3f46?logo=anthropic")).toBe(false);
+    // The old 0.7.x host badge shape, label "works with", still passes: a repo need not rewrite its README to stay clean.
+    expect(await claims("https://img.shields.io/badge/works%20with-Claude%20Code-1e1b4b?logo=claude&logoColor=white")).toBe(false);
   });
   it("fails a hero that does not show what its spec names", async () => {
     const spec = JSON.stringify({ title: "t", sources: [{ label: "Inbox" }], handled: [{ label: "Rides" }], deliverable: { label: "one claim" } });

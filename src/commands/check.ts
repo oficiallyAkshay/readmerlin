@@ -7,7 +7,7 @@ import type { CheckResult } from "../check/types.js";
 import { updateNotice } from "./update-notice.js";
 
 export interface RunCheckOptions extends CheckOptions {
-  /** Expand to README.md, CONTRIBUTING and every docs page, relative to the repo root. Overrides the given files. */
+  /** Expand to README.md, AGENTS.md when present, CONTRIBUTING and every docs page, relative to the repo root. Overrides the given files. */
   pages?: boolean;
 }
 
@@ -22,12 +22,14 @@ function collectMd(dir: string): string[] {
   return out;
 }
 
-/** README.md, .github/CONTRIBUTING.md (or CONTRIBUTING.md), and every docs page, each one that exists, relative to the nearest repo root. */
+/** README.md, AGENTS.md when present, .github/CONTRIBUTING.md (or CONTRIBUTING.md), and every docs page, each one that exists, relative to the nearest repo root. */
 export function expandPages(cwd: string): { files: string[]; root: string } {
   const root = gitRoot(resolve(cwd)) ?? resolve(cwd);
   const files: string[] = [];
   const readme = join(root, "README.md");
   if (existsSync(readme)) files.push(readme);
+  const agents = join(root, "AGENTS.md");
+  if (existsSync(agents)) files.push(agents);
   const ghContributing = join(root, ".github", "CONTRIBUTING.md");
   const rootContributing = join(root, "CONTRIBUTING.md");
   if (existsSync(ghContributing)) files.push(ghContributing);

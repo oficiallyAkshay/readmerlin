@@ -1,6 +1,6 @@
 # Contributing to readmerlin
 
-Everything the README leaves out lives here: commands, settings, workflows, badge recipes, how the pieces fit, and the block an agent reads.
+Everything the README leaves out lives here: commands, settings, workflows, badge recipes and how the pieces fit. [AGENTS.md](../AGENTS.md) at the repo root holds the block an agent reads first.
 
 ## How it ships
 
@@ -84,12 +84,3 @@ Things learned the hard way:
 - Scope, proof and limits are each worth their own section: Fit for who it is for, In action for a real result, Security and limits for the credential, the checklist and the defaults together.
 - A hero is designed before it is diagrammed: a headline that states the value earns more attention than a bigger picture.
 - Badges earn their place by adoption and licence. A language version or a rule count is not a fact a reader acts on.
-
-## For agents
-
-- Skill path: `skills/readmerlin/SKILL.md`. Install with the skills CLI or copy the folder.
-- Reference: `docs/` holds a guide per workflow and a reference page per command, read in full alongside this file.
-- Order of work: `context`, `rules`, scope the Fit lists, find the In action result, draw the hero with figurehead, write the parts in order, compare truthfully, move the rest here, write the docs pages, `check` until clean, `init-workflow`.
-- Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carry-facts`, `prose/plain-punctuation`, `visuals/spec-beside`, `privacy/denylist-clear`, `links/external`. Every finding carries the id and a repair line.
-- The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
-- Peers, never dependencies: figurehead draws the hero from `<name>.hero.json`; this skill carries no renderer of its own. Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.

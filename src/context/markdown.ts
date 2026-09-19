@@ -27,6 +27,7 @@ export function toMarkdown(c: RepoContext): string {
   s += line("Hosts", c.hosts.join(", ") || undefined);
   s += line("Install", c.install.map((i) => `\`${i}\``).join(" or ") || undefined);
   s += line("Root files", c.rootFiles.join(", "));
+  s += line("AGENTS.md", c.agentsFile);
   if (c.packages.length) {
     s += `\n## Published packages\n\n`;
     for (const p of c.packages) {
@@ -70,7 +71,7 @@ export function toMarkdown(c: RepoContext): string {
     // Six to a row at most, split evenly, so the check's row limit holds.
     const rows = Math.ceil(c.worksWith.length / 6);
     const per = Math.ceil(c.worksWith.length / rows);
-    s += `## Works with\n\nBadge rows right under the first, one badge per host the skill runs in, in this order${rows > 1 ? `, ${rows} rows of up to ${per}` : ""}:\n\n`;
+    s += `## Works with\n\nBadge rows right under the first, one badge per host the skill runs in, in this order${rows > 1 ? `, ${rows} rows of up to ${per}` : ""}. Each row opens with the plain words "Works with" once, not on every badge: \`<p align="center">Works with<br>\` then every badge in the row, closed with \`</p>\`:\n\n`;
     for (let r = 0; r < rows; r++) {
       if (rows > 1) s += `Row ${r + 1}:\n\n`;
       for (const b of c.worksWith.slice(r * per, (r + 1) * per)) s += `- <a href="${b.href}"><img alt="${b.alt}" src="${b.src}"></a>\n`;

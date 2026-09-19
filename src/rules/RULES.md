@@ -10,7 +10,7 @@ Hand this to the agent before it drafts. Two readers, one repo, three pages. A p
 4. Badges carry adoption, licence and reach: the licence, downloads or clones, the product's own live numbers, and the hosts it works with. No language version, no dependency count, no rule count. Green CI is table stakes once merges require it, so CI status stays off the page. Every badge has a logo that renders and a link.
 5. One shape, in the order below. A part with nothing to say is dropped. The platform already surfaces the licence and the contributing guide, so the page leaves them to it.
 6. The author's own words stay verbatim. Restructure freely; rewrite only when asked, and say when a sentence changes. An existing README is the draft a rerun starts from: every sentence that still holds stays word for word.
-7. README for people. The install step is one sentence in Fit, for a repo that has one; for the product's own page, CONTRIBUTING carries it. Either way it makes a Quick start section redundant. The agent block lives only in CONTRIBUTING under the .github folder, under forty lines.
+7. README for people. The install step is one sentence in Fit, for a repo that has one; for the product's own page, CONTRIBUTING carries it. Either way it makes a Quick start section redundant. The agent block lives in AGENTS.md at the repo root, under forty lines, and points to CONTRIBUTING and docs for the rest.
 8. The README is words, pictures, badges and tables. Workflow files, commands and badge recipes live in CONTRIBUTING and docs. A name that must appear as code sits in a table or a link.
 9. Link only to what a reader acts on: a page to read, a package to install, a repo to compare.
 10. Visuals are real and specific. One hero graphic, drawn as an SVG from a committed spec with a rebuild test. Registries render SVG and leave Mermaid as text, so the hero is an SVG. An animated hero has a complete still frame. A distinct icon per item. View the hero at full width and in dark theme before shipping it.
@@ -42,7 +42,7 @@ Hero, Features, In action, Fit, How it compares, Security and limits, Badges, in
 - The hero is designed, not diagrammed: a headline that states the value, an eyebrow, a short subtitle, and the mechanism drawn as a picture beside it. One colour wash, one colour per tier. Nothing negative: no "before" page, no confetti, no maturity line. GitHub's own sidebar already carries version and maintainer.
 - The hero takes the shape of the product's own verb, and a new verb gets a new layout, never a borrowed one. A product that gathers many things into one draws a fan. A product that makes one thing better draws a before and after. A product whose repo feeds several pages for different readers draws them as pages. Learn from a good hero how it thinks: the reader's nouns, the real output at real proportions, the mechanism as one arrow.
 - Badge row: licence, downloads or clones, and the product's own live numbers. A repo with no registry package carries a clone count from clonometer, since clones are its only count; a published package lets its downloads badge do that job. The row follows the repo's shape, as `readmerlin context` prints it, so a clone badge ships before its first count exists. A badge that states a category, such as "agent skill", carries no fact and stays off.
-- Works-with row: badge rows under the first, one badge per host the skill runs in, each linked to that host, six to a row at most and split evenly. The hosts come from readmerlin.json `worksWith`, or from the hosts context detects.
+- Works-with row: badge rows under the first, each opening with the plain words "Works with" once, then one badge per host the skill runs in, each linked to that host, six to a row at most and split evenly. The hosts come from readmerlin.json `worksWith`, or from the hosts context detects.
 - Number format in a badge: short form above a thousand, such as 1.2k. The label carries the unit.
 - The install step is one plain sentence in Fit, for a repo that has one. The product's own page carries it in CONTRIBUTING instead, and drops Fit when the page itself is the proof and the scope is obvious.
 - An example artifact, when the repo commits one, gets one bold centered link.
@@ -102,11 +102,13 @@ Limits, Configuration, Configuration and security, Quick start, Quickstart, Gett
 
 ## What CONTRIBUTING and docs hold
 
-CONTRIBUTING, under the .github folder: commands, settings, workflows, badge recipe templates, how the pieces fit together, and the order of work, plus the agent block under forty lines.
+AGENTS.md, at the repo root: the agent block, under forty lines, pointing to CONTRIBUTING and docs for the rest.
+
+CONTRIBUTING, under the .github folder: commands, settings, workflows, badge recipe templates, how the pieces fit together, and the order of work.
 
 Docs: guides, one per workflow; reference, one page per command with its flags and settings; the rule ids and levels; examples; benchmarks or evals, when the repo has any; and a changelog.
 
-`check --pages` holds CONTRIBUTING and every docs page to links, badges, privacy and plain punctuation, never to the README's section shape.
+`check --pages` holds AGENTS.md, CONTRIBUTING and every docs page to links, badges, privacy and plain punctuation, never to the README's section shape.
 
 ## Specs the check accepts beside an SVG
 
