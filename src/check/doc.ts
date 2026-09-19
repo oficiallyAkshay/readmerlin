@@ -45,8 +45,11 @@ export function parseDoc(file: string, repoRoot?: string): Doc {
       hero.push(node);
     }
   }
-  const kind: Doc["kind"] = README_RE.test(basename(file)) ? "readme" : "page";
-  return { file, text, lines, tree, hero, sections, dir, repoRoot: repoRoot ? resolve(repoRoot) : gitRoot(dir) ?? dir, kind };
+  const root = repoRoot ? resolve(repoRoot) : gitRoot(dir) ?? dir;
+  // A README is the page of a repo or of a package: at the repo root, or beside a manifest or a SKILL.md. A README.md inside docs is a page.
+  const ownsAProduct = resolve(dir) === root || ["package.json", "pyproject.toml", "Cargo.toml", "SKILL.md", "action.yml", "plugin.json"].some((n) => existsSync(join(dir, n)));
+  const kind: Doc["kind"] = README_RE.test(basename(file)) && ownsAProduct ? "readme" : "page";
+  return { file, text, lines, tree, hero, sections, dir, repoRoot: root, kind };
 }
 
 export function lineOf(node: { position?: { start: { line: number } } }): number | undefined {

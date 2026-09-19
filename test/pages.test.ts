@@ -132,3 +132,19 @@ describe("the repo's own pages", () => {
     expect(rel).toHaveLength(2 + docsPages.length);
   });
 });
+
+describe("which README is the README", () => {
+  it("is the one at the repo root or beside a manifest; a docs index named README.md is a page", async () => {
+    const root = mkdtempSync(join(tmpdir(), "rm-kind-"));
+    mkdirSync(join(root, ".git"));
+    mkdirSync(join(root, "docs"));
+    mkdirSync(join(root, "pkg"));
+    writeFileSync(join(root, "docs/README.md"), "# Docs\n\nAn index.\n");
+    writeFileSync(join(root, "pkg/package.json"), '{"name":"p"}');
+    writeFileSync(join(root, "pkg/README.md"), "# p\n\nA package.\n");
+    const page = await check(join(root, "docs/README.md"), { format: "json", links: false, exec: false });
+    const readme = await check(join(root, "pkg/README.md"), { format: "json", links: false, exec: false });
+    expect(page.ran.some((id) => id.startsWith("hero/"))).toBe(false);
+    expect(readme.ran.some((id) => id.startsWith("hero/"))).toBe(true);
+  });
+});
