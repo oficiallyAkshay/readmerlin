@@ -1,16 +1,16 @@
 # Changelog
 
-## 0.5.0 (this branch)
+## 0.5.0
 
-The check command now takes several files at once and a `--pages` flag that expands to `README.md`, whichever CONTRIBUTING file exists, and every markdown page under `docs`, reporting each one in turn instead of the README alone. A parsed page now carries its own kind, so a rule can opt in to running on CONTRIBUTING and docs pages, rather than only on the README; twenty rules now do, covering links, badges, privacy and plain punctuation. The action and this repo's own CI check the pages by default. This docs folder is the first the pages check now holds to those twenty rules alongside the README and CONTRIBUTING, and CONTRIBUTING itself was trimmed of the settings table and the commands block now written out here in full.
+The check command now takes several files at once and a `--pages` flag that expands to `README.md`, whichever CONTRIBUTING file exists, and every markdown page under `docs`, reporting each one in turn instead of the README alone. A parsed page now carries its own kind, so a rule can opt in to running on CONTRIBUTING and docs pages, rather than only on the README; twenty rules now do, covering links, badges, privacy and plain punctuation. The action and this repo's own CI check the pages by default. This docs folder arrived with it, written with the skill's own docs step, and CONTRIBUTING was trimmed of the settings table and the commands block, which live here in full. CI was hardened as well: pinned actions, a gate job, a secrets scan and dependabot. Merged as pull requests 9, 13 and 14.
 
 ## 0.4.0
 
-The README's shape changed to three pages feeding two readers: the README stayed the person's page, while commands, settings, workflows, badge recipes, the architecture diagram and the agent block all moved into CONTRIBUTING. A repo whose own page feeds several pages for different readers, this project's own case, got a third hero layout, `pages`, alongside the existing fan and before-after ones, and the rebuild test started reading every field that layout's spec can hold. The tidy-inbox example was reshaped to match. Merged as pull request 7, install-step, and pull request 8, shape-0.4.
+The README's shape changed to three pages feeding two readers: the README stayed the person's page, while commands, settings, workflows, badge recipes, the architecture diagram and the agent block all moved into CONTRIBUTING. A repo whose own page feeds several pages for different readers, this project's own case, got a third hero layout, `pages`, alongside the existing fan and before-after ones, and the rebuild test started reading every field that layout's spec can hold. The tidy-inbox example was reshaped to match. Merged as pull request 8. Pull request 7 taught the install rule that a clone and build, or a download, is an install step.
 
 ## 0.3.0
 
-The rules started printing their own ids and levels as part of the rules command's output, the workflow template began pinning a commit of main instead of a moving branch, and a wrong command now exits with status 2 instead of silently doing nothing. The context gatherer, the hero generator and an early docs folder landed together, and the README-shape rules learned to read a README closer to the way GitHub itself renders it. Merged as pull request 5, leftovers, and pull request 6, ready.
+The rules started printing their own ids and levels as part of the rules command's output, the workflow template began pinning a commit of main instead of a moving branch, and a wrong command now exits with status 2 instead of silently doing nothing. The hero generator moved into the skill folder, the context gatherer was hardened, and the rules learned to read a README the way GitHub renders it. Merged as pull request 5, leftovers, and pull request 6, ready.
 
 ## 0.2.0
 

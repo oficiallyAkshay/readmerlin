@@ -3,7 +3,7 @@ name: readmerlin
 description: Write or rewrite a repo's README, CONTRIBUTING and docs so the README leads with the value to the reader, shows instead of narrates, and passes an honesty check, while CONTRIBUTING and docs carry what the agent needs. Use when the user asks for a README, a repo landing page, a rewrite of an existing README, or says a README is too long, too code-centric or unclear. Also use to check a README against the rules.
 license: MIT
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
   peers: herofold for the hero graphic, archify for the architecture diagram in CONTRIBUTING
 ---
 
