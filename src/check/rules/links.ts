@@ -103,6 +103,10 @@ function saveCache(c: Record<string, CacheEntry>): void {
 
 const UA = "readmerlin link check (+https://github.com/oficiallyAkshay/readmerlin)";
 
+// A host that returns one of these to an automated request is refusing the bot, not saying the link is dead.
+// The link exists but was not verified, so this stays a warning rather than a hard fail.
+const REFUSED_STATUSES = new Set([401, 403, 405, 429, 999]);
+
 /** HEAD first, GET on refusal, one retry on network error. Returns the status, 0 on a network failure. */
 export async function probe(fetchFn: typeof fetch, url: string, timeoutMs = 15000): Promise<number> {
   const attempt = async (method: "HEAD" | "GET") => {
@@ -112,9 +116,14 @@ export async function probe(fetchFn: typeof fetch, url: string, timeoutMs = 1500
   };
   for (let i = 0; i < 2; i++) {
     try {
-      let status = await attempt("HEAD");
-      if (status === 405 || status === 403 || status === 404 || status === 501 || status === 400) status = await attempt("GET");
-      return status;
+      const first = await attempt("HEAD");
+      if (first !== 405 && first !== 403 && first !== 404 && first !== 501 && first !== 400) return first;
+      const retry = await attempt("GET");
+      // The GET retry exists for a host that mishandles HEAD, not to relitigate a status HEAD already proved.
+      // A refusal from the retry only wins when HEAD's own status was itself ambiguous (a refusal, not a definitive failure);
+      // a definitive failure such as 404 stays definitive even when the GET retry comes back refused.
+      if (REFUSED_STATUSES.has(retry) && !REFUSED_STATUSES.has(first)) return first;
+      return retry;
     } catch {
       if (i === 1) return 0;
     }
@@ -135,10 +144,6 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R
   );
   return out;
 }
-
-// A host that returns one of these to an automated request is refusing the bot, not saying the link is dead.
-// The link exists but was not verified, so this stays a warning rather than a hard fail.
-const REFUSED_STATUSES = new Set([401, 403, 405, 429, 999]);
 
 export const externalLinks: Rule = {
   id: "links/external",
