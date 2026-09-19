@@ -54,6 +54,8 @@ What leaves the machine, and the guard for each:
 
 For a repo with no registry package, clones are the only count there is. `init-workflow --clones` also writes `.github/workflows/clonometer.yml`, the consumer workflow of [clonometer](https://github.com/oficiallyAkshay/clonometer) pinned to its current commit. It needs a `TRAFFIC_TOKEN` secret: a fine-grained token scoped to the one repository, with Contents write and Administration read. A private repository needs clonometer's gist storage instead, set by hand from its README, since the branch's numbers file is not public.
 
+This repo's own `.github/workflows/ci.yml` runs a `checks` job that scans the full history for secrets, a `test` job that runs the node matrix, typecheck, build, the test suite and the self check, and a `ci` gate job that needs both and only passes when every job it needs succeeded. Branch protection requires only the `ci` job, so that gate is the one check to keep green. Dependabot, configured in `.github/dependabot.yml`, opens weekly pull requests for GitHub Actions and for npm dependencies so the workflow pins and dev tooling do not go stale.
+
 ## Badge recipes
 
 After the first clonometer run, the numbers sit on the `badges` branch. Replace owner and repo:
