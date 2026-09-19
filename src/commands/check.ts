@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { extname, join, resolve } from "node:path";
+import { extname, join, relative, resolve } from "node:path";
 import { check, type CheckOptions } from "../check/index.js";
 import { gitRoot } from "../check/doc.js";
 import { formatResults } from "../check/format.js";
@@ -46,7 +46,8 @@ export async function runCheck(files: string[], opts: RunCheckOptions): Promise<
     repoRoot ??= expanded.root;
   }
   const results: CheckResult[] = [];
-  for (const file of list) results.push(await check(file, { ...opts, repoRoot }));
+  // Reports name a file the way a person wrote it, relative to where the command runs.
+  for (const file of list) results.push({ ...(await check(file, { ...opts, repoRoot })), file: relative(process.cwd(), resolve(file)) || file });
   process.stdout.write(formatResults(results, opts.format));
   // Only where a person or their agent reads the output, and only when the network is allowed.
   if (opts.format === "text" && opts.links) {

@@ -195,7 +195,7 @@ const RAW_BADGE_RE = /https?:\/\/(img\.shields\.io|badgen\.net)\/\S+/i;
 export const noRawUrls: Rule = {
   id: "badges/shown-as-badges",
   level: "fail",
-  pages: true,
+  // README only: a recipe template on CONTRIBUTING or a docs page is exactly where a raw badge URL belongs.
   description: "A badge URL appears only as the badge itself, linked",
   run: ({ doc }) => {
     const out: Array<{ message: string; line?: number; repair: string }> = [];
