@@ -108,4 +108,27 @@ describe("the repo's own pages", () => {
     expect(results.length).toBeGreaterThanOrEqual(2);
     for (const r of results) expect(r.fails, `${r.file} has a fail`).toBe(0);
   });
+
+  it("--pages lists every docs page, README and CONTRIBUTING", () => {
+    const { files } = expandPages(REPO_ROOT);
+    const rel = files.map((f) => f.slice(REPO_ROOT.length + 1));
+    expect(rel).toContain("README.md");
+    expect(rel).toContain(join(".github", "CONTRIBUTING.md"));
+    const docsPages = [
+      "README.md",
+      "changelog.md",
+      "examples.md",
+      join("guides", "keep-it-true.md"),
+      join("guides", "write-a-readme.md"),
+      join("reference", "check.md"),
+      join("reference", "context.md"),
+      join("reference", "hero-spec.md"),
+      join("reference", "init-workflow.md"),
+      join("reference", "rule-ids.md"),
+      join("reference", "rules.md"),
+      join("reference", "settings.md"),
+    ];
+    for (const p of docsPages) expect(rel).toContain(join("docs", p));
+    expect(rel).toHaveLength(2 + docsPages.length);
+  });
 });
