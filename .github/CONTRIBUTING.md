@@ -20,9 +20,11 @@ With `readmerlin` standing for `node skills/readmerlin/scripts/readmerlin.mjs`:
 ```text
 readmerlin context [dir] --format md|json
 readmerlin rules
-readmerlin check [README.md] --format text|github|json [--no-links] [--no-exec]
+readmerlin check [file...] --format text|github|json [--pages] [--no-links] [--no-exec]
 readmerlin init-workflow [dir] [--clones]
 ```
+
+`check` takes one file or several, such as `check README.md .github/CONTRIBUTING.md docs/guide.md`, and reports each in turn. `--pages` checks README.md, CONTRIBUTING and every docs page instead, whichever of them exist.
 
 Exit codes: 0 clean or warnings only, 1 any fail, 2 a wrong command or a tool failure.
 

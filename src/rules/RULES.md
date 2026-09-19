@@ -103,6 +103,8 @@ CONTRIBUTING, under the .github folder: commands, settings, workflows, badge rec
 
 Docs: guides, one per workflow; reference, one page per command with its flags and settings; the rule ids and levels; examples; benchmarks or evals, when the repo has any; and a changelog.
 
+`check --pages` holds CONTRIBUTING and every docs page to links, badges, privacy and plain punctuation, never to the README's section shape.
+
 ## Specs the check accepts beside an SVG
 
 - A hero: `<name>.hero.json`. The check reads it and fails a hero that does not show every label the spec names. Any other `<name>.<kind>.json` beside a hero passes spec-beside but is not read.
