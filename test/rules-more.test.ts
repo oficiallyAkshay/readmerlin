@@ -182,4 +182,52 @@ describe("links/external", () => {
       vi.unstubAllGlobals();
     }
   });
+  it("warns, not fails, on a host that refuses an automated request, and keeps a genuine 404 and a network error as fails", async () => {
+    clearCache();
+    const stub = vi.fn(async (url: string) => {
+      if (url.includes("blocked")) return new Response(null, { status: 403 });
+      if (url.includes("dead")) return new Response(null, { status: 404 });
+      if (url.includes("unreachable")) throw new Error("offline");
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal("fetch", stub);
+    try {
+      const dir = repo(
+        HERO +
+          "\n" +
+          QUICK +
+          "\n## Notes\n\n- [blocked](https://readmerlin-test.example/blocked-link-d4) [dead](https://readmerlin-test.example/dead-link-d4) [unreachable](https://readmerlin-test.example/unreachable-link-d4) [ok](https://readmerlin-test.example/ok-link-d4)\n",
+      );
+      const r = await run(dir, { links: true });
+      const findings = r.findings.filter((f) => f.id === "links/external");
+      const blocked = findings.find((f) => /blocked-link-d4/.test(f.message));
+      expect(blocked?.level).toBe("warn");
+      expect(blocked?.message).toMatch(/refused an automated request.*status 403/);
+      const dead = findings.find((f) => /dead-link-d4/.test(f.message));
+      expect(dead?.level).toBe("fail");
+      expect(dead?.message).toMatch(/answers 404/);
+      const unreachable = findings.find((f) => /unreachable-link-d4/.test(f.message));
+      expect(unreachable?.level).toBe("fail");
+      expect(unreachable?.message).toMatch(/answers with a network error/);
+      expect(findings.some((f) => /ok-link-d4/.test(f.message))).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+  it("does not cache a refused link as verified, so it is rechecked next run", async () => {
+    clearCache();
+    let calls = 0;
+    const stub = vi.fn(async () => { calls++; return new Response(null, { status: 403 }); });
+    vi.stubGlobal("fetch", stub);
+    try {
+      const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n- [a](https://readmerlin-test.example/refused-cache-d4)\n");
+      await run(dir, { links: true });
+      const afterFirst = calls;
+      await run(dir, { links: true });
+      // Each run probes the url (HEAD, then a GET retry since 403 triggers one) instead of reusing a cached "ok".
+      expect(calls).toBe(afterFirst * 2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

@@ -10,6 +10,8 @@ Reads one or more markdown pages and reports every rule finding against each one
 
 `--format text|github|json`, default `text`. `--config <file>`, the path to a readmerlin.json, default `readmerlin.json` at the repo root. `--pages`, checks `README.md`, `AGENTS.md` when the repo has one, whichever of `.github/CONTRIBUTING.md` or `CONTRIBUTING.md` exists, and every markdown file under `docs`, in place of any given files. `--no-links`, skips every external link and badge logo request. `--no-exec`, never runs a count-source command from readmerlin.json.
 
+An external link that answers 401, 403, 405, 429 or 999 gets a warning, not a fail: the host refused the automated HEAD/GET request rather than saying the link is dead, as npmjs.com's 403 to a bot does. A 404, a 410, or a network error still fails.
+
 ## Exit codes
 
 0 when every checked page is clean or carries only warnings. 1 when any page has a fail. 2 when the command line itself is wrong, such as an unknown flag or an unrecognised `--format` value.
