@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, extname } from "node:path";
 import { imageSize } from "image-size";
-import { collectImages, decodeEntities, localPath as repoPath } from "../util.js";
+import { attr, collectImages, decodeEntities, localPath as repoPath } from "../util.js";
 import type { Doc, Rule } from "../types.js";
 
 const isRemote = (s: string) => /^(https?:)?\/\//i.test(s) || /^data:/i.test(s);
@@ -147,9 +147,10 @@ function parseSvg(text: string): { vb?: { x: number; y: number; w: number; h: nu
   const vbm = /viewBox\s*=\s*"([^"]+)"/i.exec(text);
   const vbParts = vbm ? vbm[1].trim().split(/[\s,]+/).map(Number) : [];
   const vb = vbParts.length === 4 ? { x: vbParts[0], y: vbParts[1], w: vbParts[2], h: vbParts[3] } : undefined;
+  // Reuses util.ts's own attribute reader instead of a second copy of the same regex.
   const num = (tag: string, name: string) => {
-    const m = new RegExp(`\\b${name}\\s*=\\s*"([^"]+)"`).exec(tag);
-    return m ? parseFloat(m[1]) : undefined;
+    const v = attr(tag, name);
+    return v === undefined || v === "" ? undefined : parseFloat(v);
   };
   // Walk g and rect tags in order. A rect under a transformed group, or with its own transform, is placed by the transform, so it is not measured.
   const rects: Box[] = [];

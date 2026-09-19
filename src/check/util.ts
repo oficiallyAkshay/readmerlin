@@ -87,7 +87,10 @@ export function* proseLines(doc: Doc): Generator<[number, string]> {
   for (let i = 0; i < doc.lines.length; i++) if (!fences.has(i + 1)) yield [i, doc.lines[i]];
 }
 
-function attr(tag: string, name: string): string | undefined {
+// Shared by collectImages below (every attribute an <img> tag carries) and by
+// visuals.ts's own SVG tag reader (numeric attributes only, reusing this
+// instead of a second attribute regex for the same shape of markup).
+export function attr(tag: string, name: string): string | undefined {
   const m = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(tag);
   return m ? decodeEntities(m[1] ?? m[2] ?? m[3]) : undefined;
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+An ossemble pass over this repo closed its two open gaps: a pre-commit hook now runs gitleaks locally, matching the full-history scan CI already ran, and CI runs it too. Dependabot now groups its weekly GitHub Actions updates into one pull request, the way it already grouped npm. The comparison rules in privacy.ts now share one table walker instead of three, the section rules in shape.ts share one top-level-section reader, and visuals.ts reuses util.ts's own attribute reader instead of a second copy of the same regex. CONTRIBUTING now points to RULES.md for the hero and spec-beside description instead of repeating it.
+
 ## 0.8.0
 
 The agent block now lives in AGENTS.md at the repo root, under forty lines, instead of a "For agents" section in CONTRIBUTING: the shape/agents-in-contributing rule checks AGENTS.md's length and fails a CONTRIBUTING that still carries the section, `check --pages` reads AGENTS.md when the repo has one, and context lists it the way it lists a workflow. This repo's own agent block moved there from `.github/CONTRIBUTING.md`. The works-with row now says "Works with" once per row instead of on every badge: each host badge is message-only, a logo and the host name, so `hostBadgeSrc` drops the repeated label.

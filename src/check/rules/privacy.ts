@@ -53,10 +53,20 @@ function comparisonTables(doc: Doc): Table[] {
   return doc.sections.filter((s) => COMPARE_TITLE.test(s.title)).flatMap((s) => s.nodes.filter((n): n is Table => n.type === "table"));
 }
 
+/** Walks every comparison table in `doc`, collecting whatever `fn` finds in each. The three comparison rules share this instead of each re-filtering `doc.sections` for tables. */
+function forEachComparisonTable<T>(doc: Doc, fn: (t: Table) => T[]): T[] {
+  return comparisonTables(doc).flatMap(fn);
+}
+
 /** Header cells that name a column. The corner cell above the row labels is empty and does not count. */
 function columns(t: Table): TableCell[] {
   const cells = t.children[0]?.children ?? [];
   return cells.filter((c, i) => i > 0 || toString(c).trim() !== "");
+}
+
+/** Data rows, the row labels' own column excluded, so a rule only sees the boolean or value cells. */
+function dataCellRows(t: Table): TableCell[][] {
+  return t.children.slice(1).map((row) => row.children.slice(1));
 }
 
 const linkOf = (c: TableCell): string | undefined => {
@@ -72,7 +82,7 @@ export const comparisonLinks: Rule = {
   level: "warn",
   description: "Comparison columns are the real alternatives, each header a link to its repo",
   run: ({ doc, config }) =>
-    comparisonTables(doc).flatMap((t) => [
+    forEachComparisonTable(doc, (t) => [
       ...specFindings(t, doc.repoRoot, config.compare),
       ...columns(t).flatMap((c) => {
         const text = toString(c).trim();
@@ -116,14 +126,13 @@ export const comparisonProductFirst: Rule = {
     const title = h1 ? (h1.type === "html" ? (/<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(h1.value)?.[1] ?? "").replace(/<[^>]+>/g, "") : toString(h1)) : "";
     const names = [remote.name, title.replace(/[^\p{L}\p{N}\s._-]/gu, "").trim()].filter((n): n is string => !!n).map((n) => n.toLowerCase());
     if (names.length === 0) return [];
-    const out = [];
-    for (const t of comparisonTables(doc)) {
+    return forEachComparisonTable(doc, (t) => {
       const first = columns(t)[0];
-      if (!first) continue;
+      if (!first) return [];
       const text = `${toString(first)} ${linkOf(first) ?? ""}`.toLowerCase();
-      if (!names.some((n) => text.includes(n))) out.push({ message: "The first comparison column is not this project.", line: first.position?.start.line, repair: "Put the product first, then the alternatives." });
-    }
-    return out;
+      if (!names.some((n) => text.includes(n))) return [{ message: "The first comparison column is not this project.", line: first.position?.start.line, repair: "Put the product first, then the alternatives." }];
+      return [];
+    });
   },
 };
 
@@ -132,14 +141,11 @@ export const comparisonYesNo: Rule = {
   level: "fail",
   description: "A boolean comparison cell is \u2705 or \u274c",
   run: ({ doc }) => {
-    const out = [];
-    for (const t of comparisonTables(doc)) {
-      for (const row of t.children.slice(1)) {
-        for (const c of row.children.slice(1)) {
-          if (/^(yes|no)\b/i.test(toString(c).trim())) out.push({ message: `Comparison cell says "${toString(c).trim()}".`, line: c.position?.start.line, repair: "Use \u2705 or \u274c. Any other cell is one or two words." });
-        }
-      }
-    }
+    const out = forEachComparisonTable(doc, (t) =>
+      dataCellRows(t).flatMap((cells) =>
+        cells.flatMap((c) => (/^(yes|no)\b/i.test(toString(c).trim()) ? [{ message: `Comparison cell says "${toString(c).trim()}".`, line: c.position?.start.line, repair: "Use \u2705 or \u274c. Any other cell is one or two words." }] : [])),
+      ),
+    );
     for (const s of doc.sections.filter((x) => COMPARE_TITLE.test(x.title))) {
       for (const n of s.nodes) {
         if (n.type === "html" && /<td\b[^>]*>\s*(yes|no)\s*<\/td>/i.test(n.value)) out.push({ message: "Comparison cell says Yes or No.", line: n.position?.start.line, repair: "Use \u2705 or \u274c. Any other cell is one or two words." });
