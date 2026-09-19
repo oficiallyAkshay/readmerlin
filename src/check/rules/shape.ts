@@ -125,9 +125,10 @@ export const enableStep: Rule = {
     const early = doc.sections.slice(0, 4).flatMap((s) => s.nodes).concat(doc.hero);
     let found = false;
     for (const n of early) {
-      visit({ type: "root", children: [n] } as never, (node: { type: string; value?: string }) => {
-        if ((node.type === "code" || node.type === "inlineCode") && INSTALL_RE.test(node.value ?? "")) found = true;
-        if (node.type === "html" && /<code>[^<]*<\/code>/.test(node.value ?? "") && INSTALL_RE.test(node.value ?? "")) found = true;
+      // A code, inlineCode or html node from a real parsed tree always carries a value.
+      visit({ type: "root", children: [n] } as never, (node: { type: string; value: string }) => {
+        if ((node.type === "code" || node.type === "inlineCode") && INSTALL_RE.test(node.value)) found = true;
+        if (node.type === "html" && /<code>[^<]*<\/code>/.test(node.value) && INSTALL_RE.test(node.value)) found = true;
       });
       // The sentence may sit in a paragraph, a list item or an html block.
       if (INSTALL_PROSE_RE.test(toString(n).replace(/<[^>]+>/g, " "))) found = true;

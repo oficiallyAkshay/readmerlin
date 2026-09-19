@@ -1,6 +1,6 @@
 {
   "name": "readmerlin",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "description": "An agent skill that writes value-first READMEs for skill, agent and MCP server repos, and holds them to their rules.",
   "license": "MIT",
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "check": "node skills/readmerlin/scripts/readmerlin.mjs check README.md",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.5.1",
+    "@vitest/coverage-v8": "^5.0.1",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"

@@ -39,6 +39,8 @@ export const rootFiles: Rule = {
       try {
         names = readdirSync(doc.dir).filter((n) => n !== ".git" && n !== "node_modules" && n !== ".DS_Store");
       } catch {
+        // The folder existed moments ago, when the file inside it was read; only an OS-level failure gets here.
+        /* v8 ignore next */
         return [];
       }
     }
@@ -60,7 +62,8 @@ function forEachComparisonTable<T>(doc: Doc, fn: (t: Table) => T[]): T[] {
 
 /** Header cells that name a column. The corner cell above the row labels is empty and does not count. */
 function columns(t: Table): TableCell[] {
-  const cells = t.children[0]?.children ?? [];
+  // A parsed GFM table always has at least a header row.
+  const cells = t.children[0].children;
   return cells.filter((c, i) => i > 0 || toString(c).trim() !== "");
 }
 
@@ -109,7 +112,8 @@ function specFindings(t: Table, root: string, spec: { repos?: string[]; rows?: s
     if (want.join("|") !== got.join("|")) out.push({ message: `Comparison columns are ${got.join(", ")}, the spec says ${want.join(", ")}.`, line: t.position?.start.line, repair });
   }
   if (spec?.rows?.length) {
-    const got = t.children.slice(1).map((r) => toString(r.children[0] ?? "").trim().toLowerCase());
+    // A parsed GFM table row always has at least one cell.
+    const got = t.children.slice(1).map((r) => toString(r.children[0]).trim().toLowerCase());
     const want = spec.rows.map((x) => x.toLowerCase());
     if (want.join("|") !== got.join("|")) out.push({ message: `Comparison rows are ${got.join(", ")}, the spec says ${want.join(", ")}.`, line: t.position?.start.line, repair });
   }

@@ -8,5 +8,16 @@ export default defineConfig({
     __WORKFLOW_YML__: JSON.stringify(readFileSync("templates/readme-check.yml", "utf8")),
     __CLONES_YML__: JSON.stringify(readFileSync("templates/clonometer.yml", "utf8")),
   },
-  test: { include: ["test/**/*.test.ts"] },
+  test: {
+    include: ["test/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      thresholds: {
+        statements: 99,
+        branches: 98,
+        functions: 100,
+        lines: 99,
+      },
+    },
+  },
 });

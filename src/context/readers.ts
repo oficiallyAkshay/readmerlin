@@ -101,6 +101,8 @@ export function readNamedDocs(root: string, dirs: string[]): NamedDoc[] {
     if (!existsSync(full)) continue;
     for (const rel of walk(full, 2, (_r, name) => name.endsWith(".md") && name !== "README.md")) {
       const path = posix(join(d, rel));
+      // walk() already resolved this same path a moment ago; only a concurrent delete gets the fallback here.
+      /* v8 ignore next */
       const real = realpathOr(join(root, path)) ?? path;
       if (seen.has(real)) continue;
       seen.add(real);
