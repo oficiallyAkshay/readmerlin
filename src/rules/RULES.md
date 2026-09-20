@@ -44,6 +44,7 @@ Hero, Features, In action, Fit, How it compares, Security and limits, Badges, in
 - Badge row: licence, downloads or clones, and the product's own live numbers. A repo with no registry package carries a clone count from clonometer, since clones are its only count; a published package lets its downloads badge do that job. The row follows the repo's shape, as `readmerlin context` prints it, so a clone badge ships before its first count exists. A badge that states a category, such as "agent skill", carries no fact and stays off.
 - Works-with row: badge rows under the first, each opening with the plain words "Works with" once, then one badge per host the skill runs in, each linked to that host, six to a row at most and split evenly. The hosts come from readmerlin.json `worksWith`, or from the hosts context detects.
 - Number format in a badge: short form above a thousand, such as 1.2k. The label carries the unit.
+- A badge from a host with no shields.io mirror, such as the OpenSSF Best Practices badge, the Scorecard badge or a codecov.io badge, is still a badge: it counts in the badge row and the row-length limit, and never counts as a second hero visual. It carries no logo parameter, since none exists for that host, so the logo rule leaves it alone.
 - The install step is one plain sentence in Fit, for a repo that has one. The product's own page carries it in CONTRIBUTING instead, and drops Fit when the page itself is the proof and the scope is obvious.
 - An example artifact, when the repo commits one, gets one bold centered link.
 

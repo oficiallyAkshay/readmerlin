@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "n
 import { join, relative, sep } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { stabilize } from "../text.js";
+import { isBadge } from "../check/util.js";
 import { firstParagraph, headingsOf, splitFrontmatter } from "./frontmatter.js";
 import type { BadgeSpec, McpFileInfo, NamedDoc, PackageInfo, PluginInfo, ReadmeInfo, SkillInfo, WorkflowInfo } from "./types.js";
 
@@ -204,10 +205,13 @@ export function readReadme(root: string): ReadmeInfo {
   const title = (h1Body !== undefined ? stabilize(h1Body, /<[^>]+>/g, "").trim() : undefined) ?? /^#\s+(.+)$/m.exec(body)?.[1]?.trim();
   const tagline = /<b>([^<]+)<\/b>/i.exec(body)?.[1]?.trim() ?? /^\*\*([^*]+)\*\*$/m.exec(body)?.[1]?.trim();
   const images = [...body.matchAll(/(?:<img[^>]+src="([^"]+)"|!\[[^\]]*\]\(([^)\s]+))/g)].map((m) => m[1] ?? m[2]);
-  const badges = images.filter((s) => /shields\.io|badge|\/actions\/workflows\/.*\.svg/.test(s)).length;
+  // The same badge-host allowlist the check runs on: shields.io and its mirrors, plus a handful of
+  // hosts with no shields mirror at all (OpenSSF Best Practices, Scorecard, codecov.io), so a badge
+  // from any of those is counted here and left out of the plain image list the same way.
+  const badges = images.filter((s) => isBadge(s)).length;
   const prose = body.replace(/<[^>]+>/g, " ").replace(/```[\s\S]*?```/g, " ").replace(/!\[[^\]]*\]\([^)]*\)/g, " ");
   const words = prose.split(/\s+/).filter((w) => /\w/.test(w)).length;
-  return { exists: true, title, tagline, headings: headingsOf(body), badges, images: images.filter((s) => !/shields\.io|badge/.test(s)), words, text: body.trim() };
+  return { exists: true, title, tagline, headings: headingsOf(body), badges, images: images.filter((s) => !isBadge(s)), words, text: body.trim() };
 }
 
 const HOST_HINTS: Array<[RegExp, string]> = [
