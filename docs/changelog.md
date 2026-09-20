@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+`init-workflow` now writes `exec: "true"` into the readme-check workflow it creates, so the count commands behind every count badge actually run in the consumer's own CI; seven repos had to flip the input by hand on 2026-09-20 because the template left it at the action's bare default of off. The commands come from that repo's own readmerlin.json, so in that repo's own CI they are already trusted; the action's own default stays off, for a workflow checking a different repo's README from outside it.
+
+The badge detector now knows a handful of hosts with no shields.io mirror: the OpenSSF Best Practices badge, the Scorecard badge and a codecov.io badge. Each now counts as a badge everywhere a badge is checked, in the badge row and the row-length limit, is exempt from badges/logo-present since no shields logo parameter exists for it, and never counts as a second hero visual; boomerang's OpenSSF badge had to move below the fold on 2026-09-20 because the checker counted it as a second hero graphic. `readmerlin context`'s own badge count and image list now read the same allowlist instead of a separate, looser check.
+
 ## 1.0.2
 
 Closes all 16 CodeQL alerts on the incomplete-multi-character-sanitization and incomplete-url-substring-sanitization queries. Every regex-based HTML tag, comment, CDATA and style-block strip now goes through a shared `stabilize()` helper that reapplies the removal until the string stops changing, instead of trusting a single pass; `stabilize()` takes the regex and replacement as data and calls `.replace()` itself inside its own loop, so CodeQL's incomplete-multi-character-sanitization query recognizes every call site as the pattern it documents. registry.ts's npm lookup URL now percent-encodes every slash in a package name with `replaceAll` instead of a single-occurrence replace. Hostname checks in tests now parse the URL and compare its hostname instead of testing a substring of the raw URL. Eighteen new regression tests cover the fixes; coverage stays at 100 on every metric.
