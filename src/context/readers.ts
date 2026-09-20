@@ -201,7 +201,7 @@ export function readReadme(root: string): ReadmeInfo {
   const text = readText(root, file);
   const { body } = splitFrontmatter(text);
   const h1Body = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(body)?.[1];
-  const title = (h1Body !== undefined ? stabilize(h1Body, (t) => t.replace(/<[^>]+>/g, "")).trim() : undefined) ?? /^#\s+(.+)$/m.exec(body)?.[1]?.trim();
+  const title = (h1Body !== undefined ? stabilize(h1Body, /<[^>]+>/g, "").trim() : undefined) ?? /^#\s+(.+)$/m.exec(body)?.[1]?.trim();
   const tagline = /<b>([^<]+)<\/b>/i.exec(body)?.[1]?.trim() ?? /^\*\*([^*]+)\*\*$/m.exec(body)?.[1]?.trim();
   const images = [...body.matchAll(/(?:<img[^>]+src="([^"]+)"|!\[[^\]]*\]\(([^)\s]+))/g)].map((m) => m[1] ?? m[2]);
   const badges = images.filter((s) => /shields\.io|badge|\/actions\/workflows\/.*\.svg/.test(s)).length;

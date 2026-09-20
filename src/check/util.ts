@@ -194,7 +194,7 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const inner = m[3];
-    const strippedInner = stabilize(inner, (t) => t.replace(/<[^>]+>/g, ""));
+    const strippedInner = stabilize(inner, /<[^>]+>/g, "");
     const imageOnly = /<img\b/i.test(inner) && !strippedInner.trim();
     if (imageOnly && !all) continue;
     const line = lineAt(doc, m.index);
@@ -207,7 +207,7 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
 /** The anchor GitHub gives a heading: lower-cased, punctuation dropped, spaces to hyphens. A leading emoji leaves a leading hyphen. */
 // GitHub's anchor: lower case, every character that is not a letter, a number, a mark, a space, a hyphen or an underscore dropped, and each space turned into a hyphen. Two spaces give two hyphens.
 export function slug(heading: string): string {
-  return stabilize(heading.toLowerCase(), (t) => t.replace(/<[^>]+>/g, ""))
+  return stabilize(heading.toLowerCase(), /<[^>]+>/g, "")
     .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, "")
     .replace(/\s/g, "-");
 }

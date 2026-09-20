@@ -44,13 +44,12 @@ const findingsFor = async (dir: string, id: string, opts?: { links?: boolean }) 
 describe("text: stabilize", () => {
   it("removes a match that a single replace pass leaves reformed by the characters it splices together", () => {
     // The textbook incomplete-sanitization witness: one pass over "aabb" deletes only the
-    // middle "ab", leaving the outer "a" and "b" newly adjacent -- reforming "ab".
-    const stripAB = (s: string) => s.replace(/ab/g, "");
-    expect(stripAB("aabb")).toBe("ab");
-    expect(stabilize("aabb", stripAB)).toBe("");
+    // middle "ab", leaving the outer "a" and "b" newly adjacent -- reforming "ab". A single
+    // `.replace()` call, run once, cannot see that: it has to run again to catch it.
+    expect(stabilize("aabb", /ab/g, "")).toBe("");
   });
   it("returns the input unchanged when nothing in it ever matches", () => {
-    expect(stabilize("plain text", (s) => s.replace(/<[^>]+>/g, ""))).toBe("plain text");
+    expect(stabilize("plain text", /<[^>]+>/g, "")).toBe("plain text");
   });
 });
 
