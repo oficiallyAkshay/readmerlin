@@ -106,7 +106,7 @@ describe("expandPages: no .git anywhere, no README, and a non-markdown docs file
 });
 
 describe("init-workflow: git fallback with a failed ref listing, the default fetch, and a real remote", () => {
-  it("returns undefined when the git-upload-pack fallback also answers with an error status", async () => {
+  it("returns undefined when the tag list fallback also answers with an error status", async () => {
     const dir = repo();
     const fetchFn = (async (url: string) => (/api\.github\.com/.test(url) ? new Response(null, { status: 500 }) : new Response(null, { status: 404 }))) as unknown as typeof fetch;
     await runInitWorkflow(dir, { fetch: fetchFn });
