@@ -139,9 +139,17 @@ export function collectImages(doc: Doc): ImageRef[] {
   visit(doc.tree as Root, (node, _index, parent) => {
     if (node.type !== "image" && node.type !== "imageReference") return;
     const src = node.type === "image" ? node.url : defs.get(node.identifier.toLowerCase());
+    // remark-parse (mdast-util-from-markdown) only ever produces an imageReference node when a
+    // matching definition exists somewhere in the same tree; definitions() scans that same tree,
+    // so this lookup cannot miss given the parser that every caller here uses.
+    /* v8 ignore next */
     if (src === undefined) return;
     // remark-parse always attaches a position to an image node it parses.
     const line = node.position!.start.line;
+    // mdast-util-from-markdown always sets .alt to a string (possibly "") for both an image and
+    // an imageReference node; the ?? "" only guards the mdast type, which allows null, and is
+    // never hit by anything remark-parse itself produces.
+    /* v8 ignore next */
     out.push({ src, alt: node.alt ?? "", line, inHero: line < heroEnd, linked: wrapped(parent?.type), html: false, badge: isBadge(src) });
   });
   // HTML images. Link wrapping: an <a that opens before the img and has not closed, or a markdown link around it.
@@ -172,6 +180,8 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
   visit(doc.tree as Root, (node, _i, parent) => {
     if (node.type !== "link" && node.type !== "linkReference") return;
     const href = node.type === "link" ? node.url : defs.get(node.identifier.toLowerCase());
+    // Same guarantee as collectImages above: a linkReference node only exists when defs() already has it.
+    /* v8 ignore next */
     if (href === undefined) return;
     // remark-parse always attaches a position to a link node it parses.
     const line = node.position!.start.line;

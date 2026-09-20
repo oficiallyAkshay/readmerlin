@@ -48,7 +48,11 @@ export async function runCheck(files: string[], opts: RunCheckOptions): Promise<
     repoRoot ??= expanded.root;
   }
   const results: CheckResult[] = [];
-  // Reports name a file the way a person wrote it, relative to where the command runs.
+  // Reports name a file the way a person wrote it, relative to where the command runs. The ||
+  // fallback only matters when relative() returns "", which needs resolve(file) === cwd; cwd is
+  // always a directory, and check() above would already have thrown reading it as a file, so
+  // this line is never reached with that fallback in play.
+  /* v8 ignore next */
   for (const file of list) results.push({ ...(await check(file, { ...opts, repoRoot })), file: relative(process.cwd(), resolve(file)) || file });
   process.stdout.write(formatResults(results, opts.format));
   // Only where a person or their agent reads the output, and only when the network is allowed.
