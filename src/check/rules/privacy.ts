@@ -128,7 +128,7 @@ export const comparisonProductFirst: Rule = {
   run: ({ doc }) => {
     const remote = remoteOf(doc.repoRoot);
     const h1 = doc.hero.find((n) => n.type === "heading") ?? doc.hero.find((n) => n.type === "html" && /<h1\b/i.test(n.value));
-    const title = h1 ? (h1.type === "html" ? stabilize(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(h1.value)?.[1] ?? "", (t) => t.replace(/<[^>]+>/g, "")) : toString(h1)) : "";
+    const title = h1 ? (h1.type === "html" ? stabilize(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(h1.value)?.[1] ?? "", /<[^>]+>/g, "") : toString(h1)) : "";
     const names = [remote.name, title.replace(/[^\p{L}\p{N}\s._-]/gu, "").trim()].filter((n): n is string => !!n).map((n) => n.toLowerCase());
     if (names.length === 0) return [];
     return forEachComparisonTable(doc, (t) => {
@@ -225,7 +225,7 @@ export const hostPathPointers: Rule = {
   run: ({ doc }) => {
     const out = [];
     for (const [i, line] of proseLines(doc)) {
-      if (/^\s*(<sub>)?\s*(install paths?|paths? per host|where (it|this) (lives|installs))/i.test(stabilize(line, (t) => t.replace(/<[^>]+>/g, "")))) out.push({ message: "Host path pointer line.", line: i + 1, repair: "The Runs on badges already link to each host's notes." });
+      if (/^\s*(<sub>)?\s*(install paths?|paths? per host|where (it|this) (lives|installs))/i.test(stabilize(line, /<[^>]+>/g, ""))) out.push({ message: "Host path pointer line.", line: i + 1, repair: "The Runs on badges already link to each host's notes." });
     }
     return out;
   },
