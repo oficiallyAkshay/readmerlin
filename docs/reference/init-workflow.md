@@ -1,6 +1,6 @@
 # init-workflow
 
-Writes `.github/workflows/readme-check.yml`, pinned to the commit its latest release tag points at, with a `# vX.Y.Z` comment naming that tag, so the pin passes a pinact-style verifiability check and the workflow always runs the exact code that release carries. An existing file of the same name is left alone and reported as already there rather than overwritten.
+Writes `.github/workflows/readme-check.yml`, pinned to the commit its latest release tag points at, with a `# vX.Y.Z` comment naming that tag, so the pin passes a pinact-style verifiability check and the workflow always runs the exact code that release carries. The workflow sets the action's `exec` input to `"true"`, so the count commands behind the repo's own count badges run in that repo's own CI; the action's own default keeps `exec` off, for a workflow that checks a different repo's README. An existing file of the same name is left alone and reported as already there rather than overwritten.
 
 ## Arguments
 

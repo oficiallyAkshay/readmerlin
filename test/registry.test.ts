@@ -69,6 +69,14 @@ describe("published packages", () => {
     expect(yml).toContain(`oficiallyAkshay/clonometer@${"b".repeat(40)}   # v1.0.0`);
     expect(yml).toContain("secrets.TRAFFIC_TOKEN");
   });
+  it("writes the readme-check workflow with exec turned on, so the consumer's own count commands run in its own trusted CI", async () => {
+    const d = dir({});
+    const fetchFn = (async () => new Response(null, { status: 500 })) as unknown as typeof fetch;
+    await runInitWorkflow(d, { fetch: fetchFn });
+    const yml = readFileSync(join(d, ".github/workflows/readme-check.yml"), "utf8");
+    expect(yml).toContain("with:");
+    expect(yml).toMatch(/\n\s*exec:\s*"true"/);
+  });
   it("falls back to the tag list when the latest release's tag_name is not a plain vX.Y.Z", async () => {
     const d = dir({});
     const sha = "f".repeat(40);

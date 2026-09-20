@@ -12,3 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oficiallyAkshay/readmerlin@<sha>   # <comment>
+        with:
+          # The count commands come from this repo's own readmerlin.json, so in this repo's own CI
+          # they are already trusted. The action's own default stays off, for a workflow that
+          # checks a different repo's README.
+          exec: "true"
