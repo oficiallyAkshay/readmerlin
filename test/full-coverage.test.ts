@@ -84,7 +84,8 @@ describe("links/external: a protocol-relative href", () => {
     try {
       const dir = repo(HERO + "\n" + QUICK + "\n## Notes\n\n- [a](//readmerlin-test.example/proto-rel-f6)\n");
       const findings = await findingsFor(dir, "links/external", { links: true });
-      expect(findings.some((f) => f.message.includes("https://readmerlin-test.example/proto-rel-f6"))).toBe(true);
+      expect(findings).toHaveLength(1);
+      expect(findings[0]?.message).toBe("Link answers 404: https://readmerlin-test.example/proto-rel-f6");
     } finally {
       vi.unstubAllGlobals();
       rmSync(CACHE_FILE, { force: true });
