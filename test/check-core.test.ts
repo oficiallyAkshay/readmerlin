@@ -6,7 +6,7 @@ import { check } from "../src/check/index.js";
 import { format, formatResults } from "../src/check/format.js";
 import { loadConfig, DEFAULT_CONFIG } from "../src/check/config.js";
 import { parseDoc } from "../src/check/doc.js";
-import { decodeEntities, localPath, collectImages, collectLinks, attr, safeDecode } from "../src/check/util.js";
+import { decodeEntities, localPath, collectImages, collectLinks, attr, safeDecode, isBadge } from "../src/check/util.js";
 
 function repo(files: Record<string, string> = {}): string {
   const dir = mkdtempSync(join(tmpdir(), "rm-core-"));
@@ -93,6 +93,19 @@ describe("util: localPath and safeDecode", () => {
   it("resolves a root-relative path from the repo root, not the file's folder", () => {
     const dir = repo({ "docs/a.md": "x", "b.md": "y" });
     expect(localPath(dir, "/b.md", join(dir, "docs"))).toBe(join(dir, "b.md"));
+  });
+});
+
+describe("util: isBadge host allowlist", () => {
+  it("knows the OpenSSF Best Practices badge, with or without a trailing slash or query", () => {
+    expect(isBadge("https://www.bestpractices.dev/projects/14723/badge")).toBe(true);
+    expect(isBadge("https://www.bestpractices.dev/projects/14723/badge/")).toBe(true);
+    expect(isBadge("https://www.bestpractices.dev/projects/14723")).toBe(false);
+  });
+  it("knows the Scorecard badge and a codecov.io badge, and still rejects an unrelated bestpractices.dev page", () => {
+    expect(isBadge("https://api.scorecard.dev/projects/github.com/o/r/badge")).toBe(true);
+    expect(isBadge("https://codecov.io/gh/o/r/graph/badge.svg?token=abc")).toBe(true);
+    expect(isBadge("https://www.bestpractices.dev/projects/14723/badge_static")).toBe(false);
   });
 });
 

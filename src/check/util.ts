@@ -54,8 +54,16 @@ export function maskedText(doc: Doc): string {
   return text;
 }
 
-export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|https?:\/\/[^"'\s)]*\/badge\/|badge\.svg|codecov\.io\/[^"'\s)]*\/graph\/badge|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|api\.scorecard\.dev\/|api\.securityscorecards\.dev\/|\/workflows\/[^"'\s)]*\.svg/i;
-export const isBadge = (src: string): boolean => BADGE_RE.test(src);
+// Hosts with no shields.io mirror, so a repo's own badge image is the only way to show them: the
+// OpenSSF Best Practices badge and the Scorecard badge, each an image at a /badge path with no
+// query string required, and a codecov.io badge (shields' own codecov mirror is already covered
+// by the shields.io branch above). Each counts as a badge wherever a badge is checked: it belongs
+// in the badge row, counts toward the row-length limit, is exempt from badges/logo-present since
+// no shields logo parameter exists for it, and never counts as a second hero visual.
+const BADGE_HOST_ALLOWLIST = /bestpractices\.dev\/projects\/\d+\/badge(?:[/?#]|$)|scorecard\.dev\/projects\/[^"'\s)]*\/badge(?:[/?#]|$)|codecov\.io\/[^"'\s)]*\/(?:graph\/)?badge/i;
+
+export const BADGE_RE = /img\.shields\.io|shields\.io|badgen\.net|https?:\/\/[^"'\s)]*\/badge\/|badge\.svg|img\.badgesize|deepwiki\.com\/badge|trendshift\.io\/api\/badge|api\.securityscorecards\.dev\/|\/workflows\/[^"'\s)]*\.svg/i;
+export const isBadge = (src: string): boolean => BADGE_RE.test(src) || BADGE_HOST_ALLOWLIST.test(src);
 
 export interface ImageRef {
   src: string;

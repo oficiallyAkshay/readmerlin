@@ -36,6 +36,11 @@ describe("shape/badges-in-hero, shape/hero-one-visual and shape/cta-link", () =>
     const dir = repo(HERO.replace("Add the tidy skill", '<p align="center"><b><a href="LICENSE">Second link</a></b></p>\n\nAdd the tidy skill') + "\n" + QUICK);
     expect(await idsOf(dir)).toContain("shape/cta-link");
   });
+  it("does not count an OpenSSF Best Practices badge or a Scorecard badge as a second hero visual", async () => {
+    const row = '<p align="center"><a href="https://www.bestpractices.dev/projects/1"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/1/badge"></a> <a href="https://scorecard.dev/viewer/?uri=github.com/o/r"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/o/r/badge"></a></p>\n\n';
+    const dir = repo(HERO.replace('<p align="center"><img alt="Receipts flow into one claim"', row + '<p align="center"><img alt="Receipts flow into one claim"') + "\n" + QUICK);
+    expect(await idsOf(dir)).not.toContain("shape/hero-one-visual");
+  });
 });
 
 describe("shape/enable-step through a raw html <code> block", () => {
