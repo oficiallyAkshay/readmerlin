@@ -1,6 +1,6 @@
 # init-workflow
 
-Writes `.github/workflows/readme-check.yml`, pinned to the commit its main branch currently points at, so the workflow always runs the exact code that commit carries. An existing file of the same name is left alone and reported as already there rather than overwritten.
+Writes `.github/workflows/readme-check.yml`, pinned to the commit its latest release tag points at, with a `# vX.Y.Z` comment naming that tag, so the pin passes a pinact-style verifiability check and the workflow always runs the exact code that release carries. An existing file of the same name is left alone and reported as already there rather than overwritten.
 
 ## Arguments
 
@@ -12,7 +12,7 @@ Writes `.github/workflows/readme-check.yml`, pinned to the commit its main branc
 
 ## Exit codes
 
-0 always. When GitHub cannot be reached to resolve the current commit, the workflow is still written with a placeholder in place of the commit, and a line tells the user to replace it before pushing.
+0 always. When GitHub cannot be reached to resolve the latest release, the workflow is still written with a `<sha>` placeholder and a `# vX.Y.Z, replace before pushing` comment in place of the pin, and a line tells the user to replace both before pushing.
 
 ## Output formats
 
