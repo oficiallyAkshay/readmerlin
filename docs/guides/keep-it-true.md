@@ -12,7 +12,7 @@ A rule at the fail level turns into a nonzero exit code the moment one finding r
 
 ## Pinning the action to a commit
 
-A repo that consumes readmerlin's own action rather than running the script by hand should pin it to one commit of this repository, never to a branch name, so the workflow always runs the exact code that commit carries. The init-workflow command does this for a new repo automatically: it asks GitHub for the commit its main branch currently points at and writes that commit into the workflow file it creates. Once the pin is in place, this repo's own Dependabot configuration opens a weekly pull request bumping it, along with every other GitHub Actions pin and npm dependency, so the pin ages instead of going stale unnoticed.
+A repo that consumes readmerlin's own action rather than running the script by hand should pin it to one commit of this repository, never to a branch name, with a version comment naming the tag that commit came from, so a tool like pinact can verify the pin and the workflow always runs the exact code that commit carries. The init-workflow command does this for a new repo automatically: it asks GitHub for this repository's latest release, resolves the commit that release's tag points at, and writes both the commit and a `# vX.Y.Z` comment into the workflow file it creates. Once the pin is in place, this repo's own Dependabot configuration opens a weekly pull request bumping it, along with every other GitHub Actions pin and npm dependency, so the pin ages instead of going stale unnoticed.
 
 ## What --no-links and exec do
 
