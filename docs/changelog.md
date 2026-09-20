@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+The first stable release. An `overrides` entry pins esbuild to 0.28.2, closing the Dependabot alert on the range tsup and vitest had pulled in (0.27.3-0.28.0, low severity, arbitrary file read from the dev server on Windows); `npm audit` now reports zero vulnerabilities, and build, typecheck, tests and the coverage floor all still pass.
+
 ## 0.8.3
 
 links/external no longer hard-fails a link whose host refuses an automated request: a blind validation run on exa-labs/exa-mcp-server turned up two npmjs.com links failing CI only because npmjs.com answers a bot's HEAD or GET with 403. A status of 401, 403, 405, 429 or 999 now warns instead, naming the status and saying the link was not verified; a genuine 404, a 410 or a network error still fails, and a refused result is never cached as verified.
