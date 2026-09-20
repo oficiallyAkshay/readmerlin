@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+`init-workflow` pins to the commit of the action's latest release now, not the commit its main branch happens to point at, and writes a `# vX.Y.Z` comment naming that release in place of the earlier fixed wording. pinact, run in consumer CI with `--verify`, fails a SHA pin whose comment does not name a tag that resolves to that commit; two consumer repos hit this today. The same fix applies to the clonometer workflow `--clones` writes. When GitHub cannot be reached, the workflow still gets the `<sha>` placeholder, now paired with a `vX.Y.Z, replace before pushing` comment instead of the earlier wording, so it is clear a real release tag is still needed before the workflow can pass.
+
 ## 1.0.0
 
 The first stable release. An `overrides` entry pins esbuild to 0.28.2, closing the Dependabot alert on the range tsup and vitest had pulled in (0.27.3-0.28.0, low severity, arbitrary file read from the dev server on Windows); `npm audit` now reports zero vulnerabilities, and build, typecheck, tests and the coverage floor all still pass.
