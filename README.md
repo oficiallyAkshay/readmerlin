@@ -64,4 +64,4 @@ No credential. The writing runs on your agent's own login. The check calls no mo
 - ❌ names a denylisted word in its output
 - ❌ sends telemetry
 
-By default the check fetches external links and badge logos, once a day per link; `--no-links` turns that off. By default it never runs the count commands in your config; the `exec` input turns them on. It needs Node 20 or newer. A private repository gets every check; its clone badge needs a clonometer gist.
+By default the check fetches external links and badge logos, once a day per link; `--no-links` turns that off. By default the action never runs the count commands in your config; the workflow init-workflow writes turns them on, since the commands come from your own readmerlin.json and run in your own CI. It needs Node 20 or newer. A private repository gets every check; its clone badge needs a clonometer gist.
