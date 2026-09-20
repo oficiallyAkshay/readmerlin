@@ -12,6 +12,6 @@ jobs:
   count:
     runs-on: ubuntu-latest
     steps:
-      - uses: oficiallyAkshay/clonometer@<sha>   # pinned commit
+      - uses: oficiallyAkshay/clonometer@<sha>   # <comment>
         with:
           token: ${{ secrets.TRAFFIC_TOKEN }}
