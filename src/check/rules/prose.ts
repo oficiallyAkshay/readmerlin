@@ -35,7 +35,10 @@ export const metaNarration: Rule = {
     for (const [i, line] of proseLines(doc)) {
       if (/^\s*<img|^\s*!\[|^\s*<!--/.test(line)) continue;
       // Quoted text is what the user says, not the README talking about itself.
-      const stripped = stabilize(line, (t) => t.replace(/alt="[^"]*"/g, "").replace(/!\[[^\]]*\]/g, "").replace(/<!--[\s\S]*?-->/g, "").replace(/"[^"]*"/g, ""));
+      const noAlt = stabilize(line, /alt="[^"]*"/g, "");
+      const noImg = stabilize(noAlt, /!\[[^\]]*\]/g, "");
+      const noComment = stabilize(noImg, /<!--[\s\S]*?-->/g, "");
+      const stripped = stabilize(noComment, /"[^"]*"/g, "");
       for (const [re, why] of META) {
         if (re.test(stripped)) {
           out.push({ message: `Line ${why}.`, line: i + 1, repair: "Cut it. The reader does not need the making-of." });
@@ -83,7 +86,7 @@ export const taglineRepeat: Rule = {
   description: "The opening paragraphs add to the tagline",
   run: ({ doc }) => {
     const html = doc.hero.filter((n) => n.type === "html").map((n) => (n as { value: string }).value).join("\n");
-    const bolds = [...html.matchAll(/<(b|strong)>([\s\S]*?)<\/\1>/gi)].map((m) => stabilize(m[2], (t) => t.replace(/<[^>]+>/g, "")));
+    const bolds = [...html.matchAll(/<(b|strong)>([\s\S]*?)<\/\1>/gi)].map((m) => stabilize(m[2], /<[^>]+>/g, ""));
     for (const p of paragraphs(doc.hero)) for (const c of p.children) if (c.type === "strong") bolds.push(toString(c));
     const tagline = bolds.flatMap((b) => sentences(b)).map(words).filter((w) => w.length >= 3);
     if (tagline.length === 0) return [];

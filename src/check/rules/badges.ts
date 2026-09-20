@@ -207,7 +207,7 @@ export const noRawUrls: Rule = {
       if ((node.type === "code" || node.type === "inlineCode") && RAW_BADGE_RE.test(node.value)) hit(node.position?.start.line);
       // A bare URL that GFM autolinks, or a link whose visible words are the URL.
       if (node.type === "link" && RAW_BADGE_RE.test(toString(node, { includeHtml: false }))) hit(node.position?.start.line);
-      if (node.type === "html" && RAW_BADGE_RE.test(stabilize(node.value, (t) => t.replace(/<!--[\s\S]*?-->/g, "").replace(/<[^>]+>/g, " ")))) hit(node.position?.start.line);
+      if (node.type === "html" && RAW_BADGE_RE.test(stabilize(stabilize(node.value, /<!--[\s\S]*?-->/g, ""), /<[^>]+>/g, " "))) hit(node.position?.start.line);
     });
     return out;
   },

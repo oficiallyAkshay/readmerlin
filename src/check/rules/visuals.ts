@@ -134,7 +134,9 @@ export const specAgrees: Rule = {
         continue;
       }
       // A label split across tspans is still one label, so those tags vanish before the others become line breaks.
-      const shown = decodeEntities(stabilize(readFileSync(p, "utf8"), (t) => t.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<\/?tspan\b[^>]*>/g, "").replace(/<[^>]+>/g, "\n")));
+      const noStyle = stabilize(readFileSync(p, "utf8"), /<style[\s\S]*?<\/style>/g, "");
+      const noTspan = stabilize(noStyle, /<\/?tspan\b[^>]*>/g, "");
+      const shown = decodeEntities(stabilize(noTspan, /<[^>]+>/g, "\n"));
       const missing = labels.filter((l) => !shown.includes(l));
       if (missing.length) out.push({ message: `${i.src} does not show what its spec names: ${missing.slice(0, 5).join(", ")}${missing.length > 5 ? ", and more" : ""}.`, line: i.line, repair: "Redraw the hero from its spec. The spec is the source, the SVG is its output." });
     }
@@ -173,14 +175,15 @@ function parseSvg(text: string): { vb?: { x: number; y: number; w: number; h: nu
   const texts: Array<{ x: number; y: number; size: number; len: number; anchor: string; width?: number }> = [];
   for (const m of text.matchAll(/<text\b([^>]*)>([\s\S]*?)<\/text>/g)) {
     const t = m[1];
-    const content = stabilize(m[2], (s) => s.replace(/<[^>]+>/g, "")).trim();
+    const content = stabilize(m[2], /<[^>]+>/g, "").trim();
     const size = num(t, "font-size") ?? parseFloat(/font-size:\s*([\d.]+)/.exec(t)?.[1] ?? "16");
     const anchor = /text-anchor\s*=\s*"([^"]+)"/.exec(t)?.[1] ?? "start";
     texts.push({ x: num(t, "x") ?? 0, y: num(t, "y") ?? 0, size, len: content.length, anchor, width: num(t, "textLength") });
   }
   const hasText = texts.length > 0;
   const fontStack = /font-family\s*[:=]/i.test(text);
-  const badAmp = /&(?![a-zA-Z]+;|#\d+;|#x[0-9a-fA-F]+;)/.test(stabilize(text, (t) => t.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, "").replace(/<!--[\s\S]*?-->/g, "")));
+  const noCdata = stabilize(text, /<!\[CDATA\[[\s\S]*?\]\]>/g, "");
+  const badAmp = /&(?![a-zA-Z]+;|#\d+;|#x[0-9a-fA-F]+;)/.test(stabilize(noCdata, /<!--[\s\S]*?-->/g, ""));
   const groups = [...text.matchAll(/<g\b[^>]*class="[^"]*(glyph|icon)[^"]*"[^>]*>([\s\S]*?)<\/g>/g)].map((m) => m[2].replace(/\s+/g, ""));
   return { vb, rects, texts, hasText, fontStack, badAmp, groups };
 }
