@@ -11,7 +11,7 @@ const PATTERNS: Record<string, RegExp> = {
 };
 
 const LOOKUP: Record<string, (name: string) => string> = {
-  npm: (n) => `https://registry.npmjs.org/${n.replace("/", "%2F")}`,
+  npm: (n) => `https://registry.npmjs.org/${n.replaceAll("/", "%2F")}`,
   pypi: (n) => `https://pypi.org/pypi/${n}/json`,
   crates: (n) => `https://crates.io/api/v1/crates/${n}`,
   gems: (n) => `https://rubygems.org/api/v1/gems/${n}.json`,

@@ -91,9 +91,10 @@ describe("registry: pypi, crates and gems, and an unbadged registry", () => {
       "thing.gemspec": 'Gem::Specification.new do |s|\n  s.name = "thing-rb"\nend\n',
     });
     const stub = vi.fn(async (url: string) => {
-      if (url.includes("pypi.org")) return new Response("{}", { status: 404 });
-      if (url.includes("crates.io")) return new Response("{}", { status: 200 });
-      if (url.includes("rubygems.org")) return new Response("{}", { status: 500 });
+      const host = new URL(url).hostname;
+      if (host === "pypi.org") return new Response("{}", { status: 404 });
+      if (host === "crates.io") return new Response("{}", { status: 200 });
+      if (host === "rubygems.org") return new Response("{}", { status: 500 });
       return new Response("{}", { status: 200 });
     });
     vi.stubGlobal("fetch", stub);
@@ -107,6 +108,24 @@ describe("registry: pypi, crates and gems, and an unbadged registry", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+  // js/incomplete-url-substring-sanitization: a host check by .includes() would let
+  // "https://attacker.example/?x=pypi.org" through as if it were the real pypi.org, since the
+  // target string can sit anywhere in the URL. Comparing the parsed hostname instead rejects it.
+  it("does not mistake a url that merely contains pypi.org somewhere in its path or query for the real pypi.org host", () => {
+    const spoofed = "https://attacker.example/?next=pypi.org";
+    expect(spoofed.includes("pypi.org")).toBe(true);
+    expect(new URL(spoofed).hostname).not.toBe("pypi.org");
+  });
+  it("does not mistake a url that merely contains crates.io somewhere in its path or query for the real crates.io host", () => {
+    const spoofed = "https://attacker.example/?next=crates.io";
+    expect(spoofed.includes("crates.io")).toBe(true);
+    expect(new URL(spoofed).hostname).not.toBe("crates.io");
+  });
+  it("does not mistake a url that merely contains rubygems.org somewhere in its path or query for the real rubygems.org host", () => {
+    const spoofed = "https://attacker.example/?next=rubygems.org";
+    expect(spoofed.includes("rubygems.org")).toBe(true);
+    expect(new URL(spoofed).hostname).not.toBe("rubygems.org");
   });
   it("names only the missing badge kind when the other one is already there", async () => {
     const version = '<a href="LICENSE"><img alt="v" src="https://img.shields.io/npm/v/thing?logo=npm"></a>';
