@@ -2,6 +2,7 @@ import { visit } from "unist-util-visit";
 import { toString } from "mdast-util-to-string";
 import type { Root, RootContent, Paragraph } from "mdast";
 import { isAbsolute, relative, resolve } from "node:path";
+import { stabilize } from "../text.js";
 import type { Doc } from "./types.js";
 
 /** decodeURIComponent that returns the input on malformed escapes instead of throwing. */
@@ -193,11 +194,12 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const inner = m[3];
-    const imageOnly = /<img\b/i.test(inner) && !inner.replace(/<[^>]+>/g, "").trim();
+    const strippedInner = stabilize(inner, (t) => t.replace(/<[^>]+>/g, ""));
+    const imageOnly = /<img\b/i.test(inner) && !strippedInner.trim();
     if (imageOnly && !all) continue;
     const line = lineAt(doc, m.index);
     const before = text.slice(Math.max(0, m.index - 12), m.index);
-    out.push({ href: decodeEntities(m[1] ?? m[2]), line, inHero: line < heroEnd, text: inner.replace(/<[^>]+>/g, "").trim(), bold: /<b>\s*$|<strong>\s*$/i.test(before), html: true, imageOnly });
+    out.push({ href: decodeEntities(m[1] ?? m[2]), line, inHero: line < heroEnd, text: strippedInner.trim(), bold: /<b>\s*$|<strong>\s*$/i.test(before), html: true, imageOnly });
   }
   return out.sort((a, b) => a.line - b.line);
 }
@@ -205,9 +207,7 @@ export function collectLinks(doc: Doc, all = false): LinkRef[] {
 /** The anchor GitHub gives a heading: lower-cased, punctuation dropped, spaces to hyphens. A leading emoji leaves a leading hyphen. */
 // GitHub's anchor: lower case, every character that is not a letter, a number, a mark, a space, a hyphen or an underscore dropped, and each space turned into a hyphen. Two spaces give two hyphens.
 export function slug(heading: string): string {
-  return heading
-    .toLowerCase()
-    .replace(/<[^>]+>/g, "")
+  return stabilize(heading.toLowerCase(), (t) => t.replace(/<[^>]+>/g, ""))
     .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, "")
     .replace(/\s/g, "-");
 }
