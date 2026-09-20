@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+Closes all 16 CodeQL alerts on the incomplete-multi-character-sanitization and incomplete-url-substring-sanitization queries. Every regex-based HTML tag, comment, CDATA and style-block strip now goes through a shared `stabilize()` helper that reapplies the removal until the string stops changing, instead of trusting a single pass; `stabilize()` takes the regex and replacement as data and calls `.replace()` itself inside its own loop, so CodeQL's incomplete-multi-character-sanitization query recognizes every call site as the pattern it documents. registry.ts's npm lookup URL now percent-encodes every slash in a package name with `replaceAll` instead of a single-occurrence replace. Hostname checks in tests now parse the URL and compare its hostname instead of testing a substring of the raw URL. Eighteen new regression tests cover the fixes; coverage stays at 100 on every metric.
+
+CI hardens: the checks job verifies every action pin with pinact (fix off, verify on), and runs actionlint and zizmor alongside the existing pre-commit set. A dependency-review workflow flags a known-vulnerable package at pull request time, and a weekly npm audit workflow catches the rest on a schedule. Dependabot pull requests now auto-merge once the required ci check passes.
+
 ## 1.0.1
 
 `init-workflow` pins to the commit of the action's latest release now, not the commit its main branch happens to point at, and writes a `# vX.Y.Z` comment naming that release in place of the earlier fixed wording. pinact, run in consumer CI with `--verify`, fails a SHA pin whose comment does not name a tag that resolves to that commit; two consumer repos hit this today. The same fix applies to the clonometer workflow `--clones` writes. When GitHub cannot be reached, the workflow still gets the `<sha>` placeholder, now paired with a `vX.Y.Z, replace before pushing` comment instead of the earlier wording, so it is clear a real release tag is still needed before the workflow can pass.
