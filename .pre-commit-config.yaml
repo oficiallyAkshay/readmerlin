@@ -1,9 +1,19 @@
-# The same hook CI runs, run here through pre-commit. gitleaks is a
-# standalone tool pre-commit installs on its own; readmerlin has no other
-# language pre-commit would gate, since typecheck, build and test already
-# run in CI.
+# The same hooks CI runs, run here through pre-commit. gitleaks, actionlint
+# and zizmor are standalone tools pre-commit installs on its own; readmerlin
+# has no other language pre-commit would gate, since typecheck, build and
+# test already run in CI.
 repos:
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.30.1
+    hooks:
+      - id: zizmor
