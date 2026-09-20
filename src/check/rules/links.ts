@@ -128,6 +128,10 @@ export async function probe(fetchFn: typeof fetch, url: string, timeoutMs = 1500
       if (i === 1) return 0;
     }
   }
+  // The loop runs i = 0 then i = 1: i = 0 either returns from the try block or falls through to
+  // i = 1, and i = 1 always returns (from the try block, or from the catch above). Every path
+  // returns from inside the loop, so this line can never run.
+  /* v8 ignore next */
   return 0;
 }
 

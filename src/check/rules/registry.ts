@@ -20,6 +20,9 @@ const LOOKUP: Record<string, (name: string) => string> = {
 /** True when the registry knows the package, false on a 404, undefined when it could not be asked. */
 async function published(fetchFn: typeof fetch, registry: string, name: string): Promise<boolean | undefined> {
   const url = LOOKUP[registry]?.(name);
+  // published() is only ever called below with a registry PATTERNS already matched, and PATTERNS
+  // and LOOKUP carry the exact same four keys, so this lookup cannot miss.
+  /* v8 ignore next */
   if (!url) return undefined;
   try {
     const res = await fetchFn(url, { headers: { accept: "application/json", "user-agent": "readmerlin registry check" }, signal: AbortSignal.timeout(8000) });
@@ -43,6 +46,9 @@ export const registryBadges: Rule = {
     const packages = readPackages(doc.dir).length ? readPackages(doc.dir) : readPackages(doc.repoRoot);
     for (const p of packages) {
       const re = PATTERNS[p.registry];
+      // readPackages() only ever emits registry: "npm" | "pypi" | "crates" | "gems", the exact
+      // key set PATTERNS carries, so this lookup cannot miss.
+      /* v8 ignore next */
       if (!re) continue;
       const hasVersion = badges.some((b) => re.test(b) && /\/(v)\//.test(b));
       const hasDownloads = badges.some((b) => re.test(b) && !/\/(v)\//.test(b));

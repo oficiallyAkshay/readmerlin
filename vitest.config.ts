@@ -14,10 +14,10 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       thresholds: {
-        statements: 99,
-        branches: 98,
+        statements: 100,
+        branches: 100,
         functions: 100,
-        lines: 99,
+        lines: 100,
       },
     },
   },
