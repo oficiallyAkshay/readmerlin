@@ -10,6 +10,7 @@
   <a href="https://codecov.io/gh/oficiallyAkshay/readmerlin"><img alt="coverage" src="https://img.shields.io/codecov/c/github/oficiallyAkshay/readmerlin?logo=codecov&logoColor=white"></a>
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-2f6f4e?logo=opensourceinitiative&logoColor=white"></a>
   <a href="https://github.com/oficiallyAkshay/clonometer"><img alt="clones of this repository, last seven days and all time" src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/oficiallyAkshay/readmerlin/badges/clones.json&query=$.badge&label=clones&logo=github&logoColor=white"></a>
+  <a href="https://www.bestpractices.dev/projects/14723"><img alt="OpenSSF Best Practices, passing" src="https://www.bestpractices.dev/projects/14723/badge"></a>
 </p>
 
 <p align="center">Works with<br>
