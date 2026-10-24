@@ -1,0 +1,18 @@
+{
+  "badge": "69 (7d) \u2022 1,845 (all-time)",
+  "last7": 69,
+  "last7_short": "69",
+  "metric": "clones",
+  "repo": "oficiallyAkshay/readmerlin",
+  "schema": 1,
+  "since": "2026-09-04",
+  "total": 1845,
+  "total_short": "1,845",
+  "updated": "2026-10-24",
+  "window": {
+    "count": 250,
+    "days": 14,
+    "uniques": 87
+  },
+  "window_short": "250"
+}
