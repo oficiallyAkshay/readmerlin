@@ -23,7 +23,7 @@ function repo(body: string, files: Record<string, string> = {}): string {
 const messages = async (dir: string, id: string, pkg: boolean) =>
   (await check(join(dir, "README.md"), { format: "json", links: false, exec: false, package: pkg })).findings.filter((f) => f.id === id).map((f) => f.message);
 const SHELL = "shape/install-in-words";
-const WITH_COMMANDS = FEATURES + "\n```bash\n# install\nnpm install tidy-receipts\ntidy-receipts claim --week 42\n```\n";
+const WITH_COMMANDS = FEATURES + "\n```bash\n# install\nnpm install tidy-receipts\nnpx tidy-receipts claim --week 42\n```\n";
 
 describe("package mode, shell commands", () => {
   it("passes one install line and one example", async () => {
@@ -37,7 +37,7 @@ describe("package mode, shell commands", () => {
     expect(await messages(repo(body), SHELL, true)).toEqual([]);
   });
   it("fails a README with a destructive command in package mode", async () => {
-    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /"]) {
+    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /", "find . -delete", "npm publish", "npm unpublish tidy --force", "git push origin :main", "docker system prune -af", "chown -R root /", "shred -u secrets.txt", "git checkout -- ."]) {
       const m = await messages(repo(FEATURES + "\n```bash\nnpm install tidy-receipts\n" + cmd + "\n```\n"), SHELL, true);
       expect(m, cmd).toContain("Destructive command.");
     }
@@ -46,8 +46,10 @@ describe("package mode, shell commands", () => {
     expect(await messages(repo(FEATURES + "\nRun `rm -rf /` to start.\n"), SHELL, true)).toEqual(["Destructive command."]);
   });
   it("fails a second install line, a second example and a chained command", async () => {
-    const two = await messages(repo(FEATURES + "\n```bash\nnpm install a\nnpm install b\ntidy one\ntidy two\n```\n"), SHELL, true);
+    const two = await messages(repo(FEATURES + "\n```bash\nnpm install a\nnpm install b\nnpx tidy one\nnpx tidy two\n```\n"), SHELL, true);
     expect(two).toEqual(["More than one install line.", "More than one example command."]);
+    const general = await messages(repo(FEATURES + "\n```bash\nmkdir out\nls out\n```\n"), SHELL, true);
+    expect(general).toEqual(["Shell command that is neither an install line nor an example run.", "Shell command that is neither an install line nor an example run."]);
     const chained = await messages(repo(FEATURES + "\n```bash\nnpm install a && tidy one\n```\n"), SHELL, true);
     expect(chained).toEqual(["Shell command that is not a single plain command."]);
   });
