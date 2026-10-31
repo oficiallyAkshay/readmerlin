@@ -40,6 +40,8 @@ export interface RuleContext {
   links: boolean;
   /** Whether count-source commands from the config may run. */
   exec: boolean;
+  /** Package mode: the page belongs to a carved package, so one install line and one example command are allowed and the pipeline folders are not root clutter. Off by default. */
+  package?: boolean;
   fetch: typeof fetch;
 }
 

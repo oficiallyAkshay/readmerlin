@@ -2,7 +2,7 @@ import { toString } from "mdast-util-to-string";
 import { visit } from "unist-util-visit";
 import { htmlOf } from "../doc.js";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { collectImages, collectLinks, EMOJI_RE, fencedLines } from "../util.js";
 import type { Rule, Section } from "../types.js";
 
@@ -254,20 +254,62 @@ const SHELL_LANG = /^(bash|sh|shell|zsh|fish|console|shellsession|terminal|power
 // export counts only as a shell variable, so export default and export const stay code.
 const SHELL_LINE = /^\s*(\$\s+|(sudo\s+)?(npx|npm|pnpm|yarn|bunx?|pipx?|uvx?|brew|cargo|go|git|curl|wget|mkdir|sed|cd|cp|mv|rm|docker|chmod|make|gh|claude)\s+\S|export\s+[A-Za-z_]\w*=)/;
 
+// Package mode: a command is destructive wherever it appears, so the allowance below never reaches it.
+const DESTRUCTIVE = /\brm\s+(?:-\S+\s+)*(?:-\w*[rR]\w*|--recursive)\b|\|\s*(?:sudo\s+)?(?:ba|z|da)?sh\b|\$\(\s*(?:curl|wget)\b|\bgit\s+push\b.*(?:--force|\s-f\b|\s\+\S)|\bgit\s+(?:reset\s+--hard|clean\s+-\w*f|branch\s+-D)\b|\bsudo\b|\bchmod\s+-R\b|\bmkfs\b|\bdd\s+if=|>\s*\/dev\/(?!null)|\bgit\s+(?:(?:push|restore)\b|checkout\s+--(?:\s|$))|\bnpm\s+(?:un)?publish\b|\bfind\b.*\s-(?:delete|exec)\b|\bdocker\b.*\bprune\b|\bchown\s+-R\b|\bshred\b|\s--force\b/;
+// An example starts the package's own program through a runner. A runner given any other name could fetch and run any program, so the allowance is a list of the package's own names, never a list of forbidden ones.
+const RUNNER = "(?:npx|bunx|pnpm\\s+dlx|yarn\\s+dlx|uvx|pipx\\s+run)\\s+(?:(?:-y|--yes)\\s+)?";
+function ownNames(dir: string): string[] {
+  const names = [basename(dir)];
+  try {
+    const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as { name?: unknown; bin?: unknown };
+    if (typeof pkg.name === "string") names.push(pkg.name);
+    if (typeof pkg.bin === "string" && typeof pkg.name === "string") names.push(pkg.name.replace(/^@[^/]+\//, ""));
+    else if (pkg.bin && typeof pkg.bin === "object") names.push(...Object.keys(pkg.bin));
+  } catch {
+    // No readable package.json: the folder name is the only own name.
+  }
+  return names.filter(Boolean);
+}
+const exampleOf = (names: string[]) => new RegExp(`^${RUNNER}(?:${names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?:@[\\w.^~-]+)?(?:\\s|$)`);
+const INSTALL_CMD = /^(?:npm\s+(?:i|install|add)|pnpm\s+(?:add|i|install)|yarn\s+add|bun\s+(?:add|install)|pipx?\s+install|uvx?\s+tool\s+install|brew\s+install|cargo\s+install|go\s+install)\s+\S/;
+// One plain command: no pipe, chain, redirect, substitution or backtick.
+const SIMPLE_CMD = /^[^|;&<>`$]+$/;
+
 export const noShellSnippets: Rule = {
   id: "shape/install-in-words",
   level: "fail",
   description: "Install and usage are said in plain sentences; commands live in CONTRIBUTING",
-  run: ({ doc }) => {
+  run: ({ doc, package: pkg }) => {
     const out: Array<{ message: string; line?: number; repair: string }> = [];
     const repair = "Name the thing to add in a plain sentence. Commands live in CONTRIBUTING.";
+    let installs = 0;
+    let examples = 0;
+    const isExample = pkg ? exampleOf(ownNames(doc.dir)) : /$^/;
+    // Package mode: judge each command, allowing one install line and one example. Everything else, and every destructive command, fails.
+    const judge = (cmd: string, line: number | undefined) => {
+      const c = cmd.replace(/^\$\s+/, "").trim();
+      const packageRepair = "A package README may carry one install line and one example command, each a single plain command. An example starts the package's own program with npx, bunx, pnpm dlx, yarn dlx, uvx or pipx run.";
+      if (DESTRUCTIVE.test(c)) out.push({ message: "Destructive command.", line, repair: "Remove it. A README never tells a reader to delete recursively, pipe a download into a shell, force push or run as root." });
+      else if (!SIMPLE_CMD.test(c)) out.push({ message: "Shell command that is not a single plain command.", line, repair: packageRepair });
+      else if (INSTALL_CMD.test(c)) {
+        if (++installs > 1) out.push({ message: "More than one install line.", line, repair: packageRepair });
+      } else if (!isExample.test(c)) out.push({ message: "Shell command that is neither an install line nor an example run.", line, repair: packageRepair });
+      else if (++examples > 1) out.push({ message: "More than one example command.", line, repair: packageRepair });
+    };
     visit(doc.tree, (node) => {
       if (node.type === "code") {
         const lang = (node.lang ?? "").trim();
-        const shell = SHELL_LANG.test(lang) || (!lang && node.value.split("\n").some((l) => SHELL_LINE.test(l)));
-        if (shell) out.push({ message: "Shell snippet.", line: node.position?.start.line, repair });
+        const lines = node.value.split("\n");
+        const shell = SHELL_LANG.test(lang) || (!lang && lines.some((l) => SHELL_LINE.test(l)));
+        if (shell && pkg) {
+          const line = node.position?.start.line;
+          for (const l of lines) if (l.trim() && !l.trim().startsWith("#") && (lang || SHELL_LINE.test(l))) judge(l, line);
+        } else if (shell) out.push({ message: "Shell snippet.", line: node.position?.start.line, repair });
       }
-      if (node.type === "inlineCode" && SHELL_LINE.test(node.value)) out.push({ message: "Shell command in inline code.", line: node.position?.start.line, repair });
+      if (node.type === "inlineCode" && SHELL_LINE.test(node.value)) {
+        if (pkg) judge(node.value, node.position?.start.line);
+        else out.push({ message: "Shell command in inline code.", line: node.position?.start.line, repair });
+      }
     });
     return out;
   },

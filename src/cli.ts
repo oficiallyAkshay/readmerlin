@@ -16,6 +16,7 @@ Options
   --format <fmt>          context: json | md (default json). check: text | github | json (default text)
   --config <file>         check: path to readmerlin.json (default: readmerlin.json at the repo root)
   --pages                 check: README.md, CONTRIBUTING and every docs page, in place of the given files
+  --package               check: package mode for a carved package. Allows one install line and one example command, never a destructive one, and does not count .changeset, workflows and tools as root clutter
   --no-links              check: skip external link checks
   --no-exec               check: never run count-source commands from readmerlin.json
   --clones                init-workflow: also add the clonometer workflow and print its badges
@@ -30,6 +31,7 @@ function parse() {
     format: { type: "string" },
     config: { type: "string" },
     pages: { type: "boolean", default: false },
+    package: { type: "boolean", default: false },
     "no-links": { type: "boolean", default: false },
     "no-exec": { type: "boolean", default: false },
     clones: { type: "boolean", default: false },
@@ -79,6 +81,7 @@ async function main(): Promise<number> {
         links: !values["no-links"],
         exec: !values["no-exec"],
         pages: values.pages,
+        package: values.package,
       });
     case "init-workflow":
       return runInitWorkflow(target ?? process.cwd(), { clones: values.clones });

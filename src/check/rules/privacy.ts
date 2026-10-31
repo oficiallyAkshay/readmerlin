@@ -18,6 +18,9 @@ const CONVENTIONAL = [
   /^(src|lib|bin|dist|docs|examples?|tests?|scripts?|assets|references?|skills?|commands?|agents?|hooks?|templates?|schemas?|renderers?|tools?|integrations?|benchmarks?|public|static)$/i,
 ];
 
+/** Pipeline folders a carved package keeps at its root; honoured in package mode only. */
+const PACKAGE_PIPELINE = [/^\.changeset$/, /^workflows$/, /^tools$/];
+
 /** Top-level names git tracks. Undefined outside a git checkout, so caches and virtualenvs never count. */
 function trackedRootNames(root: string): string[] | undefined {
   try {
@@ -34,7 +37,7 @@ export const rootFiles: Rule = {
   level: "warn",
   description: "Every tracked root file is one a host or a reader needs",
   // The README's own folder: a package inside a monorepo is judged on its files, not the monorepo's.
-  run: ({ doc }) => {
+  run: ({ doc, package: pkg }) => {
     let names = trackedRootNames(doc.dir);
     if (!names) {
       try {
@@ -45,7 +48,8 @@ export const rootFiles: Rule = {
         return [];
       }
     }
-    const odd = names.filter((n) => !CONVENTIONAL.some((re) => re.test(n))).sort();
+    const known = pkg ? [...CONVENTIONAL, ...PACKAGE_PIPELINE] : CONVENTIONAL;
+    const odd = names.filter((n) => !known.some((re) => re.test(n))).sort();
     return odd.length ? [{ message: `Root has files a host or reader does not need: ${odd.join(", ")}.`, line: 1, repair: "Move them under docs, references or scripts, or delete them." }] : [];
   },
 };
