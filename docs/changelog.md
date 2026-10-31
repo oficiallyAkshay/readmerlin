@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+`check --package` adds a package mode for a carved package's README. It allows one install line and one example command and never a destructive one, and it stops reporting the `.changeset`, `workflows` and `tools` folders as root clutter. Without the flag nothing changes.
+
 ## 1.1.0
 
 `init-workflow` now writes `exec: "true"` into the readme-check workflow it creates, so the count commands behind every count badge actually run in the consumer's own CI; seven repos had to flip the input by hand on 2026-09-20 because the template left it at the action's bare default of off. The commands come from that repo's own readmerlin.json, so in that repo's own CI they are already trusted; the action's own default stays off, for a workflow checking a different repo's README from outside it.

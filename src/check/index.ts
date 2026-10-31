@@ -10,6 +10,8 @@ export interface CheckOptions {
   links: boolean;
   /** Run count-source commands from readmerlin.json. Default true. */
   exec?: boolean;
+  /** Package mode: allow one install line and one example command, and do not count .changeset, workflows and tools as root clutter. Default false. */
+  package?: boolean;
   /** Repo root for root-relative paths and config. Defaults to the nearest folder with .git above the README, else its folder. */
   repoRoot?: string;
 }
@@ -26,7 +28,7 @@ export async function check(file: string, opts: CheckOptions): Promise<CheckResu
     const level = config.rules[rule.id] ?? rule.level;
     if (level === "off") continue;
     ran.push(rule.id);
-    const out = await rule.run({ doc, config, links: opts.links, exec: opts.exec ?? true, fetch: globalThis.fetch });
+    const out = await rule.run({ doc, config, links: opts.links, exec: opts.exec ?? true, package: opts.package ?? false, fetch: globalThis.fetch });
     const cap = Math.max(1, config.maxFindingsPerRule);
     for (const f of out.slice(0, cap)) findings.push({ id: rule.id, ...f, level: f.level ?? level });
     if (out.length > cap) findings.push({ id: rule.id, level, message: `${out.length - cap} more of the same. Fix these and run again.`, line: out[cap].line });

@@ -8,7 +8,9 @@ Reads one or more markdown pages and reports every rule finding against each one
 
 ## Flags
 
-`--format text|github|json`, default `text`. `--config <file>`, the path to a readmerlin.json, default `readmerlin.json` at the repo root. `--pages`, checks `README.md`, `AGENTS.md` when the repo has one, whichever of `.github/CONTRIBUTING.md` or `CONTRIBUTING.md` exists, and every markdown file under `docs`, in place of any given files. `--no-links`, skips every external link and badge logo request. `--no-exec`, never runs a count-source command from readmerlin.json.
+`--format text|github|json`, default `text`. `--config <file>`, the path to a readmerlin.json, default `readmerlin.json` at the repo root. `--pages`, checks `README.md`, `AGENTS.md` when the repo has one, whichever of `.github/CONTRIBUTING.md` or `CONTRIBUTING.md` exists, and every markdown file under `docs`, in place of any given files. `--no-links`, skips every external link and badge logo request. `--no-exec`, never runs a count-source command from readmerlin.json. `--package`, package mode for a carved package, off by default.
+
+In package mode the README may carry one install line and one example command, each a single plain command with no pipe, chain, redirect or substitution; a second install line, a second example or any other command still fails shape/install-in-words. A destructive command (a recursive delete, a download piped into a shell, a force push, a hard reset, sudo, a recursive chmod, a raw disk write) fails in package mode as it does without it. The `.changeset`, `workflows` and `tools` folders at the package root are not reported by honesty/root-files. Without the flag, every rule behaves as before.
 
 An external link that answers 401, 403, 405, 429 or 999 gets a warning, not a fail: the host refused the automated HEAD/GET request rather than saying the link is dead, as npmjs.com's 403 to a bot does. A 404, a 410, or a network error still fails.
 
