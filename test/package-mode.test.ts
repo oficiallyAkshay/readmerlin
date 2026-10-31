@@ -37,7 +37,7 @@ describe("package mode, shell commands", () => {
     expect(await messages(repo(body), SHELL, true)).toEqual([]);
   });
   it("fails a README with a destructive command in package mode", async () => {
-    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /", "find . -delete", "npm publish", "npm unpublish tidy --force", "git push origin :main", "docker system prune -af", "chown -R root /", "shred -u secrets.txt", "git checkout -- ."]) {
+    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /", "find . -delete", "npm publish", "npm unpublish tidy --force", "git push origin :main", "docker system prune -af", "chown -R root /", "shred -u secrets.txt", "git checkout -- .", "npx rimraf /", "npx -y rimraf node_modules", "node -e \"require('fs').rmSync('/', {recursive: true})\"", "python3 -c \"import shutil\"", "npx npm publish", "node scripts/wipe.js --force"]) {
       const m = await messages(repo(FEATURES + "\n```bash\nnpm install tidy-receipts\n" + cmd + "\n```\n"), SHELL, true);
       expect(m, cmd).toContain("Destructive command.");
     }
