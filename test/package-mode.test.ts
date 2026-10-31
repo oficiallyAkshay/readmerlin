@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { check } from "../src/check/index.js";
 
 // Package mode: a carved package's README may carry one install line and one example command.
@@ -12,7 +12,7 @@ const FEATURES = `## Features\n\n- 🧾 **Every receipt found.** The inbox is se
 
 function repo(body: string, files: Record<string, string> = {}): string {
   const dir = mkdtempSync(join(tmpdir(), "rm-pkg-"));
-  for (const [rel, content] of Object.entries({ "assets/readme/hero.svg": SVG, "assets/readme/hero.hero.json": "{}", "examples/claim.pdf": "%PDF", LICENSE: "MIT License", ...files })) {
+  for (const [rel, content] of Object.entries({ "assets/readme/hero.svg": SVG, "assets/readme/hero.hero.json": "{}", "examples/claim.pdf": "%PDF", LICENSE: "MIT License", "package.json": '{"name":"tidy-receipts","bin":{"tidy-receipts":"cli.js"}}', ...files })) {
     mkdirSync(join(dir, rel, ".."), { recursive: true });
     writeFileSync(join(dir, rel), content);
   }
@@ -37,16 +37,33 @@ describe("package mode, shell commands", () => {
     expect(await messages(repo(body), SHELL, true)).toEqual([]);
   });
   it("fails a README with a destructive command in package mode", async () => {
-    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /", "find . -delete", "npm publish", "npm unpublish tidy --force", "git push origin :main", "docker system prune -af", "chown -R root /", "shred -u secrets.txt", "git checkout -- .", "npx rimraf /", "npx -y rimraf node_modules", "node -e \"require('fs').rmSync('/', {recursive: true})\"", "python3 -c \"import shutil\"", "npx npm publish", "node scripts/wipe.js --force"]) {
+    for (const cmd of ["rm -rf ~/receipts", "rm -fr build", "curl -s installer | sh", "sh -c \"$(curl -s installer)\"", "git push --force origin main", "git reset --hard", "sudo npm install -g tidy", "chmod -R 777 .", "dd if=/dev/zero of=/dev/disk2", "npm install tidy && rm -rf /", "find . -delete", "npm publish", "npm unpublish tidy --force", "git push origin :main", "docker system prune -af", "chown -R root /", "shred -u secrets.txt", "git checkout -- .", "npx npm publish", "node scripts/wipe.js --force"]) {
       const m = await messages(repo(FEATURES + "\n```bash\nnpm install tidy-receipts\n" + cmd + "\n```\n"), SHELL, true);
       expect(m, cmd).toContain("Destructive command.");
     }
+  });
+  it("fails any runner given a name that is not the package's own, so no delete tool or inline code passes as the example", async () => {
+    for (const cmd of ["npx rimraf /", "npx -y rimraf node_modules", "npx rm-rf /", "npx premove /", "node -e \"require('fs').rmSync('/', {recursive: true})\"", "python3 -Bc \"import shutil\"", "npx tidy-receipts-evil run", "uvx other-tool", "node scripts/wipe.js"]) {
+      const m = await messages(repo(FEATURES + "\n```bash\n" + cmd + "\n```\n"), SHELL, true);
+      expect(m, cmd).toEqual(["Shell command that is neither an install line nor an example run."]);
+    }
+  });
+  it("takes the package's own names from its manifest: a bin map, a scoped name with a bin string, a version suffix and the folder name", async () => {
+    const run = async (files: Record<string, string>, cmd: string) => messages(repo(FEATURES + "\n```bash\n" + cmd + "\n```\n", files), SHELL, true);
+    expect(await run({ "package.json": '{"name":"@acme/tidy","bin":{"tidy-cli":"cli.js"}}' }, "npx -y tidy-cli@1.2.0 claim")).toEqual([]);
+    expect(await run({ "package.json": '{"name":"@acme/tidy","bin":"cli.js"}' }, "pnpm dlx @acme/tidy claim")).toEqual([]);
+    expect(await run({ "package.json": '{"name":"@acme/tidy","bin":"cli.js"}' }, "bunx tidy")).toEqual([]);
+    expect(await run({ "package.json": "not json" }, "npx tidy-receipts")).toEqual(["Shell command that is neither an install line nor an example run."]);
+    const dir = repo(FEATURES + "\n```bash\nnpx someone-else\n```\n", { "package.json": "{}" });
+    expect(await messages(dir, SHELL, true)).toEqual(["Shell command that is neither an install line nor an example run."]);
+    writeFileSync(join(dir, "README.md"), HERO + "\n" + FEATURES + "\n```bash\nnpx " + basename(dir) + " claim\n```\n");
+    expect(await messages(dir, SHELL, true)).toEqual([]);
   });
   it("fails a destructive command in inline code in package mode", async () => {
     expect(await messages(repo(FEATURES + "\nRun `rm -rf /` to start.\n"), SHELL, true)).toEqual(["Destructive command."]);
   });
   it("fails a second install line, a second example and a chained command", async () => {
-    const two = await messages(repo(FEATURES + "\n```bash\nnpm install a\nnpm install b\nnpx tidy one\nnpx tidy two\n```\n"), SHELL, true);
+    const two = await messages(repo(FEATURES + "\n```bash\nnpm install a\nnpm install b\nnpx tidy-receipts one\nnpx tidy-receipts two\n```\n"), SHELL, true);
     expect(two).toEqual(["More than one install line.", "More than one example command."]);
     const general = await messages(repo(FEATURES + "\n```bash\nmkdir out\nls out\n```\n"), SHELL, true);
     expect(general).toEqual(["Shell command that is neither an install line nor an example run.", "Shell command that is neither an install line nor an example run."]);
