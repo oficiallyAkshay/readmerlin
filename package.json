@@ -20,6 +20,8 @@
     "url": "git+https://github.com/oficiallyAkshay/readmerlin.git"
   },
   "dependencies": {
+    "github-slugger": "^2.0.0",
+    "hast-util-from-html": "^2.0.3",
     "image-size": "^2.0.4",
     "mdast-util-to-string": "^4.0.0",
     "remark-gfm": "^4.0.1",
