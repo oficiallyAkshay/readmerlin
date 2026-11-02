@@ -14,6 +14,7 @@ export const DEFAULT_CONFIG: Config = {
   maxImageHeight: 700,
   counts: {},
   maxFindingsPerRule: 10,
+  packageMode: false,
 };
 
 export function loadConfig(path: string | undefined, cwd: string): Config {
@@ -32,5 +33,5 @@ export function loadConfig(path: string | undefined, cwd: string): Config {
   for (const [k, v] of Object.entries(raw.rules ?? {})) {
     if (v === "off" || v === "warn" || v === "fail") rules[k] = v;
   }
-  return { ...DEFAULT_CONFIG, ...raw, rules, counts: raw.counts ?? {} };
+  return { ...DEFAULT_CONFIG, ...raw, rules, counts: raw.counts ?? {}, packageMode: raw.packageMode === true };
 }

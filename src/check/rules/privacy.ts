@@ -19,6 +19,9 @@ const CONVENTIONAL = [
 ];
 
 /** Top-level names git tracks. Undefined outside a git checkout, so caches and virtualenvs never count. */
+/** Folders a published package keeps at its root: release notes and pipeline files. Tools is already conventional above. */
+const PACKAGE_ONLY = [/^\.changeset$/, /^\.?workflows?$/];
+
 function trackedRootNames(root: string): string[] | undefined {
   try {
     const out = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 10000, maxBuffer: 64 * 1024 * 1024 });
@@ -34,7 +37,7 @@ export const rootFiles: Rule = {
   level: "warn",
   description: "Every tracked root file is one a host or a reader needs",
   // The README's own folder: a package inside a monorepo is judged on its files, not the monorepo's.
-  run: ({ doc }) => {
+  run: ({ doc, config }) => {
     let names = trackedRootNames(doc.dir);
     if (!names) {
       try {
@@ -45,7 +48,7 @@ export const rootFiles: Rule = {
         return [];
       }
     }
-    const odd = names.filter((n) => !CONVENTIONAL.some((re) => re.test(n))).sort();
+    const odd = names.filter((n) => !CONVENTIONAL.some((re) => re.test(n)) && !(config.packageMode && PACKAGE_ONLY.some((re) => re.test(n)))).sort();
     return odd.length ? [{ message: `Root has files a host or reader does not need: ${odd.join(", ")}.`, line: 1, repair: "Move them under docs, references or scripts, or delete them." }] : [];
   },
 };
