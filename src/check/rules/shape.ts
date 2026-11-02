@@ -254,12 +254,93 @@ const SHELL_LANG = /^(bash|sh|shell|zsh|fish|console|shellsession|terminal|power
 // export counts only as a shell variable, so export default and export const stay code.
 const SHELL_LINE = /^\s*(\$\s+|(sudo\s+)?(npx|npm|pnpm|yarn|bunx?|pipx?|uvx?|brew|cargo|go|git|curl|wget|mkdir|sed|cd|cp|mv|rm|docker|chmod|make|gh|claude)\s+\S|export\s+[A-Za-z_]\w*=)/;
 
+// Package mode: a command passes only by exact shape, never by being absent from a list of bad ones.
+const DESTRUCTIVE = /\brm\s+-\w*[rRfF]|rm-rf|rimraf|premove|rmtree|shutil|os\.(remove|unlink|rmdir)|\b(rmdir|unlink|mkfs|shred)\b|\|\s*(ba|z)?sh\b|\bgit\s+push\b[^\n]*(\s-f\b|--force)|\bgit\s+(reset\s+--hard|clean\b)|\bdd\s+if=|\bchmod\s+-R/i;
+const SAFE_NAME = /^[A-Za-z0-9_@./-]+$/;
+const SAFE_LINE = /^[A-Za-z0-9_@./:=+,%\- ]+$/;
+const INSTALL_LINE = /^(?:npm install|npm i|pip install|pipx install) (\S+)$/;
+
+/** The package's own name and bin names from the manifest beside the README. Undefined when there is none, so nothing is allowed. */
+function packageIdentity(dir: string): { name: string; bins: string[] } | undefined {
+  try {
+    const pj = join(dir, "package.json");
+    if (existsSync(pj)) {
+      const m = JSON.parse(readFileSync(pj, "utf8")) as { name?: unknown; bin?: unknown };
+      if (typeof m.name !== "string" || !SAFE_NAME.test(m.name)) return undefined;
+      const bins = typeof m.bin === "string" ? [m.name.replace(/^@[^/]+\//, "")] : m.bin && typeof m.bin === "object" ? Object.keys(m.bin) : [];
+      return { name: m.name, bins: bins.filter((b) => SAFE_NAME.test(b)) };
+    }
+    const py = join(dir, "pyproject.toml");
+    if (existsSync(py)) {
+      let table = "";
+      let name: string | undefined;
+      const bins: string[] = [];
+      for (const l of readFileSync(py, "utf8").split(/\r?\n/)) {
+        const head = /^\s*\[([^\]]+)\]/.exec(l);
+        if (head) table = head[1].trim();
+        else if (table === "project" && name === undefined) name = /^\s*name\s*=\s*["']([^"']+)["']/.exec(l)?.[1];
+        else if (table === "project.scripts") {
+          const b = /^\s*["']?([\w.-]+)["']?\s*=/.exec(l)?.[1];
+          if (b) bins.push(b);
+        }
+      }
+      return name && SAFE_NAME.test(name) ? { name, bins } : undefined;
+    }
+  } catch {
+    // An unreadable or malformed manifest allows nothing.
+  }
+  return undefined;
+}
+
+/** Why a command line is refused in package mode, or undefined when it is the one install line or the one example, by exact shape. */
+function packageRefusal(line: string, id: { name: string; bins: string[] } | undefined, seen: { install: boolean; example: boolean }): string | undefined {
+  if (!id) return "No package manifest beside the README, so no command is allowed.";
+  const install = INSTALL_LINE.exec(line);
+  if (install) {
+    if (install[1] !== id.name) return `The install line names ${install[1]}, not this package (${id.name}).`;
+    if (seen.install) return "A second install line.";
+    seen.install = true;
+    return undefined;
+  }
+  if (!SAFE_LINE.test(line)) return "A command with characters outside letters, digits and . / : = + , % - _ @.";
+  const tokens = line.split(/ +/);
+  const own = new Set([id.name, ...id.bins]);
+  const start = tokens[0] === "npx" ? 1 : 0;
+  if (!own.has(tokens[start])) return `The command is not this package's own (${[...own].join(", ")}).`;
+  if (seen.example) return "A second example.";
+  seen.example = true;
+  return undefined;
+}
+
 export const noShellSnippets: Rule = {
   id: "shape/install-in-words",
   level: "fail",
   description: "Install and usage are said in plain sentences; commands live in CONTRIBUTING",
-  run: ({ doc }) => {
+  run: ({ doc, config }) => {
     const out: Array<{ message: string; line?: number; repair: string }> = [];
+    if (config.packageMode) {
+      const id = packageIdentity(doc.dir);
+      const seen = { install: false, example: false };
+      const repair = "A package README may show one install line (npm install, npm i, pip install or pipx install, of this package) and one example that starts with this package's own command.";
+      const judge = (text: string, at: number | undefined) => {
+        const line = text.trim().replace(/^\$\s+/, "");
+        if (!line) return;
+        if (DESTRUCTIVE.test(line)) out.push({ message: "Destructive command.", line: at, repair: "Remove it. A package README never shows a delete, a force push or a pipe into a shell." });
+        const why = packageRefusal(line, id, seen);
+        if (why) out.push({ message: `Shell command not allowed in package mode. ${why}`, line: at, repair });
+      };
+      visit(doc.tree, (node) => {
+        if (node.type === "code") {
+          const lang = (node.lang ?? "").trim();
+          if (lang && !SHELL_LANG.test(lang)) return;
+          // A parsed code node always carries its position.
+          const first = node.position?.start.line as number;
+          node.value.split("\n").forEach((l, i) => judge(l, first + 1 + i));
+        }
+        if (node.type === "inlineCode" && SHELL_LINE.test(node.value)) judge(node.value, node.position?.start.line);
+      });
+      return out;
+    }
     const repair = "Name the thing to add in a plain sentence. Commands live in CONTRIBUTING.";
     visit(doc.tree, (node) => {
       if (node.type === "code") {
