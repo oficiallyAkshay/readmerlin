@@ -84,3 +84,15 @@ Things learned the hard way:
 - Scope, proof and limits are each worth their own section: Fit for who it is for, In action for a real result, Security and limits for the credential, the checklist and the defaults together.
 - A hero is designed before it is diagrammed: a headline that states the value earns more attention than a bigger picture.
 - Badges earn their place by adoption and licence. A language version or a rule count is not a fact a reader acts on.
+
+## Scorecard decisions
+
+The solo-owner review gap is chosen (ruling of 2026-11-03): this repository has one owner, so no second person can approve a pull request. The `main` ruleset requires the `ci` check, a pull request and linear history.
+
+| Scorecard alert | Decision | Reason |
+| --- | --- | --- |
+| Branch-Protection | Accepted | One owner, so no second approver exists. |
+| Code-Review | Accepted | One owner, so no second reviewer exists. |
+| Maintained | Accepted | The score rises by itself when the repository is 90 days old. |
+| Fuzzing | Accepted | No fuzz harness exists. This is a cost choice, not a claim that no hostile input is read. |
+| SAST | Undecided | The alert is read first, then ruled on. |
