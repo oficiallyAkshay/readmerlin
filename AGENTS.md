@@ -11,3 +11,7 @@ Rule ids read `group/name`: `hero/exists`, `shape/earned-headings`, `badges/carr
 The script is `skills/readmerlin/scripts/readmerlin.mjs`. Edit `src`, never the script, then run the build.
 
 Peers, never dependencies: figurehead draws the hero from `<name>.hero.json`; this skill carries no renderer of its own. Archify draws the diagram from `<name>.archify.json`. Both specs sit beside their SVG, and `check` refuses an SVG without one.
+
+Scope: build no skills-directory or Marketplace listing unless the maintainer reopens that item.
+
+Merges: the main ruleset requires the `ci` check and allows rebase merges only, so arm auto-merge with `gh pr merge --auto --rebase`.
