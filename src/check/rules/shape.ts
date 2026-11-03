@@ -28,7 +28,7 @@ export const heroExists: Rule = {
     const plain = doc.hero
       .filter((n) => n.type === "paragraph")
       .map((n) => n as { children: Array<{ type: string }> })
-      .filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link" || c.type === "html" || (c.type === "text" && !/\S/.test((c as { value?: string }).value ?? ""))))
+      .filter((p) => !p.children.every((c) => c.type === "strong" || c.type === "image" || c.type === "link" || c.type === "html" || (c.type === "text" && !/\S/.test((c as unknown as { value: string }).value))))
       .map((p) => toString(p as never).trim())
       .filter(Boolean);
     // What is left of the html once the title and the bold lines are gone.
