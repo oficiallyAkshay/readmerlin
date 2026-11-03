@@ -35,7 +35,7 @@ jobs:
       # a hook cannot see. pipx ships preinstalled on the runner image, so
       # this needs no extra setup step for a repo with no other Python use.
       - name: pre-commit hooks
-        run: pipx run pre-commit run --all-files --show-diff-on-failure
+        run: pipx run pre-commit==4.7.0 run --all-files --show-diff-on-failure
 
       # pinact has no pre-commit hook of its own to pin to, so it runs as its
       # own step: every `uses:` must be a full commit SHA, and that SHA must
