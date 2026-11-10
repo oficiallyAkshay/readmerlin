@@ -15,12 +15,13 @@ const CONVENTIONAL = [
   /^skill\.md$/i, /^agents\.md$/i, /^claude\.md$/i, /^gemini\.md$/i, /^\.cursorrules$/i,
   /^package(-lock)?\.json$/, /^pnpm-lock\.yaml$/, /^yarn\.lock$/, /^bun\.lockb?$/, /^pyproject\.toml$/, /^requirements.*\.txt$/, /^setup\.(py|cfg)$/, /^uv\.lock$/, /^poetry\.lock$/, /^cargo\.(toml|lock)$/i, /^go\.(mod|sum)$/, /^makefile$/i, /^dockerfile$/i, /^docker-compose.*\.ya?ml$/, /^tsconfig.*\.json$/, /^.*\.config\.(js|ts|mjs|cjs)$/, /^action\.ya?ml$/, /^readmerlin(\.schema)?\.json$/, /^codecov\.ya?ml$/, /^\.pre-commit-config\.yaml$/, /^\.editorconfig$/, /^\.prettierrc.*$/, /^\.eslintrc.*$/, /^\.npmrc$/, /^\.nvmrc$/, /^\.python-version$/, /^\.env\.example$/, /^\.gitignore$/, /^\.gitattributes$/, /^\.gitmodules$/, /^vitest\.config\.ts$/, /\.gemspec$/,
   /^\.github$/, /^\.readmerlin$/, /^\.ossemble$/, /^\.claude$/, /^\.claude-plugin$/, /^\.mcp\.json$/, /^\.cursor$/, /^\.codex$/, /^\.agents$/, /^\.vscode$/,
+  /^\.changeset$/, /^\.open-sourcerer$/, /^enrich\.json$/,
   /^(src|lib|bin|dist|docs|examples?|tests?|scripts?|assets|references?|skills?|commands?|agents?|hooks?|templates?|schemas?|renderers?|tools?|integrations?|benchmarks?|public|static)$/i,
 ];
 
 /** Top-level names git tracks. Undefined outside a git checkout, so caches and virtualenvs never count. */
-/** Folders a published package keeps at its root: release notes and pipeline files. Tools is already conventional above. */
-const PACKAGE_ONLY = [/^\.changeset$/, /^\.?workflows?$/];
+/** Folders a published package keeps at its root: pipeline files. Tools is already conventional above. */
+const PACKAGE_ONLY = [/^\.?workflows?$/];
 
 function trackedRootNames(root: string): string[] | undefined {
   try {

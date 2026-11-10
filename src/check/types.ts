@@ -69,7 +69,7 @@ export interface Config {
   maxBadgesPerRow: number;
   maxImageHeight: number;
   denylistFile?: string;
-  /** Package mode: one install line and one example of the package's own command pass, and the changeset and workflow folders are not root clutter. Off by default. */
+  /** Package mode: one install line and one example of the package's own command pass, and the workflow folders are not root clutter. Off by default. */
   packageMode: boolean;
   counts: Record<string, string>;
   maxFindingsPerRule: number;
