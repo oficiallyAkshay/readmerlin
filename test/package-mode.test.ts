@@ -106,10 +106,18 @@ describe("package mode, shell commands", () => {
 
 describe("package mode, root folders", () => {
   const folders = { ".changeset/config.json": "{}", "workflows/build.yml": "on: push", "tools/x.sh": "echo" };
-  it("flags the changeset and workflow folders without the mode", async () => {
+  it("flags the workflow folder without the mode", async () => {
     const msg = (await root(pkg(fence("wandr"), { files: folders }))).map((f) => f.message).join(" ");
-    expect(msg).toMatch(/\.changeset/);
+    expect(msg).not.toMatch(/\.changeset/);
     expect(msg).toMatch(/workflows/);
+  });
+  it("never flags the pipeline files open-sourcerer adds, but still flags a stray file", async () => {
+    const pipeline = { ".changeset/config.json": "{}", ".open-sourcerer/run.sh": "echo", "enrich.json": "[]" };
+    expect(await root(pkg(fence("wandr"), { files: pipeline }))).toEqual([]);
+    const found = await root(pkg(fence("wandr"), { files: { ...pipeline, "stray.txt": "x" } }));
+    expect(found.length).toBe(1);
+    expect(found[0].message).toMatch(/stray\.txt/);
+    expect(found[0].message).not.toMatch(/changeset|open-sourcerer|enrich/);
   });
   it("does not flag the changeset, workflow and tools folders with it", async () => {
     expect(await root(pkg(fence("wandr"), { packageMode: true, files: folders }))).toEqual([]);
