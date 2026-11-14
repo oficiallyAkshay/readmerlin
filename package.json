@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
-    "hast-util-from-html": "^2.0.3",
-    "image-size": "^2.0.4",
+    "hast-util-from-html": "^2.1.0",
+    "image-size": "^2.1.0",
     "mdast-util-to-string": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.6.6",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "tsup": "^9.0.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
