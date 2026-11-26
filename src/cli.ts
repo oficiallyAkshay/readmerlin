@@ -17,7 +17,8 @@ Options
   --config <file>         check: path to readmerlin.json (default: readmerlin.json at the repo root)
   --pages                 check: README.md, CONTRIBUTING and every docs page, in place of the given files
   --no-links              check: skip external link checks
-  --no-exec               check: never run count-source commands from readmerlin.json
+  --exec                  check: run count-source commands from readmerlin.json (off by default)
+  --no-exec               check: still accepted; commands are off by default, and this wins over --exec
   --clones                init-workflow: also add the clonometer workflow and print its badges
   --version, -v           Print the version
   --help, -h              This text`;
@@ -31,6 +32,7 @@ function parse() {
     config: { type: "string" },
     pages: { type: "boolean", default: false },
     "no-links": { type: "boolean", default: false },
+    exec: { type: "boolean", default: false },
     "no-exec": { type: "boolean", default: false },
     clones: { type: "boolean", default: false },
     version: { type: "boolean", short: "v", default: false },
@@ -77,7 +79,7 @@ async function main(): Promise<number> {
         format: pickFormat(FORMATS.check, values.format, "text"),
         configPath: values.config,
         links: !values["no-links"],
-        exec: !values["no-exec"],
+        exec: values.exec && !values["no-exec"],
         pages: values.pages,
       });
     case "init-workflow":
