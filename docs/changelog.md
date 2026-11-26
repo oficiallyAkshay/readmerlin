@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+`readmerlin check` no longer runs the count commands from the checked repo's readmerlin.json unless you pass the new `--exec` switch, so checking someone else's repo, or following the skill's check step, runs none of its shell commands. This matches the action, which already left them off by default and now passes `--exec` only when its `exec` input is `true`, so the action behaves as before. Anyone who relied on count checks from the command line must add `--exec`. The old `--no-exec` is still accepted and wins over `--exec`.
+
 ## 1.1.0
 
 `init-workflow` now writes `exec: "true"` into the readme-check workflow it creates, so the count commands behind every count badge actually run in the consumer's own CI; seven repos had to flip the input by hand on 2026-09-20 because the template left it at the action's bare default of off. The commands come from that repo's own readmerlin.json, so in that repo's own CI they are already trusted; the action's own default stays off, for a workflow checking a different repo's README from outside it.

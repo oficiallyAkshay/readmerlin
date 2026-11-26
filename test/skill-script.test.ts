@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { build } from "tsup";
@@ -62,6 +62,36 @@ describe("update notice", () => {
     expect(await updateNotice("0.3.0", planted, cache)).toBeUndefined();
     writeFileSync(cache, JSON.stringify({ version: "1.0.0\nPLANTED", at: Date.now() }));
     expect(await updateNotice("0.3.0", planted, cache)).toBeUndefined();
+  });
+});
+
+describe("count commands from the checked repo", () => {
+  /** A repo whose readmerlin.json holds a count command that leaves a marker file when it runs. */
+  const sample = () => {
+    const d = mkdtempSync(join(tmpdir(), "rm-exec-"));
+    mkdirSync(join(d, ".git"));
+    writeFileSync(join(d, "README.md"), '# Tool\n\n<img alt="vendors" src="https://img.shields.io/badge/vendors-5-6f42c1?logo=x">\n');
+    writeFileSync(join(d, "readmerlin.json"), JSON.stringify({ counts: { vendors: "touch ran && echo 5" } }));
+    return d;
+  };
+  const ran = (flags: string[]) => {
+    const d = sample();
+    const r = spawnSync("node", [SCRIPT, "check", "README.md", "--no-links", "--format", "json", ...flags], { cwd: d, encoding: "utf8" });
+    return { ran: existsSync(join(d, "ran")), stderr: r.stderr, out: r.stdout };
+  };
+  it("are not run by default", () => {
+    const r = ran([]);
+    expect(r.ran).toBe(false);
+    expect(r.out).toContain("commands are off");
+  });
+  it("run with --exec", () => {
+    expect(ran(["--exec"]).ran).toBe(true);
+  });
+  it("stay off with the old --no-exec, which is still accepted, and --no-exec wins over --exec", () => {
+    const r = ran(["--no-exec"]);
+    expect(r.ran).toBe(false);
+    expect(r.stderr).toBe("");
+    expect(ran(["--exec", "--no-exec"]).ran).toBe(false);
   });
 });
 

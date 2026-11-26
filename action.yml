@@ -29,7 +29,7 @@ runs:
         set -euo pipefail
         FLAGS=()
         [ "$RM_LINKS" = "true" ] || FLAGS+=(--no-links)
-        [ "$RM_EXEC" = "true" ] || FLAGS+=(--no-exec)
+        [ "$RM_EXEC" != "true" ] || FLAGS+=(--exec)
         # The script the skill carries, from this action's own checkout: the commit you pin is the code that runs.
         if [ "$RM_PAGES" = "true" ]; then
           node "$GITHUB_ACTION_PATH/skills/readmerlin/scripts/readmerlin.mjs" check --pages --format github "${FLAGS[@]}"

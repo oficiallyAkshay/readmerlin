@@ -128,7 +128,7 @@ export const countSource: Rule = {
         continue;
       }
       if (!exec) {
-        out.push({ level: "warn" as const, message: `Count badge "${label}: ${number}" was not verified, commands are off.`, line: i.line, repair: "Run without --no-exec on a machine you trust." });
+        out.push({ level: "warn" as const, message: `Count badge "${label}: ${number}" was not verified, commands are off.`, line: i.line, repair: "Run with --exec on a machine you trust." });
         continue;
       }
       let got: string;
